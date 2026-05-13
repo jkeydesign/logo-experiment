@@ -1,0 +1,99 @@
+﻿:root {
+  --surface: #ffffff;
+  --surface2: #f5f5f5;
+  --border: rgba(17,17,17,.12);
+  --text: #111111;
+  --text2: #4d4d4d;
+  --text3: #666666;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; }
+body { background: #ffffff; color: var(--text); }
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(17,17,17,.18); border-radius: 4px; }
+button { font-family: inherit; }
+
+@keyframes aiOrbit {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes aiPulse {
+  0%, 100% { opacity: .9; transform: scale(1); }
+  50% { opacity: .5; transform: scale(.92); }
+}
+
+.ai-thinking-orbit {
+  position: relative;
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  border: 2px solid rgba(75,85,99,.26);
+  border-top-color: #4b5563;
+  animation: aiOrbit .9s linear infinite;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.ai-thinking-core {
+  font-size: 8px;
+  font-weight: 700;
+  color: #4b5563;
+  animation: aiPulse 1.2s ease-in-out infinite;
+}
+
+.btn-interact {
+  transition: background-color .12s ease, border-color .12s ease, color .12s ease, box-shadow .12s ease, transform .08s ease;
+}
+
+.btn-interact:not(:disabled):hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(17, 17, 17, .12);
+}
+
+.btn-interact:not(:disabled):active {
+  transform: translateY(0) scale(.985);
+  box-shadow: inset 0 2px 4px rgba(17, 17, 17, .18);
+}
+
+.btn-hold:not(:disabled):hover {
+  background: #4b5563 !important;
+  border-color: #4b5563 !important;
+  color: #ffffff !important;
+}
+
+.btn-exclude:not(:disabled):hover {
+  background: #6b7280 !important;
+  border-color: #6b7280 !important;
+  color: #ffffff !important;
+}
+
+.btn-final:not(:disabled):hover {
+  background: #1f2937 !important;
+  border-color: #1f2937 !important;
+  color: #ffffff !important;
+}
+
+.btn-selected {
+  box-shadow: 0 0 0 2px rgba(17, 17, 17, .18), 0 8px 18px rgba(17, 17, 17, .14) !important;
+}
+
+.btn-hold.btn-selected {
+  background: #4b5563 !important;
+  border-color: #374151 !important;
+  color: #ffffff !important;
+}
+
+.btn-exclude.btn-selected {
+  background: #6b7280 !important;
+  border-color: #4b5563 !important;
+  color: #ffffff !important;
+}
+
+.btn-final.btn-selected {
+  background: #1f2937 !important;
+  border-color: #111827 !important;
+  color: #ffffff !important;
+}
