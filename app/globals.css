@@ -12,7 +12,40 @@ body { background: #ffffff; color: var(--text); }
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: rgba(17,17,17,.18); border-radius: 4px; }
-button { font-family: inherit; }
+button {
+  font-family: inherit;
+  transition:
+    transform .12s ease,
+    box-shadow .12s ease,
+    filter .12s ease,
+    background-color .12s ease,
+    border-color .12s ease,
+    color .12s ease,
+    opacity .12s ease;
+}
+
+button:not(:disabled):not([aria-disabled="true"]):hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(17, 17, 17, .12);
+  filter: contrast(1.03);
+}
+
+button:not(:disabled):not([aria-disabled="true"]):active {
+  transform: translateY(1px) scale(.985);
+  box-shadow: inset 0 2px 5px rgba(17, 17, 17, .2);
+}
+
+button:focus-visible {
+  outline: 2px solid rgba(17, 17, 17, .42);
+  outline-offset: 2px;
+}
+
+button:disabled,
+button[aria-disabled="true"] {
+  transform: none !important;
+  box-shadow: none !important;
+  filter: none !important;
+}
 
 @keyframes aiOrbit {
   from { transform: rotate(0deg); }
@@ -48,32 +81,43 @@ button { font-family: inherit; }
   transition: background-color .12s ease, border-color .12s ease, color .12s ease, box-shadow .12s ease, transform .08s ease;
 }
 
-.btn-interact:not(:disabled):hover {
+.btn-interact:not(:disabled):not([aria-disabled="true"]):hover {
   transform: translateY(-1px);
   box-shadow: 0 4px 10px rgba(17, 17, 17, .12);
 }
 
-.btn-interact:not(:disabled):active {
+.btn-interact:not(:disabled):not([aria-disabled="true"]):active {
   transform: translateY(0) scale(.985);
   box-shadow: inset 0 2px 4px rgba(17, 17, 17, .18);
 }
 
-.btn-hold:not(:disabled):hover {
+.btn-hold:not(:disabled):not([aria-disabled="true"]):hover {
   background: #4b5563 !important;
   border-color: #4b5563 !important;
   color: #ffffff !important;
 }
 
-.btn-exclude:not(:disabled):hover {
+.btn-exclude:not(:disabled):not([aria-disabled="true"]):hover {
   background: #6b7280 !important;
   border-color: #6b7280 !important;
   color: #ffffff !important;
 }
 
-.btn-final:not(:disabled):hover {
+.btn-final:not(:disabled):not([aria-disabled="true"]):hover {
   background: #1f2937 !important;
   border-color: #1f2937 !important;
   color: #ffffff !important;
+}
+
+.btn-choice.btn-selected {
+  background: #4b5563 !important;
+  border-color: #4b5563 !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 0 2px rgba(17, 17, 17, .14), 0 8px 18px rgba(17, 17, 17, .12) !important;
+}
+
+.btn-choice:not(:disabled):not([aria-disabled="true"]):hover {
+  border-color: #4b5563 !important;
 }
 
 .btn-selected {

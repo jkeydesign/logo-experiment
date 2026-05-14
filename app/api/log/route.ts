@@ -25,6 +25,30 @@ function safeReadArray(filePath: string): PersistedLog[] {
   }
 }
 
+function getLogTime(entry: PersistedLog): number {
+  if (typeof entry.eventMs === 'number') return entry.eventMs
+  if (typeof entry.timestamp === 'string') {
+    const parsed = Date.parse(entry.timestamp)
+    return Number.isNaN(parsed) ? 0 : parsed
+  }
+  return 0
+}
+
+function listLogFilesNewestFirst() {
+  return fs
+    .readdirSync(LOG_DIR)
+    .filter((file) => file.endsWith('.json'))
+    .map((file) => {
+      const filePath = path.join(LOG_DIR, file)
+      return {
+        file,
+        filePath,
+        mtimeMs: fs.statSync(filePath).mtimeMs,
+      }
+    })
+    .sort((a, b) => b.mtimeMs - a.mtimeMs)
+}
+
 export async function POST(req: NextRequest) {
   try {
     const entry = (await req.json()) as PersistedLog
@@ -47,11 +71,31 @@ export async function POST(req: NextRequest) {
   }
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
     ensureLogDir()
-    const files = fs.readdirSync(LOG_DIR).filter((file) => file.endsWith('.json'))
-    const all = files.flatMap((file) => safeReadArray(path.join(LOG_DIR, file)))
+    const limitParam = req.nextUrl.searchParams.get('limit')
+    const limit = limitParam ? Number.parseInt(limitParam, 10) : 0
+    const files = listLogFilesNewestFirst()
+
+    if (Number.isFinite(limit) && limit > 0) {
+      const recent: PersistedLog[] = []
+      for (const file of files) {
+        recent.push(...safeReadArray(file.filePath))
+        if (recent.length >= limit * 2) break
+      }
+
+      return NextResponse.json(
+        recent
+          .sort((a, b) => getLogTime(a) - getLogTime(b))
+          .slice(-limit)
+      )
+    }
+
+    const all = files
+      .flatMap((file) => safeReadArray(file.filePath))
+      .sort((a, b) => getLogTime(a) - getLogTime(b))
+
     return NextResponse.json(all)
   } catch {
     return NextResponse.json([])

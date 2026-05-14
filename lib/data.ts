@@ -9,32 +9,32 @@
 } from '@/types'
 
 export const CONDITION_LABELS: Record<Condition, ConditionLabel> = {
-  human: '인간 전략 주도형',
-  collab: '협업 전략 주도형',
-  ai: 'AI 전략 주도형',
-  mixed: '협업 전략 주도형',
+  human: '시안 제시형',
+  collab: '추천 제시형',
+  ai: '평가 제시형',
+  mixed: '추천 제시형',
 }
 
 export const CONDITION_GUIDES: Record<Condition, string[]> = {
   human: [
     'AI 정보 없이 로고 시안만 제시됩니다.',
-    '각 시안의 8개 평가 판단 척도를 직접 입력해야 합니다.',
-    '각 시안을 반드시 보류 또는 제외로 분류해야 다음 단계로 이동할 수 있습니다.',
+    '먼저 각 시안을 보류 또는 제외로만 분류합니다.',
+    '2단계에서 종합 점수와 주된 판단 기준을 입력합니다.',
   ],
   collab: [
     'AI 추천 시안 2개가 표시됩니다.',
     'AI 평가 점수는 제공되지 않습니다.',
-    '추천 정보를 참고하거나 무시할 수 있으며, 각 시안을 보류/제외로 분류해야 합니다.',
+    '추천 정보를 참고하거나 무시할 수 있으며, 먼저 각 시안을 보류/제외로 분류합니다.',
   ],
   ai: [
     'AI 추천 시안 2개와 전체 6개 시안의 AI 평가 제안 점수가 제공됩니다.',
-    '참가자는 AI 평가 제안을 유지하거나 수정할 수 있습니다.',
-    '수정 전후 점수와 수정 방향이 모두 로그로 저장됩니다.',
+    '먼저 각 시안을 보류/제외로 분류한 뒤 2단계에서 종합 평가를 입력합니다.',
+    '상세 평가와 최종선택 로그가 모두 저장됩니다.',
   ],
   mixed: [
     'AI 추천 시안 2개가 표시됩니다.',
     'AI 평가 점수는 제공되지 않습니다.',
-    '추천 정보를 참고하거나 무시할 수 있으며, 각 시안을 보류/제외로 분류해야 합니다.',
+    '추천 정보를 참고하거나 무시할 수 있으며, 먼저 각 시안을 보류/제외로 분류합니다.',
   ],
 }
 
@@ -87,13 +87,13 @@ export const BRIEF_LIBRARY: Record<string, BrandBrief> = {
   },
   B0002: {
     code: 'B0002',
-    name: 'BeauMe',
-    category: '헤어 뷰티숍',
-    target: '자신에게 어울리는 헤어스타일과 아름다움을 찾고자 하는 20~40대 여성 고객',
-    positioning: '헤어 뷰티숍에서 흔한 얼굴 실루엣, 헤어 라인, 골드 계열의 고급 살롱 이미지와 구분되도록, 과시적 고급감보다 자기다움과 편안한 아름다움을 강조하는 여성 뷰티 브랜드로 위치시킨다.',
-    competitors: '헤어 뷰티숍 로고는 여성적 곡선, 얼굴 또는 헤어 라인 실루엣, 얇은 세리프·산세리프 서체, 골드·베이지·블랙 계열 색상을 자주 사용한다. 고급 살롱 계열은 여백이 넓고 세련된 워드마크 중심 구성이 많다.',
-    environments: ['오프라인 매장 간판', '명함', '온라인 홍보 배너', '카드뉴스', 'SNS 프로필', '예약 페이지', '가격표'],
-    keywords: ['자기다움', '아름다움', '우아함', '편안함', '빛남', '여성성'],
+    name: '오브네 OVBNE',
+    category: '리빙 오브제·홈데코 큐레이션 매장 및 온라인 쇼핑몰',
+    target: '25~35세 도시 거주자. 자기 취향과 감도 있는 소비를 중시하며, 과시적 고가 브랜드보다 일상 안에서 세련된 선택을 선호하는 소비자',
+    positioning: '대중적 소품샵보다 감도 있고, 고가 편집숍보다 접근 가능한 미들 프리미엄 라이프스타일 브랜드. 취향을 가진 도시 생활자의 일상 공간에 자연스럽게 스며드는 오브제 브랜드로 위치시킨다.',
+    competitors: '대형 라이프스타일 편집숍, 독립 소품샵, 온라인 감성 셀렉트숍과 경쟁. 이들은 감성 일러스트, 손글씨 서체, 자연 소재 이미지, 따뜻한 중립색을 주로 활용한다.',
+    environments: ['매장 간판', '쇼핑백', '패키지 라벨', 'SNS 프로필', '온라인 쇼핑몰'],
+    keywords: ['감도', '균형', '일상성'],
     judgeAxes: BRAND_JUDGE_AXES,
   },
   W0003: {
@@ -117,37 +117,37 @@ export const SET_BRIEF_MAP: Record<SetId, string> = {
 
 const STIMULUS_SETS: Record<SetId, Logo[]> = {
   A: [
-    { id: 'A1', name: 'Funipets 워드마크 A', meta: '라운드 산세리프 · 생활형 균형', style: 'sans', color: '#111111', isAiRecommended: true, aiRank: 1 },
-    { id: 'A2', name: 'Funipets 심볼+텍스트 B', meta: '유기 곡선 · 따뜻한 가구 감성', style: 'symbol', color: '#1f2937', isAiRecommended: true, aiRank: 2 },
-    { id: 'A3', name: 'Funipets 모노그램 C', meta: 'F/P 이니셜 · 심플 구조', style: 'mono', color: '#374151', aiRank: 3 },
-    { id: 'A4', name: 'Funipets 배지형 D', meta: '가구 라벨형 · 친근 톤', style: 'badge', color: '#4b5563', aiRank: 4 },
-    { id: 'A5', name: 'Funipets 레터마크 E', meta: '소프트 볼드 · 대중적 인상', style: 'letter', color: '#6b7280', aiRank: 5 },
-    { id: 'A6', name: 'Funipets 세리프 F', meta: '정돈감 · 생활 프리미엄', style: 'serif', color: '#111827', aiRank: 6 },
-    { id: 'A7', name: 'Funipets 라인심볼 G', meta: '곡선 라인 · 공존 이미지', style: 'script', color: '#333333', aiRank: 7 },
-    { id: 'A8', name: 'Funipets 아이콘형 H', meta: '생활 소품형 · 친근한 기호', style: 'icon', color: '#4d4d4d', aiRank: 8 },
-    { id: 'A9', name: 'Funipets 세리프 조합 I', meta: '차분한 프리미엄 · 균형형', style: 'serif2', color: '#666666', aiRank: 9 },
+    { id: 'A1', name: 'OVBNE 시안 A', meta: '실제 로고 이미지 A', style: 'sans', color: '#111111', imageSrc: 'stimuli/ovbne-a.svg', isAiRecommended: true, aiRank: 1 },
+    { id: 'A2', name: 'OVBNE 시안 B', meta: '실제 로고 이미지 B', style: 'symbol', color: '#1f2937', imageSrc: 'stimuli/ovbne-b.svg', isAiRecommended: true, aiRank: 2 },
+    { id: 'A3', name: 'OVBNE 시안 C', meta: '실제 로고 이미지 C', style: 'mono', color: '#374151', imageSrc: 'stimuli/ovbne-c.svg', aiRank: 3 },
+    { id: 'A4', name: 'OVBNE 시안 D', meta: '실제 로고 이미지 D', style: 'badge', color: '#4b5563', imageSrc: 'stimuli/ovbne-d.svg', aiRank: 4 },
+    { id: 'A5', name: 'OVBNE 시안 E', meta: '실제 로고 이미지 E', style: 'letter', color: '#6b7280', imageSrc: 'stimuli/ovbne-e.svg', aiRank: 5 },
+    { id: 'A6', name: 'OVBNE 시안 F', meta: '실제 로고 이미지 F', style: 'serif', color: '#111827', imageSrc: 'stimuli/ovbne-f.svg', aiRank: 6 },
+    { id: 'A7', name: 'OVBNE 시안 G', meta: '실제 로고 이미지 G', style: 'script', color: '#333333', imageSrc: 'stimuli/ovbne-g.svg', aiRank: 7 },
+    { id: 'A8', name: 'OVBNE 시안 H', meta: '실제 로고 이미지 H', style: 'icon', color: '#4d4d4d', imageSrc: 'stimuli/ovbne-h.svg', aiRank: 8 },
+    { id: 'A9', name: 'OVBNE 시안 I', meta: '실제 로고 이미지 I', style: 'serif2', color: '#666666', imageSrc: 'stimuli/ovbne-i.svg', aiRank: 9 },
   ],
   B: [
-    { id: 'B1', name: 'BeauMe 워드마크 A', meta: '슬림 세리프 · 우아한 균형', style: 'serif', color: '#111111', isAiRecommended: true, aiRank: 1 },
-    { id: 'B2', name: 'BeauMe 미니멀 B', meta: '미세 자간 · 차분한 여성성', style: 'sans', color: '#1f2937', isAiRecommended: true, aiRank: 2 },
-    { id: 'B3', name: 'BeauMe 모노그램 C', meta: 'B/M 조합 · 자기다움 강조', style: 'mono', color: '#374151', aiRank: 3 },
-    { id: 'B4', name: 'BeauMe 심볼형 D', meta: '부드러운 라인 · 편안한 뉘앙스', style: 'symbol', color: '#4b5563', aiRank: 4 },
-    { id: 'B5', name: 'BeauMe 배지형 E', meta: '예약/가격표 적용형', style: 'badge', color: '#6b7280', aiRank: 5 },
-    { id: 'B6', name: 'BeauMe 레터마크 F', meta: '간결 볼드 · 가독 중심', style: 'letter', color: '#111827', aiRank: 6 },
-    { id: 'B7', name: 'BeauMe 스크립트 G', meta: '흐름감 · 편안한 아름다움', style: 'script', color: '#333333', aiRank: 7 },
-    { id: 'B8', name: 'BeauMe 아이콘형 H', meta: '빛남 기호 · SNS 적용형', style: 'icon', color: '#4d4d4d', aiRank: 8 },
-    { id: 'B9', name: 'BeauMe 세리프 조합 I', meta: '여백 중심 · 우아한 구조', style: 'serif2', color: '#666666', aiRank: 9 },
+    { id: 'B1', name: 'OVBNE 시안 A', meta: '실제 로고 이미지 A', style: 'serif', color: '#111111', imageSrc: 'stimuli/ovbne-a.svg', isAiRecommended: true, aiRank: 1 },
+    { id: 'B2', name: 'OVBNE 시안 B', meta: '실제 로고 이미지 B', style: 'sans', color: '#1f2937', imageSrc: 'stimuli/ovbne-b.svg', isAiRecommended: true, aiRank: 2 },
+    { id: 'B3', name: 'OVBNE 시안 C', meta: '실제 로고 이미지 C', style: 'mono', color: '#374151', imageSrc: 'stimuli/ovbne-c.svg', aiRank: 3 },
+    { id: 'B4', name: 'OVBNE 시안 D', meta: '실제 로고 이미지 D', style: 'symbol', color: '#4b5563', imageSrc: 'stimuli/ovbne-d.svg', aiRank: 4 },
+    { id: 'B5', name: 'OVBNE 시안 E', meta: '실제 로고 이미지 E', style: 'badge', color: '#6b7280', imageSrc: 'stimuli/ovbne-e.svg', aiRank: 5 },
+    { id: 'B6', name: 'OVBNE 시안 F', meta: '실제 로고 이미지 F', style: 'letter', color: '#111827', imageSrc: 'stimuli/ovbne-f.svg', aiRank: 6 },
+    { id: 'B7', name: 'OVBNE 시안 G', meta: '실제 로고 이미지 G', style: 'script', color: '#333333', imageSrc: 'stimuli/ovbne-g.svg', aiRank: 7 },
+    { id: 'B8', name: 'OVBNE 시안 H', meta: '실제 로고 이미지 H', style: 'icon', color: '#4d4d4d', imageSrc: 'stimuli/ovbne-h.svg', aiRank: 8 },
+    { id: 'B9', name: 'OVBNE 시안 I', meta: '실제 로고 이미지 I', style: 'serif2', color: '#666666', imageSrc: 'stimuli/ovbne-i.svg', aiRank: 9 },
   ],
   C: [
-    { id: 'C1', name: 'Wailastic 워드마크 A', meta: '신뢰형 산세리프 · 의료 가독성', style: 'sans', color: '#111111', isAiRecommended: true, aiRank: 1 },
-    { id: 'C2', name: 'Wailastic 라인심볼 B', meta: '회복 흐름 · 탄력 곡선 암시', style: 'symbol', color: '#1f2937', isAiRecommended: true, aiRank: 2 },
-    { id: 'C3', name: 'Wailastic 모노그램 C', meta: 'W/S 구조 · 전문성 강조', style: 'mono', color: '#374151', aiRank: 3 },
-    { id: 'C4', name: 'Wailastic 배지형 D', meta: '간판/문서 응용 안정형', style: 'badge', color: '#4b5563', aiRank: 4 },
-    { id: 'C5', name: 'Wailastic 레터마크 E', meta: '강조 이니셜 · 명확한 존재감', style: 'letter', color: '#6b7280', aiRank: 5 },
-    { id: 'C6', name: 'Wailastic 세리프 F', meta: '인간적 돌봄 · 부드러운 인상', style: 'serif', color: '#111827', aiRank: 6 },
-    { id: 'C7', name: 'Wailastic 움직임 라인 G', meta: '회복 곡선 · 생활 활력', style: 'script', color: '#333333', aiRank: 7 },
-    { id: 'C8', name: 'Wailastic 아이콘형 H', meta: '전문 기호 · 안내 시스템형', style: 'icon', color: '#4d4d4d', aiRank: 8 },
-    { id: 'C9', name: 'Wailastic 세리프 조합 I', meta: '신뢰감 · 인간적 안정감', style: 'serif2', color: '#666666', aiRank: 9 },
+    { id: 'C1', name: 'OVBNE 시안 A', meta: '실제 로고 이미지 A', style: 'sans', color: '#111111', imageSrc: 'stimuli/ovbne-a.svg', isAiRecommended: true, aiRank: 1 },
+    { id: 'C2', name: 'OVBNE 시안 B', meta: '실제 로고 이미지 B', style: 'symbol', color: '#1f2937', imageSrc: 'stimuli/ovbne-b.svg', isAiRecommended: true, aiRank: 2 },
+    { id: 'C3', name: 'OVBNE 시안 C', meta: '실제 로고 이미지 C', style: 'mono', color: '#374151', imageSrc: 'stimuli/ovbne-c.svg', aiRank: 3 },
+    { id: 'C4', name: 'OVBNE 시안 D', meta: '실제 로고 이미지 D', style: 'badge', color: '#4b5563', imageSrc: 'stimuli/ovbne-d.svg', aiRank: 4 },
+    { id: 'C5', name: 'OVBNE 시안 E', meta: '실제 로고 이미지 E', style: 'letter', color: '#6b7280', imageSrc: 'stimuli/ovbne-e.svg', aiRank: 5 },
+    { id: 'C6', name: 'OVBNE 시안 F', meta: '실제 로고 이미지 F', style: 'serif', color: '#111827', imageSrc: 'stimuli/ovbne-f.svg', aiRank: 6 },
+    { id: 'C7', name: 'OVBNE 시안 G', meta: '실제 로고 이미지 G', style: 'script', color: '#333333', imageSrc: 'stimuli/ovbne-g.svg', aiRank: 7 },
+    { id: 'C8', name: 'OVBNE 시안 H', meta: '실제 로고 이미지 H', style: 'icon', color: '#4d4d4d', imageSrc: 'stimuli/ovbne-h.svg', aiRank: 8 },
+    { id: 'C9', name: 'OVBNE 시안 I', meta: '실제 로고 이미지 I', style: 'serif2', color: '#666666', imageSrc: 'stimuli/ovbne-i.svg', aiRank: 9 },
   ],
 }
 
@@ -252,4 +252,5 @@ export function getAIPrompt(condition: Condition, logoName: string, logoMeta: st
 
   return ''
 }
+
 

@@ -71,7 +71,7 @@ export default function ESMPanel({ target, onComplete, onInteraction }: Props) {
   if (!target) {
     return (
       <div style={{ minHeight: 240, display: 'grid', placeItems: 'center', color: 'var(--text3)', textAlign: 'center' }}>
-        좌측 시안을 선택하면 평가 판단 척도를 입력할 수 있습니다.
+        좌측 시안을 선택하면 판단 기준을 입력할 수 있습니다.
       </div>
     )
   }

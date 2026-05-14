@@ -23,8 +23,15 @@ import type {
   StimulusLogRow,
 } from '@/types'
 
-type ScreenStep = 'participant' | 'instruction' | 'evaluation' | 'result' | 'completed'
-type RightTab = 'evaluate' | 'hold' | 'exclude'
+type ScreenStep = 'consent' | 'screening' | 'participant' | 'instruction' | 'evaluation' | 'result' | 'completed'
+type RightTab = 'hold' | 'exclude'
+type ScreeningAnswers = {
+  currentPractice: string
+  career: string
+  logoProjects: string
+  field: string
+  aiUse: string
+}
 
 interface StimulusCardState {
   stimulus: Logo
@@ -33,6 +40,9 @@ interface StimulusCardState {
   currentScores: Partial<AxisScores>
   initialScores: AxisScores | null
   finalScores: AxisScores | null
+  brandOverallScore: number | null
+  visualOverallScore: number | null
+  mainJudgmentCriteria: string[]
   initialDecision: DecisionType | null
   finalDecision: DecisionType | null
   initialDecisionTs: string | null
@@ -58,40 +68,112 @@ const SCORE_LABEL: Record<number, string> = {
   5: '매우 높음',
 }
 
+const BRAND_SUMMARY_REFERENCES = [
+  { label: '의미 적합성', source: '브랜드 적합성', desc: '포지셔닝과 가치 키워드를 담아내는가?' },
+  { label: '타깃 전달성', source: '타깃 적합성', desc: '타깃에게 의도한 의미가 전달되는가?' },
+  { label: '경쟁 차별성', source: '경쟁 차별성', desc: '경쟁사의 시각 특성과 충분히 구분되는가?' },
+  { label: '적용 확장성', source: '확장 가능성', desc: '다양한 매체와 응용 환경에서 일관되게 작동하는가?' },
+  { label: '정체성 일관성', source: '시간 지속성', desc: '5~10년 후에도 유효한 형태인가?' },
+]
+
+const VISUAL_SUMMARY_REFERENCES = [
+  { label: '자연성', source: '자연성', desc: '이 형태는 직관적으로 읽히고 친숙하게 느껴지는가?' },
+  { label: '조화성', source: '조화성', desc: '시각 요소들이 균형 있고 안정적으로 배치되어 있는가?' },
+  { label: '정교성', source: '정교성', desc: '단순하거나 복잡한 정도, 즉 디자인의 풍부함이 이 브랜드에 적절한 수준인가?' },
+]
+
+const MAIN_JUDGMENT_CRITERIA = [
+  '의미 적합성',
+  '타깃 전달성',
+  '경쟁 차별성',
+  '적용 확장성',
+  '정체성 일관성',
+  '자연성',
+  '조화성',
+  '정교성',
+] as const
+
+const INITIAL_SCREENING_ANSWERS: ScreeningAnswers = {
+  currentPractice: '',
+  career: '',
+  logoProjects: '',
+  field: '',
+  aiUse: '',
+}
+
+const SCREENING_QUESTIONS: Array<{
+  id: keyof ScreeningAnswers
+  title: string
+  options: string[]
+}> = [
+  {
+    id: 'currentPractice',
+    title: '1. 현재 디자인 실무에 종사하고 있습니까?',
+    options: ['예', '아니요'],
+  },
+  {
+    id: 'career',
+    title: '2. 디자인 실무 경력',
+    options: ['1년 미만', '1~3년', '3~5년', '5년 이상', '10년 이상'],
+  },
+  {
+    id: 'logoProjects',
+    title: '3. 로고 디자인 또는 브랜드 아이덴티티 프로젝트 경험이 있습니까?',
+    options: ['없음', '1~2건', '3건 이상', '5건 이상'],
+  },
+  {
+    id: 'field',
+    title: '4. 주요 실무 분야',
+    options: ['브랜드 디자인', '시각디자인', '그래픽 디자인', 'BX 디자인', 'UI/UX 디자인', '편집디자인', '기타'],
+  },
+  {
+    id: 'aiUse',
+    title: '5. 생성형 AI 이미지 도구 사용 경험',
+    options: ['없음', '1~2회', '가끔 사용', '자주 사용'],
+  },
+]
+
+function getScreeningInvalidReason(answers: ScreeningAnswers): string | null {
+  if (answers.currentPractice === '예') return '1번 문항에서 실험 조건에 맞지 않는 응답이 선택되었습니다.'
+  if (answers.career === '1년 미만' || answers.career === '1~3년') return '2번 문항에서 실험 조건에 맞지 않는 응답이 선택되었습니다.'
+  if (answers.logoProjects === '없음' || answers.logoProjects === '1~2건') return '3번 문항에서 실험 조건에 맞지 않는 응답이 선택되었습니다.'
+  return null
+}
+
 const MANUAL_CONDITION_ASSIGNMENTS: ConditionAssignment[] = [
   {
     order: 1,
     condition: 'human',
-    conditionLabel: '인간 전략 주도형',
+    conditionLabel: '시안 제시형',
     setId: 'A',
     setBriefCode: 'F0001',
   },
   {
     order: 2,
     condition: 'collab',
-    conditionLabel: '협업 전략 주도형',
+    conditionLabel: '추천 제시형',
     setId: 'B',
     setBriefCode: 'B0002',
   },
   {
     order: 3,
     condition: 'ai',
-    conditionLabel: 'AI 전략 주도형',
+    conditionLabel: '평가 제시형',
     setId: 'C',
     setBriefCode: 'W0003',
   },
 ]
 
 const CONDITION_SURFACE: Record<ConditionLabel, string> = {
-  '인간 전략 주도형': '#f8f8f8',
-  '협업 전략 주도형': '#f2f2f2',
-  'AI 전략 주도형': '#ececec',
+  '시안 제시형': '#f8f8f8',
+  '추천 제시형': '#f2f2f2',
+  '평가 제시형': '#ececec',
 }
 
 const CONDITION_COLOR: Record<ConditionLabel, string> = {
-  '인간 전략 주도형': '#111111',
-  '협업 전략 주도형': '#4b5563',
-  'AI 전략 주도형': '#6b7280',
+  '시안 제시형': '#111111',
+  '추천 제시형': '#4b5563',
+  '평가 제시형': '#6b7280',
 }
 
 const SYMBOL_SVG: Record<string, (color: string) => string> = {
@@ -121,10 +203,16 @@ function getWordmarkFromName(name: string): string {
 }
 
 function renderLogoSvg(logo: Logo): string {
+  if (logo.imageSrc) {
+    const src = escapeSvgText(logo.imageSrc)
+    const alt = escapeSvgText(logo.name)
+    return `<img src="${src}" alt="${alt}" style="width:100%;height:100%;object-fit:contain;display:block;background:#ffffff;" />`
+  }
+
   const symbolFn = SYMBOL_SVG[logo.style] ?? SYMBOL_SVG.serif
   const wordmark = escapeSvgText(getWordmarkFromName(logo.name))
   const color = logo.color
-  return `<svg width="132" height="78" viewBox="0 0 132 78" xmlns="http://www.w3.org/2000/svg">
+  return `<svg width="100%" height="100%" viewBox="0 0 132 78" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
     <rect x="4" y="6" width="124" height="66" rx="10" fill="rgba(255,255,255,.9)" />
     <g>${symbolFn(color)}</g>
     <text x="73" y="29" text-anchor="middle" dominant-baseline="middle" font-size="9" fill="${color}" opacity=".65" letter-spacing="1.1">SYMBOL + WORDMARK</text>
@@ -164,6 +252,84 @@ function calcMetrics(scores: AxisScores) {
   }
 }
 
+function createSummaryScores(source: AxisScores, group: 'brand' | 'visual', value: number): AxisScores {
+  if (group === 'brand') {
+    return {
+      ...source,
+      brand_fit: value,
+      target_fit: value,
+      comp_diff: value,
+      scalable: value,
+      timeless: value,
+    }
+  }
+
+  return {
+    ...source,
+    natural: value,
+    harmony: value,
+    refinement: value,
+  }
+}
+
+function createScoresFromSummary(brandScore: number | null, visualScore: number | null): AxisScores | null {
+  if (typeof brandScore !== 'number' || typeof visualScore !== 'number') {
+    return null
+  }
+
+  return {
+    brand_fit: brandScore,
+    target_fit: brandScore,
+    comp_diff: brandScore,
+    scalable: brandScore,
+    timeless: brandScore,
+    natural: visualScore,
+    harmony: visualScore,
+    refinement: visualScore,
+  }
+}
+
+function applySummaryGroupScore(scores: Partial<AxisScores>, group: 'brand' | 'visual', value: number): Partial<AxisScores> {
+  if (group === 'brand') {
+    return {
+      ...scores,
+      brand_fit: value,
+      target_fit: value,
+      comp_diff: value,
+      scalable: value,
+      timeless: value,
+    }
+  }
+
+  return {
+    ...scores,
+    natural: value,
+    harmony: value,
+    refinement: value,
+  }
+}
+
+function isDetailEvaluationComplete(card: StimulusCardState) {
+  return (
+    typeof card.brandOverallScore === 'number' &&
+    typeof card.visualOverallScore === 'number' &&
+    card.mainJudgmentCriteria.length >= 1 &&
+    card.mainJudgmentCriteria.length <= 2
+  )
+}
+
+function getDetailAxisScores(card: StimulusCardState): AxisScores | null {
+  return createScoresFromSummary(card.brandOverallScore, card.visualOverallScore)
+}
+
+function getCardSortScore(card: StimulusCardState) {
+  return card.finalScores ? calcMetrics(card.finalScores).total : -1
+}
+
+function getCardDisplayMetrics(card: StimulusCardState) {
+  return card.finalScores ? calcMetrics(card.finalScores) : null
+}
+
 function diffCount(initial: AxisScores | null, final: AxisScores | null) {
   if (!initial || !final) {
     return { total: 0, brand: 0, visual: 0 }
@@ -201,7 +367,7 @@ function aiAcceptanceRate(aiScores: AxisScores | null, finalScores: AxisScores |
 }
 
 function toRecommended(logo: Logo) {
-  return (logo.aiRank ?? 99) <= 2
+  return (logo.aiRank ?? 99) <= 3
 }
 
 function toRecommendRank(logo: Logo) {
@@ -259,6 +425,10 @@ function createEmptyStimulusRow(
     user_score_naturalness_final: null,
     user_score_harmony_final: null,
     user_score_elaboration_final: null,
+    brand_overall_fit_score_final: null,
+    visual_overall_quality_score_final: null,
+    main_judgment_criteria: null,
+    main_judgment_criteria_count: 0,
     brand_5axis_avg_initial: null,
     visual_3axis_avg_initial: null,
     total_score_initial: null,
@@ -304,16 +474,20 @@ export default function Home() {
     exportEventsJson,
   } = useExperiment()
 
-  const [step, setStep] = useState<ScreenStep>('participant')
+  const [step, setStep] = useState<ScreenStep>('consent')
   const [participantInput, setParticipantInput] = useState(participantId)
   const [participantError, setParticipantError] = useState('')
+  const [screeningAnswers, setScreeningAnswers] = useState<ScreeningAnswers>(INITIAL_SCREENING_ANSWERS)
+  const [screeningError, setScreeningError] = useState('')
+  const [screeningBlockMessage, setScreeningBlockMessage] = useState('')
   const [currentConditionIndex, setCurrentConditionIndex] = useState(0)
   const [cards, setCards] = useState<StimulusCardState[]>([])
   const [editingCardId, setEditingCardId] = useState<string | null>(null)
-  const [rightTab, setRightTab] = useState<RightTab>('evaluate')
+  const [rightTab, setRightTab] = useState<RightTab>('hold')
   const [activeStimulusId, setActiveStimulusId] = useState<string | null>(null)
   const [pendingDecision, setPendingDecision] = useState<DecisionType | null>(null)
   const [decisionNotice, setDecisionNotice] = useState('')
+  const [detailNotice, setDetailNotice] = useState<{ stimulusId: string; message: string } | null>(null)
   const [briefCodeInput, setBriefCodeInput] = useState('')
   const [briefCodeError, setBriefCodeError] = useState('')
   const [briefOverride, setBriefOverride] = useState<BrandBrief | null>(null)
@@ -323,6 +497,8 @@ export default function Home() {
   const [finalSelectionTs, setFinalSelectionTs] = useState<string | null>(null)
   const [showLogCenter, setShowLogCenter] = useState(false)
   const [logCenterTab, setLogCenterTab] = useState<'view' | 'export'>('view')
+  const [showFinalModal, setShowFinalModal] = useState(false)
+  const [finalGuardNotice, setFinalGuardNotice] = useState<{ attemptedStimulusId: string; incompleteIds: string[] } | null>(null)
 
   const activeAssignment = assignments[currentConditionIndex] ?? null
   const conditionOrderLabel = useMemo(
@@ -337,7 +513,7 @@ export default function Home() {
   const displayedBrief = briefOverride ?? activeBrief
 
   const allInitialCompleted = useMemo(
-    () => cards.length > 0 && cards.every((card) => !!card.initialDecision && !!card.initialScores),
+    () => cards.length > 0 && cards.every((card) => !!card.initialDecision),
     [cards]
   )
 
@@ -358,6 +534,9 @@ export default function Home() {
         currentScores: aiScores ? { ...aiScores } : {},
         initialScores: null,
         finalScores: null,
+        brandOverallScore: null,
+        visualOverallScore: null,
+        mainJudgmentCriteria: [],
         initialDecision: null,
         finalDecision: null,
         initialDecisionTs: null,
@@ -367,10 +546,11 @@ export default function Home() {
 
     setCards(nextCards)
     setEditingCardId(null)
-    setRightTab('evaluate')
+    setRightTab('hold')
     setActiveStimulusId(nextCards[0]?.stimulus.id ?? null)
     setPendingDecision(null)
     setDecisionNotice('')
+    setDetailNotice(null)
     setBriefCodeError('')
     setHasGenerated(false)
     setIsGenerating(false)
@@ -437,6 +617,10 @@ export default function Home() {
         row.user_score_naturalness_final = final.natural
         row.user_score_harmony_final = final.harmony
         row.user_score_elaboration_final = final.refinement
+        row.brand_overall_fit_score_final = card.brandOverallScore
+        row.visual_overall_quality_score_final = card.visualOverallScore
+        row.main_judgment_criteria = card.mainJudgmentCriteria.length > 0 ? card.mainJudgmentCriteria.join('|') : null
+        row.main_judgment_criteria_count = card.mainJudgmentCriteria.length
         row.brand_5axis_avg_final = metric.brand
         row.visual_3axis_avg_final = metric.visual
         row.total_score_final = metric.total
@@ -503,6 +687,53 @@ export default function Home() {
       },
     })
   }, [participantInput, setParticipant, setAssignments, startExperiment, logEvent])
+
+  const updateScreeningAnswer = useCallback((id: keyof ScreeningAnswers, value: string) => {
+    setScreeningAnswers((prev) => ({ ...prev, [id]: value }))
+    setScreeningError('')
+  }, [])
+
+  const resetToConsent = useCallback(() => {
+    setScreeningAnswers(INITIAL_SCREENING_ANSWERS)
+    setScreeningError('')
+    setParticipantInput('')
+    setParticipantError('')
+    setStep('consent')
+  }, [])
+
+  const confirmScreening = useCallback(() => {
+    const hasBlank = SCREENING_QUESTIONS.some((question) => !screeningAnswers[question.id])
+    if (hasBlank) {
+      setScreeningError('모든 기본 문항에 응답해 주세요.')
+      return
+    }
+
+    const invalidReason = getScreeningInvalidReason(screeningAnswers)
+    if (invalidReason) {
+      setScreeningBlockMessage(
+        `${invalidReason} 본 실험의 참여 조건에 해당하지 않아 다음 단계로 이동할 수 없습니다. 연락처와 메일로 문의 바랍니다.`
+      )
+      logEvent('screening_blocked', {
+        detail: '실험 조건 불일치로 참여 차단',
+        payload: {
+          answers: screeningAnswers,
+          reason: invalidReason,
+        },
+      })
+      setScreeningAnswers(INITIAL_SCREENING_ANSWERS)
+      setParticipantInput('')
+      setParticipantError('')
+      setStep('consent')
+      return
+    }
+
+    setScreeningError('')
+    logEvent('screening_passed', {
+      detail: '실험참여자 기본 문항 확인 완료',
+      payload: { answers: screeningAnswers },
+    })
+    setStep('participant')
+  }, [screeningAnswers, logEvent])
 
   const startCondition = useCallback(() => {
     if (!activeAssignment) return
@@ -663,14 +894,7 @@ export default function Home() {
     if (!card || card.initialDecision) return
 
     setActiveStimulusId(stimulusId)
-    setRightTab('evaluate')
-
-    const complete = toAxisScores(card.currentScores)
-    if (!complete) {
-      setPendingDecision(decision)
-      setDecisionNotice(`[${decision}] 전에 8개 평가 판단 척도를 먼저 입력해 주세요.`)
-      return
-    }
+    setRightTab(decision === '보류' ? 'hold' : 'exclude')
 
     setPendingDecision(null)
     setDecisionNotice('')
@@ -680,8 +904,8 @@ export default function Home() {
       if (item.stimulus.id !== stimulusId || item.initialDecision) return item
       return {
         ...item,
-        initialScores: complete,
-        finalScores: complete,
+        initialScores: null,
+        finalScores: null,
         initialDecision: decision,
         finalDecision: decision,
         initialDecisionTs: nowIso,
@@ -694,7 +918,7 @@ export default function Home() {
       setId: activeAssignment?.setId,
       stimulusId,
       detail: `초기 분류: ${decision}`,
-      payload: { decision },
+      payload: { decision, stage: 'first_classification_only' },
     })
   }, [cards, activeAssignment, logEvent])
 
@@ -705,13 +929,10 @@ export default function Home() {
       if (card.stimulus.id !== stimulusId) return card
       if (card.initialDecision) return card
 
-      const complete = toAxisScores(card.currentScores)
-      if (!complete) return card
-
       return {
         ...card,
-        initialScores: complete,
-        finalScores: complete,
+        initialScores: null,
+        finalScores: null,
         initialDecision: decision,
         finalDecision: decision,
         initialDecisionTs: nowIso,
@@ -724,11 +945,49 @@ export default function Home() {
       setId: activeAssignment?.setId,
       stimulusId,
       detail: `초기 분류: ${decision}`,
-      payload: { decision },
+      payload: { decision, stage: 'first_classification_only' },
     })
     setPendingDecision(null)
     setDecisionNotice('')
   }, [activeAssignment, logEvent])
+
+  const cancelInitialDecision = useCallback((stimulusId: string) => {
+    const target = cards.find((card) => card.stimulus.id === stimulusId)
+    if (!target?.initialDecision) return
+
+    setCards((prev) => prev.map((card) => {
+      if (card.stimulus.id !== stimulusId) return card
+      return {
+        ...card,
+        initialScores: null,
+        finalScores: null,
+        initialDecision: null,
+        finalDecision: null,
+        initialDecisionTs: null,
+        revisionTs: null,
+      }
+    }))
+
+    if (finalSelectedStimulusId === stimulusId) {
+      setFinalSelectedStimulusId(null)
+      setFinalSelectionTs(null)
+    }
+
+    setActiveStimulusId(stimulusId)
+    setRightTab('hold')
+    setPendingDecision(null)
+    setDecisionNotice('')
+    setDetailNotice(null)
+
+    logEvent('initial_decision_cancel', {
+      condition: activeAssignment?.condition,
+      conditionLabel: activeAssignment?.conditionLabel,
+      setId: activeAssignment?.setId,
+      stimulusId,
+      detail: `${target.initialDecision} 취소`,
+      payload: { previous_decision: target.initialDecision },
+    })
+  }, [activeAssignment, cards, finalSelectedStimulusId, logEvent])
 
   const openResultScreen = useCallback(() => {
     if (!allInitialCompleted) return
@@ -736,6 +995,7 @@ export default function Home() {
     setEditingCardId(null)
     setPendingDecision(null)
     setDecisionNotice('')
+    setShowFinalModal(false)
 
     logEvent('result_screen_open', {
       condition: activeAssignment?.condition,
@@ -745,11 +1005,7 @@ export default function Home() {
     })
   }, [allInitialCompleted, activeAssignment, logEvent])
 
-  useEffect(() => {
-    if (step !== 'evaluation') return
-    if (!allInitialCompleted) return
-    openResultScreen()
-  }, [step, allInitialCompleted, openResultScreen])
+  // 자동 결과 화면 전환 비활성화 — 평가 화면에서 계속 머뭄
 
   const updateFinalDecision = useCallback((stimulusId: string, nextDecision: DecisionType) => {
     const nowIso = new Date().toISOString()
@@ -766,6 +1022,18 @@ export default function Home() {
       }
     }))
 
+    if (finalSelectedStimulusId === stimulusId && nextDecision === '제외') {
+      setFinalSelectedStimulusId(null)
+      setFinalSelectionTs(null)
+      logEvent('final_selection_cleared_by_move', {
+        condition: activeAssignment?.condition,
+        conditionLabel: activeAssignment?.conditionLabel,
+        setId: activeAssignment?.setId,
+        stimulusId,
+        detail: '최종선택 시안이 제외로 이동되어 최종선택 해제',
+      })
+    }
+
     logEvent('decision_move', {
       condition: activeAssignment?.condition,
       conditionLabel: activeAssignment?.conditionLabel,
@@ -774,7 +1042,7 @@ export default function Home() {
       detail: `최종 분류 변경: ${nextDecision}`,
       payload: { nextDecision },
     })
-  }, [activeAssignment, logEvent])
+  }, [activeAssignment, finalSelectedStimulusId, logEvent])
 
   const updateFinalScore = useCallback((stimulusId: string, axis: AxisKey, value: number) => {
     const nowIso = new Date().toISOString()
@@ -829,11 +1097,138 @@ export default function Home() {
     })
   }, [activeAssignment, cards, logEvent])
 
-  const selectFinal = useCallback((stimulusId: string) => {
-    if (finalSelectedStimulusId) return
+  const updateDetailOverallScore = useCallback((stimulusId: string, group: 'brand' | 'visual', value: number) => {
+    const nowIso = new Date().toISOString()
 
+    setCards((prev) => prev.map((card) => {
+      if (card.stimulus.id !== stimulusId) return card
+
+      const nextBrandScore = group === 'brand' ? value : card.brandOverallScore
+      const nextVisualScore = group === 'visual' ? value : card.visualOverallScore
+      const nextSummaryScores = createScoresFromSummary(nextBrandScore, nextVisualScore)
+      const nextCurrentScores = applySummaryGroupScore(card.currentScores, group, value)
+
+      return {
+        ...card,
+        currentScores: nextCurrentScores,
+        finalScores: card.initialDecision && nextSummaryScores ? nextSummaryScores : card.finalScores,
+        brandOverallScore: group === 'brand' ? value : card.brandOverallScore,
+        visualOverallScore: group === 'visual' ? value : card.visualOverallScore,
+        revisionTs: card.initialDecision ? nowIso : card.revisionTs,
+      }
+    }))
+
+    setDetailNotice(null)
+    setFinalGuardNotice(null)
+    logEvent('detail_overall_score_select', {
+      condition: activeAssignment?.condition,
+      conditionLabel: activeAssignment?.conditionLabel,
+      setId: activeAssignment?.setId,
+      stimulusId,
+      detail: group === 'brand' ? '브랜드 종합 적합도 선택' : '시각 종합 완성도 선택',
+      payload: { group, value },
+    })
+  }, [activeAssignment, logEvent])
+
+  const toggleMainJudgmentCriterion = useCallback((stimulusId: string, criterion: string) => {
     const target = cards.find((card) => card.stimulus.id === stimulusId)
-    if (!target || !target.initialDecision) return
+    if (!target) return
+
+    const current = target.mainJudgmentCriteria
+    const next = current.includes(criterion)
+      ? current.filter((item) => item !== criterion)
+      : [...current, criterion]
+
+    if (next.length > 2) {
+      setDetailNotice({
+        stimulusId,
+        message: '주된 판단 기준은 최대 2개까지만 선택할 수 있습니다.',
+      })
+      logEvent('detail_criteria_limit_notice', {
+        condition: activeAssignment?.condition,
+        conditionLabel: activeAssignment?.conditionLabel,
+        setId: activeAssignment?.setId,
+        stimulusId,
+        detail: '주된 판단 기준 2개 초과 선택 시도',
+        payload: { attemptedCriterion: criterion, selectedCriteria: current },
+      })
+      return
+    }
+
+    const nowIso = new Date().toISOString()
+    setCards((prev) => prev.map((card) => (
+      card.stimulus.id === stimulusId
+        ? {
+            ...card,
+            mainJudgmentCriteria: next,
+            revisionTs: nowIso,
+          }
+        : card
+    )))
+    setDetailNotice(null)
+    setFinalGuardNotice(null)
+
+    logEvent('detail_criteria_toggle', {
+      condition: activeAssignment?.condition,
+      conditionLabel: activeAssignment?.conditionLabel,
+      setId: activeAssignment?.setId,
+      stimulusId,
+      detail: '주된 판단 기준 선택 변경',
+      payload: { criterion, selectedCriteria: next },
+    })
+  }, [activeAssignment, cards, logEvent])
+
+  const selectFinal = useCallback((stimulusId: string) => {
+    const target = cards.find((card) => card.stimulus.id === stimulusId)
+    if (!target || !target.initialDecision) return false
+
+    const incompleteHoldCards = cards.filter((card) => (
+      card.initialDecision === '보류' && !isDetailEvaluationComplete(card)
+    ))
+
+    if (incompleteHoldCards.length > 0) {
+      const firstIncomplete = incompleteHoldCards[0]
+      setRightTab('hold')
+      setActiveStimulusId(firstIncomplete.stimulus.id)
+      setEditingCardId(firstIncomplete.stimulus.id)
+      setShowFinalModal(false)
+      setFinalGuardNotice({
+        attemptedStimulusId: stimulusId,
+        incompleteIds: incompleteHoldCards.map((card) => card.stimulus.id),
+      })
+      setDetailNotice({
+        stimulusId: firstIncomplete.stimulus.id,
+        message: '보류된 모든 시안의 미션 체크를 완료해야 최종선택을 할 수 있습니다.',
+      })
+      logEvent('final_selection_blocked_hold_mission_incomplete', {
+        condition: activeAssignment?.condition,
+        conditionLabel: activeAssignment?.conditionLabel,
+        setId: activeAssignment?.setId,
+        stimulusId,
+        detail: '보류 시안 전체 미션 체크 미완료로 최종선택 보류',
+        payload: {
+          attempted_stimulus_id: stimulusId,
+          incomplete_hold_ids: incompleteHoldCards.map((card) => card.stimulus.id),
+        },
+      })
+      return false
+    }
+
+    if (!isDetailEvaluationComplete(target)) {
+      setEditingCardId(stimulusId)
+      setDetailNotice({
+        stimulusId,
+        message: '브랜드 종합 적합도, 시각 종합 완성도, 주된 판단 기준 1~2개를 먼저 입력해 주세요.',
+      })
+      logEvent('final_selection_blocked_detail_incomplete', {
+        condition: activeAssignment?.condition,
+        conditionLabel: activeAssignment?.conditionLabel,
+        setId: activeAssignment?.setId,
+        stimulusId,
+        detail: '상세 평가 미완료로 최종선택 보류',
+      })
+      return false
+    }
 
     if (target.finalDecision === '제외') {
       updateFinalDecision(stimulusId, '보류')
@@ -847,6 +1242,7 @@ export default function Home() {
     }
 
     const nowIso = new Date().toISOString()
+    const previousSelectedId = finalSelectedStimulusId
     setFinalSelectedStimulusId(stimulusId)
     setFinalSelectionTs(nowIso)
 
@@ -855,15 +1251,58 @@ export default function Home() {
       conditionLabel: activeAssignment?.conditionLabel,
       setId: activeAssignment?.setId,
       stimulusId,
-      detail: '최종선택 완료',
+      detail: previousSelectedId && previousSelectedId !== stimulusId ? '최종선택 변경' : '최종선택 완료',
       payload: {
         ai_recommended: toRecommended(target.stimulus),
+        previous_selected_id: previousSelectedId,
       },
     })
+    return true
   }, [finalSelectedStimulusId, cards, updateFinalDecision, logEvent, activeAssignment])
 
   const moveToNextCondition = useCallback(() => {
     if (!activeAssignment || !finalSelectedStimulusId) return
+
+    const incompleteHoldCards = cards.filter((card) => (
+      card.initialDecision === '보류' && !isDetailEvaluationComplete(card)
+    ))
+
+    if (incompleteHoldCards.length > 0) {
+      const firstIncomplete = incompleteHoldCards[0]
+      setShowFinalModal(false)
+      setRightTab('hold')
+      setActiveStimulusId(firstIncomplete.stimulus.id)
+      setEditingCardId(firstIncomplete.stimulus.id)
+      setFinalGuardNotice({
+        attemptedStimulusId: finalSelectedStimulusId,
+        incompleteIds: incompleteHoldCards.map((card) => card.stimulus.id),
+      })
+      setDetailNotice({
+        stimulusId: firstIncomplete.stimulus.id,
+        message: '보류된 모든 시안의 미션 체크를 완료해야 조건을 완료할 수 있습니다.',
+      })
+      logEvent('condition_complete_blocked_hold_mission_incomplete', {
+        condition: activeAssignment.condition,
+        conditionLabel: activeAssignment.conditionLabel,
+        setId: activeAssignment.setId,
+        stimulusId: finalSelectedStimulusId,
+        detail: '보류 시안 전체 미션 체크 미완료로 조건 완료 보류',
+        payload: {
+          incomplete_hold_ids: incompleteHoldCards.map((card) => card.stimulus.id),
+        },
+      })
+      return
+    }
+
+    const selectedCard = cards.find((card) => card.stimulus.id === finalSelectedStimulusId)
+    if (selectedCard && !isDetailEvaluationComplete(selectedCard)) {
+      setEditingCardId(selectedCard.stimulus.id)
+      setDetailNotice({
+        stimulusId: selectedCard.stimulus.id,
+        message: '최종 선택 1개 확정 전에 상세 평가를 완료해 주세요.',
+      })
+      return
+    }
 
     logEvent('condition_complete', {
       condition: activeAssignment.condition,
@@ -882,15 +1321,17 @@ export default function Home() {
     setStep('instruction')
     setCards([])
     setEditingCardId(null)
-    setRightTab('evaluate')
+    setRightTab('hold')
     setActiveStimulusId(null)
     setPendingDecision(null)
     setDecisionNotice('')
+    setDetailNotice(null)
     setHasGenerated(false)
     setIsGenerating(false)
     setFinalSelectedStimulusId(null)
     setFinalSelectionTs(null)
-  }, [activeAssignment, finalSelectedStimulusId, currentConditionIndex, assignments.length, logEvent])
+    setShowFinalModal(false)
+  }, [activeAssignment, finalSelectedStimulusId, cards, currentConditionIndex, assignments.length, logEvent])
 
   const activeCard = useMemo(
     () => cards.find((card) => card.stimulus.id === activeStimulusId) ?? null,
@@ -909,20 +1350,23 @@ export default function Home() {
 
   const holdCards = useMemo(() => {
     return cards
-      .filter((card) => card.finalDecision === '보류' && card.finalScores)
-      .sort((a, b) => calcMetrics(b.finalScores as AxisScores).total - calcMetrics(a.finalScores as AxisScores).total)
+      .filter((card) => card.finalDecision === '보류')
+      .sort((a, b) => getCardSortScore(b) - getCardSortScore(a))
   }, [cards])
 
   const excludeCards = useMemo(() => {
     return cards
-      .filter((card) => card.finalDecision === '제외' && card.finalScores)
-      .sort((a, b) => calcMetrics(b.finalScores as AxisScores).total - calcMetrics(a.finalScores as AxisScores).total)
+      .filter((card) => card.finalDecision === '제외')
+      .sort((a, b) => getCardSortScore(b) - getCardSortScore(a))
   }, [cards])
 
+  const showConsentScreen = step === 'consent'
+  const showScreeningScreen = step === 'screening'
   const showParticipantScreen = step === 'participant'
   const showInstruction = step === 'instruction' && activeAssignment && activeBrief
   const showEvaluation = step === 'evaluation' && activeAssignment && activeBrief
   const showResult = step === 'result' && activeAssignment && activeBrief
+  const showAppHeader = !showConsentScreen && !showScreeningScreen
 
   const handleUiClickCapture = useCallback((event: React.MouseEvent<HTMLElement>) => {
     const origin = event.target as HTMLElement | null
@@ -959,18 +1403,153 @@ export default function Home() {
 
   return (
     <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', background: '#ffffff' }}>
-      <header style={{ padding: '12px 16px', borderBottom: '1px solid rgba(17,17,17,.12)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div>
-          <div style={{ fontWeight: 800, color: '#111111' }}>AI Logotics</div>
-          <div style={{ fontSize: 12, color: '#666666' }}>생성형 AI 기반 브랜드 로고디자인 평가 실험</div>
-        </div>
-        <div style={{ textAlign: 'right', fontSize: 12, color: '#4d4d4d' }}>
-          <div>참가자 ID: {participantId || '-'}</div>
-          <div>저장된 로그 행: {rows.length}</div>
-        </div>
-      </header>
+      {showAppHeader && (
+        <header style={{ padding: '12px 16px', borderBottom: '1px solid rgba(17,17,17,.12)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <div style={{ fontWeight: 800, color: '#111111' }}>AI Logotics</div>
+            <div style={{ fontSize: 12, color: '#666666' }}>생성형 AI 기반 브랜드 로고 시안 판단 실험</div>
+          </div>
+          <div style={{ textAlign: 'right', fontSize: 12, color: '#4d4d4d' }}>
+            <div>참가자 ID: {participantId || '-'}</div>
+            <div>저장된 로그 행: {rows.length}</div>
+          </div>
+        </header>
+      )}
 
       <main style={{ flex: 1, overflow: 'auto', padding: 16 }} onClickCapture={handleUiClickCapture}>
+        {showConsentScreen && (
+          <div style={{ minHeight: '100%', display: 'grid', placeItems: 'start center', padding: '46px 0 36px' }}>
+            <section style={{ width: 'min(1120px, 92vw)', background: '#ffffff', color: '#111111' }}>
+              <div style={{ textAlign: 'center', marginBottom: 52 }}>
+                <h1 style={{ fontSize: 28, fontWeight: 900, letterSpacing: '-.02em', marginBottom: 12 }}>
+                  생성형 AI 기반 브랜드 로고 시안 판단 실험
+                </h1>
+                <div style={{ fontSize: 16, color: '#6b7280', fontWeight: 500 }}>AI Logotics</div>
+              </div>
+
+              <div style={{ maxWidth: 820, margin: '0 auto', display: 'grid', gap: 34, fontSize: 16, lineHeight: 1.85, color: '#1f2937' }}>
+                <section>
+                  <h2 style={{ fontSize: 18, fontWeight: 800, color: '#111111', marginBottom: 10 }}>연구 목적</h2>
+                  <p>
+                    본 연구는 전문 디자이너가 AI 판단 정보의 제시 범위에 따라 로고 시안을 어떻게 보류, 제외, 변경,
+                    최종 선택하는지를 분석하는 실험입니다.
+                  </p>
+                </section>
+
+                <section>
+                  <h2 style={{ fontSize: 18, fontWeight: 800, color: '#111111', marginBottom: 10 }}>연구자 정보</h2>
+                  <p>연구자: 강은영</p>
+                  <p>소속: 홍익대학교 대학원 시각디자인 전공 박사과정</p>
+                  <p>이메일: researcher@example.com</p>
+                </section>
+
+                <section>
+                  <h2 style={{ fontSize: 18, fontWeight: 800, color: '#111111', marginBottom: 10 }}>실험 내용</h2>
+                  <ol style={{ display: 'grid', gap: 4, paddingLeft: 20 }}>
+                    <li>브랜드 브리프 확인</li>
+                    <li>AI 로고 시안 확인</li>
+                    <li>시안 보류 / 제외</li>
+                    <li>보류 시안 상세 평가</li>
+                    <li>최종 시안 선택</li>
+                    <li>사후 설문 응답</li>
+                  </ol>
+                </section>
+
+                <section>
+                  <h2 style={{ fontSize: 18, fontWeight: 800, color: '#111111', marginBottom: 10 }}>예상 소요 시간</h2>
+                  <p>약 30~40분</p>
+                </section>
+
+                <section>
+                  <h2 style={{ fontSize: 18, fontWeight: 800, color: '#111111', marginBottom: 10 }}>윤리 및 개인정보 안내</h2>
+                  <ul style={{ display: 'grid', gap: 4, paddingLeft: 20 }}>
+                    <li>응답 데이터는 연구 목적으로만 사용됩니다.</li>
+                    <li>개인 식별 정보는 익명화 처리됩니다.</li>
+                    <li>실험 중 언제든 참여를 중단할 수 있습니다.</li>
+                    <li>일부 실험 정보는 조건 간 비교를 위해 사전에 구성된 자극일 수 있습니다.</li>
+                    <li>실험 종료 후 디브리핑이 제공됩니다.</li>
+                  </ul>
+                </section>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, paddingTop: 8 }}>
+                  <button
+                    onClick={() => {
+                      setScreeningError('')
+                      setStep('screening')
+                    }}
+                    style={{ border: 'none', background: '#000000', color: '#ffffff', borderRadius: 8, padding: '16px 12px', fontSize: 16, fontWeight: 800, cursor: 'pointer' }}
+                  >
+                    동의 참여합니다.
+                  </button>
+                  <button
+                    onClick={() => {
+                      setScreeningBlockMessage('참여하지 않습니다. 실험 참여가 종료됩니다.')
+                    }}
+                    style={{ border: '1px solid rgba(17,17,17,.18)', background: '#ffffff', color: '#1f2937', borderRadius: 8, padding: '16px 12px', fontSize: 16, fontWeight: 700, cursor: 'pointer' }}
+                  >
+                    참여하지 않습니다.
+                  </button>
+                </div>
+              </div>
+            </section>
+          </div>
+        )}
+
+        {showScreeningScreen && (
+          <div style={{ minHeight: '100%', display: 'grid', placeItems: 'start center', padding: '42px 0 36px' }}>
+            <section style={{ width: 'min(760px, 92vw)', background: '#ffffff', color: '#111111' }}>
+              <div style={{ textAlign: 'center', marginBottom: 36 }}>
+                <h1 style={{ fontSize: 22, fontWeight: 900, letterSpacing: '-.02em', marginBottom: 10 }}>
+                  실험참여자 기본 문항
+                </h1>
+                <div style={{ fontSize: 14, color: '#6b7280' }}>전문 디자이너 여부를 확인합니다.</div>
+              </div>
+
+              <div style={{ display: 'grid', gap: 30 }}>
+                {SCREENING_QUESTIONS.map((question) => (
+                  <section key={question.id} style={{ display: 'grid', gap: 12 }}>
+                    <div style={{ fontSize: 14, fontWeight: 800, color: '#111111' }}>{question.title}</div>
+                    <div style={{ display: 'grid', gap: 11 }}>
+                      {question.options.map((option) => {
+                        const selected = screeningAnswers[question.id] === option
+                        return (
+                          <label
+                            key={`${question.id}-${option}`}
+                            style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14, color: '#111827', cursor: 'pointer' }}
+                          >
+                            <input
+                              type='radio'
+                              name={question.id}
+                              value={option}
+                              checked={selected}
+                              onChange={() => updateScreeningAnswer(question.id, option)}
+                              style={{ width: 17, height: 17, accentColor: '#111111' }}
+                            />
+                            {option}
+                          </label>
+                        )
+                      })}
+                    </div>
+                  </section>
+                ))}
+              </div>
+
+              {screeningError && (
+                <div style={{ marginTop: 20, border: '1px solid rgba(17,17,17,.18)', background: '#f7f7f7', borderRadius: 8, padding: '10px 12px', color: '#333333', fontSize: 13, fontWeight: 700 }}>
+                  {screeningError}
+                </div>
+              )}
+
+              <button
+                onClick={confirmScreening}
+                style={{ width: '100%', marginTop: 30, border: 'none', background: '#9ca3af', color: '#ffffff', borderRadius: 6, padding: '15px 12px', fontSize: 15, fontWeight: 800, cursor: 'pointer' }}
+              >
+                확인
+              </button>
+            </section>
+          </div>
+        )}
+
         {showParticipantScreen && (
           <div style={{ maxWidth: 520, margin: '32px auto', border: '1px solid rgba(17,17,17,.14)', borderRadius: 14, padding: 18, background: '#ffffff' }}>
             <div style={{ fontSize: 20, fontWeight: 800, marginBottom: 10, color: '#111111' }}>참가자 ID 입력</div>
@@ -1051,12 +1630,12 @@ export default function Home() {
         )}
 
         {showEvaluation && (
-          <div style={{ display: 'grid', gridTemplateColumns: '360px minmax(0, 1fr) 360px', gap: 14, minHeight: 0 }}>
-            <aside style={{ border: '1px solid rgba(17,17,17,.12)', borderRadius: 12, padding: 12, background: '#ffffff', overflow: 'auto' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '380px minmax(620px, 1fr) 620px', gap: 14, height: 'calc(100vh - 96px)', overflow: 'hidden' }}>
+            <aside style={{ border: '1px solid rgba(17,17,17,.12)', borderRadius: 12, padding: 14, background: '#ffffff', overflow: 'auto' }}>
               <div style={{ fontSize: 12, color: currentConditionColor, fontWeight: 800, marginBottom: 8 }}>
                 조건 {activeAssignment.order}/3 · {activeAssignment.conditionLabel}
               </div>
-              <div style={{ fontSize: 14, fontWeight: 700, color: '#111111', marginBottom: 8 }}>브랜드 브리프 (Set {activeAssignment.setId})</div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: '#111111', marginBottom: 8 }}>브랜드 브리프</div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 6, marginBottom: 8 }}>
                 <input
                   value={briefCodeInput}
@@ -1074,7 +1653,7 @@ export default function Home() {
                   <div style={{ fontSize: 10, color: '#4b5563' }}>{briefCodeError}</div>
                 )}
               </div>
-              <div style={{ fontSize: 12, color: '#4d4d4d', lineHeight: 1.65, display: 'grid', gap: 8 }}>
+              <div style={{ fontSize: 13, color: '#4d4d4d', lineHeight: 1.72, display: 'grid', gap: 9 }}>
                 <div><strong>브랜드명:</strong> {displayedBrief?.name}</div>
                 <div><strong>업종:</strong> {displayedBrief?.category}</div>
                 <div><strong>포지셔닝:</strong> {displayedBrief?.positioning}</div>
@@ -1083,9 +1662,20 @@ export default function Home() {
                 <div><strong>경쟁사 시각 특징:</strong> {displayedBrief?.competitors}</div>
                 <div><strong>적용 환경:</strong> {displayedBrief?.environments.join(', ')}</div>
               </div>
+              <div style={{ borderTop: '1px solid rgba(17,17,17,.16)', margin: '14px 0 10px' }} />
+              <div style={{ fontSize: 14, fontWeight: 800, color: '#111111', marginBottom: 8 }}>
+                판단 기준 안내
+              </div>
+              <div style={{ fontSize: 13, color: '#4d4d4d', lineHeight: 1.72, display: 'grid', gap: 8 }}>
+                {AXIS_LABELS.map((axis, idx) => (
+                  <div key={`brief-axis-${axis.id}`}>
+                    <strong>{idx + 1}. {axis.name}</strong> - {axis.desc}
+                  </div>
+                ))}
+              </div>
             </aside>
 
-            <section style={{ display: 'flex', flexDirection: 'column', gap: 12, minHeight: 0 }}>
+            <section style={{ display: 'flex', flexDirection: 'column', gap: 12, minHeight: 0, overflow: 'hidden' }}>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 8 }}>
                 {assignments.map((assignment, idx) => {
                   const isActive = idx === currentConditionIndex
@@ -1129,22 +1719,20 @@ export default function Home() {
                   </button>
                 </div>
               ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 12, overflow: 'auto', paddingRight: 2 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 10, overflow: 'auto', paddingRight: 2, flex: 1, minHeight: 0, alignContent: 'start', alignItems: 'start' }}>
                   {cards.map((card) => {
                     const isActive = activeStimulusId === card.stimulus.id
                     const isDecided = !!card.initialDecision
-                    const completeScores = toAxisScores(card.currentScores)
 
                     return (
                       <div
                         key={card.stimulus.id}
                         onClick={() => {
                           setActiveStimulusId(card.stimulus.id)
-                          setRightTab('evaluate')
                         }}
                         data-click-log={`시안 카드 선택:${card.stimulus.id}`}
                         data-stimulus-id={card.stimulus.id}
-                        style={{ border: `1px solid ${isActive ? currentConditionColor : 'rgba(17,17,17,.14)'}`, borderRadius: 12, background: '#ffffff', padding: 10, cursor: 'pointer' }}
+                        style={{ border: `1px solid ${isActive ? currentConditionColor : 'rgba(17,17,17,.14)'}`, borderRadius: 12, background: '#ffffff', padding: 8, cursor: 'pointer' }}
                       >
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                           <div style={{ fontSize: 12, fontWeight: 700, color: '#333333' }}>
@@ -1157,31 +1745,33 @@ export default function Home() {
                           )}
                         </div>
 
-                        <div style={{ height: 76, borderRadius: 10, background: '#f7f7f7', border: '1px solid rgba(17,17,17,.08)', display: 'grid', placeItems: 'center', marginBottom: 8 }} dangerouslySetInnerHTML={{ __html: renderLogoSvg(card.stimulus) }} />
+                        <div style={{ width: '100%', aspectRatio: '1 / 1', borderRadius: 10, background: '#f7f7f7', border: '1px solid rgba(17,17,17,.08)', display: 'grid', placeItems: 'center', marginBottom: 8, overflow: 'hidden' }} dangerouslySetInnerHTML={{ __html: renderLogoSvg(card.stimulus) }} />
 
-                        {activeAssignment.condition !== 'human' && (
+                        {activeAssignment.condition === 'ai' && (
                           <>
                             <div style={{ fontSize: 13, fontWeight: 700, color: '#111111', marginBottom: 2 }}>{card.stimulus.name}</div>
                             <div style={{ fontSize: 11, color: '#666666', marginBottom: 6 }}>{card.stimulus.meta}</div>
+                            <div style={{ fontSize: 11, color: '#4d4d4d', marginBottom: 8 }}>
+                              {isDecided ? `1단계 분류: ${card.initialDecision}` : '1단계 분류: 미선택'}
+                            </div>
                           </>
                         )}
-                        <div style={{ fontSize: 11, color: '#4d4d4d', marginBottom: 8 }}>
-                          {isDecided ? `초기 분류: ${card.initialDecision}` : `점수 입력: ${completeScores ? '완료' : '미완료'}`}
-                        </div>
 
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
                           <button
-                            onClick={() => requestInitialDecision(card.stimulus.id, '보류')}
+                            onClick={(e) => { e.stopPropagation(); requestInitialDecision(card.stimulus.id, '보류') }}
                             aria-disabled={isDecided}
-                            className={`btn-interact btn-hold ${card.initialDecision === '보류' ? 'btn-selected' : ''}`}
+                            aria-pressed={card.initialDecision === '보류'}
+                            className={`btn-interact btn-hold btn-choice ${card.initialDecision === '보류' ? 'btn-selected' : ''}`}
                             style={{ border: '1px solid rgba(75,85,99,.45)', background: card.initialDecision === '보류' ? '#4b5563' : '#f3f4f6', color: card.initialDecision === '보류' ? '#ffffff' : '#111827', borderRadius: 7, padding: '7px 0', fontSize: 11, fontWeight: 700, cursor: isDecided ? 'not-allowed' : 'pointer', opacity: isDecided && card.initialDecision !== '보류' ? .45 : 1 }}
                           >
                             보류
                           </button>
                           <button
-                            onClick={() => requestInitialDecision(card.stimulus.id, '제외')}
+                            onClick={(e) => { e.stopPropagation(); requestInitialDecision(card.stimulus.id, '제외') }}
                             aria-disabled={isDecided}
-                            className={`btn-interact btn-exclude ${card.initialDecision === '제외' ? 'btn-selected' : ''}`}
+                            aria-pressed={card.initialDecision === '제외'}
+                            className={`btn-interact btn-exclude btn-choice ${card.initialDecision === '제외' ? 'btn-selected' : ''}`}
                             style={{ border: '1px solid rgba(107,114,128,.45)', background: card.initialDecision === '제외' ? '#6b7280' : '#f3f4f6', color: card.initialDecision === '제외' ? '#ffffff' : '#1f2937', borderRadius: 7, padding: '7px 0', fontSize: 11, fontWeight: 700, cursor: isDecided ? 'not-allowed' : 'pointer', opacity: isDecided && card.initialDecision !== '제외' ? .45 : 1 }}
                           >
                             제외
@@ -1196,10 +1786,7 @@ export default function Home() {
               <div style={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center', gap: 8 }}>
                 <div style={{ display: 'flex', gap: 8 }}>
                   <button
-                    onClick={() => {
-                      setLogCenterTab('view')
-                      setShowLogCenter(true)
-                    }}
+                    onClick={() => window.open('/log-viewer', '_blank', 'width=1200,height=800')}
                     style={{ border: '1px solid rgba(17,17,17,.2)', background: '#ffffff', color: '#111111', borderRadius: 10, padding: '9px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
                   >
                     로그 열람
@@ -1218,9 +1805,8 @@ export default function Home() {
             </section>
 
             <aside style={{ border: '1px solid rgba(17,17,17,.12)', borderRadius: 12, background: '#ffffff', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', borderBottom: '1px solid rgba(17,17,17,.1)' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', borderBottom: '1px solid rgba(17,17,17,.1)' }}>
                 {[
-                  { id: 'evaluate' as RightTab, label: '평가 판단 척도' },
                   { id: 'hold' as RightTab, label: `보류 (${initialHoldCards.length})` },
                   { id: 'exclude' as RightTab, label: `제외 (${initialExcludeCards.length})` },
                 ].map((tab) => (
@@ -1244,121 +1830,125 @@ export default function Home() {
               </div>
 
               <div style={{ flex: 1, overflow: 'auto', padding: 10 }}>
-                {rightTab === 'evaluate' && (
-                  !hasGenerated ? (
-                    <div style={{ minHeight: 220, display: 'grid', placeItems: 'center', color: '#666666', textAlign: 'center', fontSize: 12, lineHeight: 1.7 }}>
-                      중앙의 [AI 로고 시안 생성] 버튼을 눌러주세요.
-                    </div>
-                  ) : !activeCard ? (
-                    <div style={{ minHeight: 220, display: 'grid', placeItems: 'center', color: '#666666', textAlign: 'center', fontSize: 12, lineHeight: 1.7 }}>
-                      좌측 카드에서 시안을 선택해 주세요.
-                    </div>
-                  ) : (
-                    <div>
-                      <div style={{ border: '1px solid rgba(17,17,17,.12)', borderRadius: 9, padding: 8, marginBottom: 10 }}>
-                        <div style={{ fontSize: 12, fontWeight: 700, color: '#111111', marginBottom: activeAssignment.condition === 'human' ? 0 : 2 }}>
-                          {activeCard.stimulus.id}
-                          {activeAssignment.condition !== 'human' ? ` · ${activeCard.stimulus.name}` : ''}
-                        </div>
-                        {activeAssignment.condition !== 'human' && (
-                          <div style={{ fontSize: 11, color: '#666666' }}>{activeCard.stimulus.meta}</div>
-                        )}
-                      </div>
-
-                      {pendingDecision && (
-                        <div style={{ border: '1px solid rgba(107,114,128,.45)', background: 'rgba(107,114,128,.12)', color: '#374151', borderRadius: 8, padding: '8px 9px', fontSize: 11, lineHeight: 1.6, marginBottom: 10 }}>
-                          [{pendingDecision}] 확정을 위해 8개 항목 점수를 모두 입력해 주세요.
-                        </div>
-                      )}
-
-                      <div style={{ display: 'grid', gap: 8 }}>
-                        {AXIS_LABELS.map((axis, idx) => {
-                          const selected = activeCard.currentScores[axis.id]
-                          const aiValue = activeCard.aiScores?.[axis.id]
-
-                          return (
-                            <div key={`${activeCard.stimulus.id}-${axis.id}`} style={{ border: '1px solid rgba(17,17,17,.08)', borderRadius: 8, padding: 7 }}>
-                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-                                <div style={{ fontSize: 11, fontWeight: 700, color: '#333333' }}>{idx + 1}. {axis.name}</div>
-                                <div style={{ fontSize: 10, color: '#666666' }}>{selected ? `${selected}점` : '미입력'}</div>
-                              </div>
-                              <div style={{ fontSize: 10, color: '#666666', marginBottom: 4 }}>{axis.desc}</div>
-                              {typeof aiValue === 'number' && (
-                                <div style={{ fontSize: 10, color: '#1f2937', marginBottom: 4 }}>AI 평가 제안: {aiValue}점</div>
-                              )}
-                              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, minmax(0,1fr))', gap: 4 }}>
-                                {[1, 2, 3, 4, 5].map((value) => (
-                                  <button
-                                    key={`${activeCard.stimulus.id}-${axis.id}-${value}`}
-                                    onClick={() => setScore(activeCard.stimulus.id, axis.id, value)}
-                                    disabled={!!activeCard.initialDecision}
-                                    style={{
-                                      border: `1px solid ${selected === value ? currentConditionColor : 'rgba(17,17,17,.14)'}`,
-                                      background: selected === value ? currentConditionColor : '#ffffff',
-                                      color: selected === value ? '#ffffff' : '#333333',
-                                      borderRadius: 6,
-                                      padding: '4px 0',
-                                      fontSize: 11,
-                                      cursor: activeCard.initialDecision ? 'not-allowed' : 'pointer',
-                                      opacity: activeCard.initialDecision ? .55 : 1,
-                                    }}
-                                  >
-                                    {value}
-                                  </button>
-                                ))}
-                              </div>
-                            </div>
-                          )
-                        })}
-                      </div>
-
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 7, marginTop: 10 }}>
-                        <button
-                          onClick={() => commitInitialDecision(activeCard.stimulus.id, '보류')}
-                          disabled={!toAxisScores(activeCard.currentScores) || !!activeCard.initialDecision}
-                          className='btn-interact btn-hold'
-                          style={{ border: '1px solid rgba(75,85,99,.45)', background: '#f3f4f6', color: '#111827', borderRadius: 8, padding: '8px 0', fontSize: 12, fontWeight: 700, cursor: !toAxisScores(activeCard.currentScores) || !!activeCard.initialDecision ? 'not-allowed' : 'pointer', opacity: !toAxisScores(activeCard.currentScores) || !!activeCard.initialDecision ? .45 : 1 }}
-                        >
-                          보류 확정
-                        </button>
-                        <button
-                          onClick={() => commitInitialDecision(activeCard.stimulus.id, '제외')}
-                          disabled={!toAxisScores(activeCard.currentScores) || !!activeCard.initialDecision}
-                          className='btn-interact btn-exclude'
-                          style={{ border: '1px solid rgba(107,114,128,.45)', background: '#f3f4f6', color: '#1f2937', borderRadius: 8, padding: '8px 0', fontSize: 12, fontWeight: 700, cursor: !toAxisScores(activeCard.currentScores) || !!activeCard.initialDecision ? 'not-allowed' : 'pointer', opacity: !toAxisScores(activeCard.currentScores) || !!activeCard.initialDecision ? .45 : 1 }}
-                        >
-                          제외 확정
-                        </button>
-                      </div>
-                    </div>
-                  )
-                )}
-
                 {rightTab === 'hold' && (
                   initialHoldCards.length === 0 ? (
                     <div style={{ minHeight: 220, display: 'grid', placeItems: 'center', color: '#666666', textAlign: 'center', fontSize: 12 }}>
                       보류 시안이 없습니다.
                     </div>
                   ) : (
-                    <div style={{ display: 'grid', gap: 7 }}>
-                      {initialHoldCards.map((card) => (
-                        <button
-                          key={`hold-${card.stimulus.id}`}
-                          onClick={() => {
-                            setActiveStimulusId(card.stimulus.id)
-                            setRightTab('evaluate')
-                          }}
-                          style={{ textAlign: 'left', border: '1px solid rgba(17,17,17,.14)', background: '#ffffff', borderRadius: 8, padding: '8px 9px', cursor: 'pointer' }}
-                        >
-                          <div style={{ fontSize: 12, fontWeight: 700, color: '#111111' }}>
-                            {card.stimulus.id}
-                            {activeAssignment.condition !== 'human' ? ` · ${card.stimulus.name}` : ''}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 10, alignItems: 'start' }}>
+                      {initialHoldCards.map((card) => {
+                        const cardDetailNotice = detailNotice?.stimulusId === card.stimulus.id ? detailNotice.message : ''
+                        return (
+                          <div
+                            key={`hold-${card.stimulus.id}`}
+                            style={{ border: `1px solid ${finalSelectedStimulusId === card.stimulus.id ? currentConditionColor : 'rgba(17,17,17,.14)'}`, background: '#ffffff', borderRadius: 8, padding: '8px 9px', opacity: finalSelectedStimulusId && finalSelectedStimulusId !== card.stimulus.id ? 0.4 : 1, pointerEvents: (finalSelectedStimulusId && finalSelectedStimulusId !== card.stimulus.id ? 'none' : 'auto') as React.CSSProperties['pointerEvents'], transition: 'opacity 0.2s' }}
+                          >
+                            <div style={{ width: '100%', aspectRatio: '1 / 1', borderRadius: 8, background: '#f7f7f7', border: '1px solid rgba(17,17,17,.07)', display: 'grid', placeItems: 'center', marginBottom: 7, overflow: 'hidden' }} dangerouslySetInnerHTML={{ __html: renderLogoSvg(card.stimulus) }} />
+                            <div style={{ fontSize: 11, fontWeight: 700, color: '#111111', marginBottom: 1 }}>
+                              {card.stimulus.id}{activeAssignment.condition === 'ai' ? ` · ${card.stimulus.name}` : ''}
+                            </div>
+                            {activeAssignment.condition === 'ai' && (
+                              <div style={{ fontSize: 10, color: '#666666', marginBottom: 8 }}>{card.stimulus.meta}</div>
+                            )}
+
+                            <div style={{ borderTop: '1px solid rgba(17,17,17,.08)', paddingTop: 8, display: 'grid', gap: 8 }}>
+                              <div>
+                                <div style={{ fontSize: 10, fontWeight: 700, color: '#333333', marginBottom: 4 }}>
+                                  1. 브랜드 종합 적합도
+                                </div>
+                                <div style={{ fontSize: 9, color: '#666666', marginBottom: 5 }}>이 로고 시안이 브랜드 브리프에 얼마나 적합한가?</div>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: 3 }}>
+                                  {[1, 2, 3, 4, 5].map((v) => (
+                                    <button
+                                      key={`${card.stimulus.id}-hold-brand-${v}`}
+                                      onClick={() => updateDetailOverallScore(card.stimulus.id, 'brand', v)}
+                                      style={{ border: `1px solid ${card.brandOverallScore === v ? currentConditionColor : 'rgba(17,17,17,.18)'}`, background: card.brandOverallScore === v ? currentConditionColor : '#ffffff', color: card.brandOverallScore === v ? '#ffffff' : '#333333', borderRadius: 5, padding: '4px 0', fontSize: 11, fontWeight: card.brandOverallScore === v ? 800 : 500, cursor: 'pointer' }}
+                                    >
+                                      {v}
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+
+                              <div>
+                                <div style={{ fontSize: 10, fontWeight: 700, color: '#333333', marginBottom: 4 }}>
+                                  2. 시각 종합 완성도
+                                </div>
+                                <div style={{ fontSize: 9, color: '#666666', marginBottom: 5 }}>이 로고 시안이 시각적으로 얼마나 완성도 있는가?</div>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: 3 }}>
+                                  {[1, 2, 3, 4, 5].map((v) => (
+                                    <button
+                                      key={`${card.stimulus.id}-hold-visual-${v}`}
+                                      onClick={() => updateDetailOverallScore(card.stimulus.id, 'visual', v)}
+                                      style={{ border: `1px solid ${card.visualOverallScore === v ? currentConditionColor : 'rgba(17,17,17,.18)'}`, background: card.visualOverallScore === v ? currentConditionColor : '#ffffff', color: card.visualOverallScore === v ? '#ffffff' : '#333333', borderRadius: 5, padding: '4px 0', fontSize: 11, fontWeight: card.visualOverallScore === v ? 800 : 500, cursor: 'pointer' }}
+                                    >
+                                      {v}
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+
+                              <div>
+                                <div style={{ fontSize: 10, fontWeight: 700, color: '#333333', marginBottom: 3 }}>
+                                  3. 주된 판단 기준 <span style={{ fontWeight: 400, color: '#888888' }}>(2개 선택)</span>
+                                </div>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 3, marginBottom: cardDetailNotice ? 5 : 0 }}>
+                                  {MAIN_JUDGMENT_CRITERIA.map((criterion) => {
+                                    const selected = card.mainJudgmentCriteria.includes(criterion)
+                                    const atMax = card.mainJudgmentCriteria.length >= 2 && !selected
+                                    return (
+                                      <button
+                                        key={`${card.stimulus.id}-hold-criterion-${criterion}`}
+                                        onClick={() => toggleMainJudgmentCriterion(card.stimulus.id, criterion)}
+                                        style={{ border: `1px solid ${selected ? currentConditionColor : 'rgba(17,17,17,.15)'}`, background: selected ? currentConditionColor : atMax ? '#f5f5f5' : '#ffffff', color: selected ? '#ffffff' : atMax ? '#aaaaaa' : '#333333', borderRadius: 999, padding: '5px 4px', fontSize: 9, fontWeight: selected ? 800 : 500, cursor: 'pointer' }}
+                                      >
+                                        {criterion}
+                                      </button>
+                                    )
+                                  })}
+                                </div>
+                                {cardDetailNotice && (
+                                  <div style={{ fontSize: 10, color: '#b45309', background: '#fffbeb', border: '1px solid #fcd34d', borderRadius: 6, padding: '5px 7px', lineHeight: 1.5 }}>
+                                    {cardDetailNotice}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+
+                            <div style={{ marginTop: 8, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
+                              <button
+                                onClick={() => cancelInitialDecision(card.stimulus.id)}
+                                className='btn-interact btn-hold'
+                                style={{ border: '1px solid rgba(75,85,99,.3)', background: '#ffffff', color: '#333333', borderRadius: 7, padding: '6px 0', fontSize: 11, fontWeight: 800, cursor: 'pointer' }}
+                              >
+                                보류취소
+                              </button>
+                              <button
+                                onClick={() => {
+                                  if (finalSelectedStimulusId === card.stimulus.id) {
+                                    setFinalSelectedStimulusId(null)
+                                    setFinalSelectionTs(null)
+                                    setShowFinalModal(false)
+                                  } else {
+                                    const target = cards.find((c) => c.stimulus.id === card.stimulus.id)
+                                    if (target && isDetailEvaluationComplete(target)) {
+                                      const didSelectFinal = selectFinal(card.stimulus.id)
+                                      if (didSelectFinal) setShowFinalModal(true)
+                                    } else {
+                                      selectFinal(card.stimulus.id)
+                                    }
+                                  }
+                                }}
+                                className='btn-interact btn-final'
+                                style={{ border: `1px solid ${finalSelectedStimulusId === card.stimulus.id ? currentConditionColor : 'rgba(17,17,17,.3)'}`, background: finalSelectedStimulusId === card.stimulus.id ? currentConditionColor : '#f3f4f6', color: finalSelectedStimulusId === card.stimulus.id ? '#ffffff' : '#111827', borderRadius: 7, padding: '6px 0', fontSize: 11, fontWeight: 800, cursor: 'pointer' }}
+                              >
+                                {finalSelectedStimulusId === card.stimulus.id ? '최종선택 ✓' : '최종선택'}
+                              </button>
+                            </div>
                           </div>
-                          {activeAssignment.condition !== 'human' && (
-                            <div style={{ fontSize: 11, color: '#666666', marginTop: 2 }}>{card.stimulus.meta}</div>
-                          )}
-                        </button>
-                      ))}
+                        )
+                      })}
                     </div>
                   )
                 )}
@@ -1369,24 +1959,37 @@ export default function Home() {
                       제외 시안이 없습니다.
                     </div>
                   ) : (
-                    <div style={{ display: 'grid', gap: 7 }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 10, alignItems: 'start' }}>
                       {initialExcludeCards.map((card) => (
-                        <button
+                        <div
                           key={`exclude-${card.stimulus.id}`}
-                          onClick={() => {
-                            setActiveStimulusId(card.stimulus.id)
-                            setRightTab('evaluate')
-                          }}
-                          style={{ textAlign: 'left', border: '1px solid rgba(17,17,17,.14)', background: '#ffffff', borderRadius: 8, padding: '8px 9px', cursor: 'pointer' }}
+                          style={{ border: '1px solid rgba(17,17,17,.14)', background: '#ffffff', borderRadius: 8, padding: '8px 9px' }}
                         >
-                          <div style={{ fontSize: 12, fontWeight: 700, color: '#111111' }}>
-                            {card.stimulus.id}
-                            {activeAssignment.condition !== 'human' ? ` · ${card.stimulus.name}` : ''}
+                          <div style={{ width: '100%', aspectRatio: '1 / 1', borderRadius: 8, background: '#f7f7f7', border: '1px solid rgba(17,17,17,.07)', display: 'grid', placeItems: 'center', marginBottom: 7, overflow: 'hidden' }} dangerouslySetInnerHTML={{ __html: renderLogoSvg(card.stimulus) }} />
+                          <button
+                            onClick={() => {
+                              setActiveStimulusId(card.stimulus.id)
+                            }}
+                            style={{ width: '100%', textAlign: 'left', border: 'none', background: 'transparent', padding: 0, cursor: 'pointer' }}
+                          >
+                            <div style={{ fontSize: 12, fontWeight: 700, color: '#111111' }}>
+                              {card.stimulus.id}
+                              {activeAssignment.condition === 'ai' ? ` · ${card.stimulus.name}` : ''}
+                            </div>
+                            {activeAssignment.condition === 'ai' && (
+                              <div style={{ fontSize: 11, color: '#666666', marginTop: 2 }}>{card.stimulus.meta}</div>
+                            )}
+                          </button>
+                          <div style={{ marginTop: 7 }}>
+                            <button
+                              onClick={() => cancelInitialDecision(card.stimulus.id)}
+                              className='btn-interact btn-exclude'
+                              style={{ width: '100%', border: '1px solid rgba(107,114,128,.3)', background: '#ffffff', color: '#333333', borderRadius: 7, padding: '6px 0', fontSize: 11, fontWeight: 800, cursor: 'pointer' }}
+                            >
+                              제외취소
+                            </button>
                           </div>
-                          {activeAssignment.condition !== 'human' && (
-                            <div style={{ fontSize: 11, color: '#666666', marginTop: 2 }}>{card.stimulus.meta}</div>
-                          )}
-                        </button>
+                        </div>
                       ))}
                     </div>
                   )
@@ -1403,14 +2006,14 @@ export default function Home() {
                 조건 {activeAssignment.order}/3 · {activeAssignment.conditionLabel}
               </div>
               <div style={{ fontSize: 12, color: '#333333' }}>
-                보류/제외 영역 내부 자동 순위는 전체 8축 평균 점수 기준입니다. 점수 수정과 영역 이동 후 순위가 즉시 업데이트됩니다.
+                보류/제외 영역 내부 자동 순위는 브랜드 종합 적합도와 시각 종합 완성도 기준입니다. 상세 평가와 영역 이동 후 순위가 즉시 업데이트됩니다.
               </div>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               {[
-                { key: 'hold', title: `보류 영역 (${holdCards.length})`, cards: holdCards, color: '#111827', bg: '#f7f7f7', move: '제외 이동' as const },
-                { key: 'exclude', title: `제외 영역 (${excludeCards.length})`, cards: excludeCards, color: '#1f2937', bg: '#f5f5f5', move: '보류 이동' as const },
+                { key: 'hold', title: `보류 영역 (${holdCards.length})`, cards: holdCards, color: '#111827', bg: '#f7f7f7', move: '보류→제외' as const },
+                { key: 'exclude', title: `제외 영역 (${excludeCards.length})`, cards: excludeCards, color: '#1f2937', bg: '#f5f5f5', move: '제외→보류 복원' as const },
               ].map((bucket) => (
                 <div key={bucket.key} style={{ border: '1px solid rgba(17,17,17,.18)', borderRadius: 12, background: bucket.bg }}>
                   <div style={{ padding: '10px 12px', borderBottom: '1px solid rgba(17,17,17,.12)', fontSize: 14, fontWeight: 800, color: bucket.color }}>
@@ -1421,68 +2024,148 @@ export default function Home() {
                       <div style={{ fontSize: 12, color: '#666666' }}>해당 시안이 없습니다.</div>
                     )}
                     {bucket.cards.map((card, idx) => {
-                      const metrics = calcMetrics(card.finalScores as AxisScores)
+                      const metrics = getCardDisplayMetrics(card)
                       const editing = editingCardId === card.stimulus.id
                       const moveDecision: DecisionType = bucket.key === 'hold' ? '제외' : '보류'
+                      const detailComplete = isDetailEvaluationComplete(card)
+                      const cardDetailNotice = detailNotice?.stimulusId === card.stimulus.id ? detailNotice.message : ''
+                      const finalButtonLabel = finalSelectedStimulusId === card.stimulus.id
+                        ? '최종선택 유지'
+                        : finalSelectedStimulusId
+                          ? '최종선택 변경'
+                          : '최종선택'
 
                       return (
                         <div key={`${bucket.key}-${card.stimulus.id}`} style={{ border: '1px solid rgba(17,17,17,.12)', borderRadius: 10, background: '#ffffff', padding: 10 }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
                             <div style={{ fontSize: 12, fontWeight: 700, color: '#333333' }}>{idx + 1}위 · {card.stimulus.id}</div>
-                            <div style={{ fontSize: 12, color: '#111111', fontWeight: 700 }}>{metrics.total.toFixed(2)}점 ({metrics.score100.toFixed(1)})</div>
+                            <div style={{ fontSize: 12, color: '#111111', fontWeight: 700 }}>
+                              {metrics ? `${metrics.total.toFixed(2)}점 (${metrics.score100.toFixed(1)})` : '상세 평가 전'}
+                            </div>
                           </div>
-                          {activeAssignment.condition !== 'human' && (
+                          {activeAssignment.condition === 'ai' && (
                             <div style={{ fontSize: 12, color: '#4d4d4d', marginBottom: 6 }}>{card.stimulus.name}</div>
                           )}
                           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
-                            {AXIS_KEYS.map((axis) => (
-                              <span key={`${card.stimulus.id}-tag-${axis}`} style={{ fontSize: 10, border: '1px solid rgba(17,17,17,.12)', borderRadius: 999, padding: '2px 6px', color: '#333333' }}>
-                                {axis}: {(card.finalScores as AxisScores)[axis]}
-                              </span>
-                            ))}
+                            <span style={{ fontSize: 10, border: '1px solid rgba(17,17,17,.12)', borderRadius: 999, padding: '2px 6px', color: '#333333' }}>
+                              브랜드 종합 적합도: {card.brandOverallScore ? `${card.brandOverallScore}점` : '미입력'}
+                            </span>
+                            <span style={{ fontSize: 10, border: '1px solid rgba(17,17,17,.12)', borderRadius: 999, padding: '2px 6px', color: '#333333' }}>
+                              시각 종합 완성도: {card.visualOverallScore ? `${card.visualOverallScore}점` : '미입력'}
+                            </span>
+                            <span style={{ fontSize: 10, border: `1px solid ${detailComplete ? 'rgba(17,17,17,.2)' : 'rgba(107,114,128,.28)'}`, borderRadius: 999, padding: '2px 6px', color: detailComplete ? '#111111' : '#6b7280', background: detailComplete ? '#ffffff' : '#f5f5f5' }}>
+                              주된 판단 기준: {card.mainJudgmentCriteria.length > 0 ? card.mainJudgmentCriteria.join(', ') : '미선택'}
+                            </span>
                           </div>
 
                           {editing && (
-                            <div style={{ display: 'grid', gap: 6, marginBottom: 8, border: '1px solid rgba(17,17,17,.1)', borderRadius: 8, padding: 8 }}>
-                              {AXIS_LABELS.map((axis) => (
-                                <div key={`${card.stimulus.id}-edit-${axis.id}`}>
-                                  <div style={{ fontSize: 11, color: '#333333', marginBottom: 4 }}>{axis.name}</div>
-                                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,minmax(0,1fr))', gap: 4 }}>
-                                    {[1, 2, 3, 4, 5].map((value) => (
-                                      <button
-                                        key={`${card.stimulus.id}-${axis.id}-edit-${value}`}
-                                        onClick={() => updateFinalScore(card.stimulus.id, axis.id, value)}
-                                        style={{ border: '1px solid rgba(17,17,17,.2)', background: (card.finalScores as AxisScores)[axis.id] === value ? currentConditionColor : '#ffffff', color: (card.finalScores as AxisScores)[axis.id] === value ? '#ffffff' : '#333333', borderRadius: 6, padding: '4px 0', fontSize: 11, cursor: 'pointer' }}
-                                      >
-                                        {value}
-                                      </button>
-                                    ))}
-                                  </div>
+                            <div style={{ display: 'grid', gap: 8, marginBottom: 8, border: '1px solid rgba(17,17,17,.1)', borderRadius: 8, padding: 8 }}>
+                              <div style={{ border: '1px solid rgba(17,17,17,.08)', borderRadius: 8, padding: 8, background: '#fafafa', fontSize: 11, color: '#333333', lineHeight: 1.6 }}>
+                                아래 8개 항목은 각각 점수를 매기는 항목이 아니라, 방금 입력한 종합 점수의 주된 판단 근거를 선택하는 항목입니다.
+                              </div>
+
+                              <div style={{ border: '1px solid rgba(17,17,17,.08)', borderRadius: 8, padding: 8 }}>
+                                <div style={{ fontSize: 12, fontWeight: 800, color: '#111111', marginBottom: 6 }}>브랜드 종합 적합도</div>
+                                <div style={{ display: 'grid', gap: 4, marginBottom: 8 }}>
+                                  {BRAND_SUMMARY_REFERENCES.map((item, refIdx) => (
+                                    <div key={`${card.stimulus.id}-brand-ref-${item.label}`} style={{ fontSize: 10, color: '#4d4d4d', lineHeight: 1.45 }}>
+                                      {refIdx + 1}. {item.label}({item.source}) - {item.desc}
+                                    </div>
+                                  ))}
                                 </div>
-                              ))}
+                                <div style={{ fontSize: 11, fontWeight: 700, color: '#333333', marginBottom: 6 }}>
+                                  이 로고 시안이 브랜드 브리프에 얼마나 적합하다고 판단되는가?
+                                </div>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,minmax(0,1fr))', gap: 4 }}>
+                                  {[1, 2, 3, 4, 5].map((value) => (
+                                    <button
+                                      key={`${card.stimulus.id}-brand-overall-${value}`}
+                                      onClick={() => updateDetailOverallScore(card.stimulus.id, 'brand', value)}
+                                      className={`btn-choice ${card.brandOverallScore === value ? 'btn-selected' : ''}`}
+                                      style={{ border: `1px solid ${card.brandOverallScore === value ? currentConditionColor : 'rgba(17,17,17,.2)'}`, background: card.brandOverallScore === value ? currentConditionColor : '#ffffff', color: card.brandOverallScore === value ? '#ffffff' : '#333333', borderRadius: 6, padding: '5px 0', fontSize: 11, fontWeight: card.brandOverallScore === value ? 800 : 600, cursor: 'pointer' }}
+                                    >
+                                      {value}
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+
+                              <div style={{ border: '1px solid rgba(17,17,17,.08)', borderRadius: 8, padding: 8 }}>
+                                <div style={{ fontSize: 12, fontWeight: 800, color: '#111111', marginBottom: 6 }}>시각 종합 완성도</div>
+                                <div style={{ display: 'grid', gap: 4, marginBottom: 8 }}>
+                                  {VISUAL_SUMMARY_REFERENCES.map((item, refIdx) => (
+                                    <div key={`${card.stimulus.id}-visual-ref-${item.label}`} style={{ fontSize: 10, color: '#4d4d4d', lineHeight: 1.45 }}>
+                                      {refIdx + 6}. {item.label}({item.source}) - {item.desc}
+                                    </div>
+                                  ))}
+                                </div>
+                                <div style={{ fontSize: 11, fontWeight: 700, color: '#333333', marginBottom: 6 }}>
+                                  이 로고 시안이 시각적으로 얼마나 완성도 있다고 판단되는가?
+                                </div>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,minmax(0,1fr))', gap: 4 }}>
+                                  {[1, 2, 3, 4, 5].map((value) => (
+                                    <button
+                                      key={`${card.stimulus.id}-visual-overall-${value}`}
+                                      onClick={() => updateDetailOverallScore(card.stimulus.id, 'visual', value)}
+                                      className={`btn-choice ${card.visualOverallScore === value ? 'btn-selected' : ''}`}
+                                      style={{ border: `1px solid ${card.visualOverallScore === value ? currentConditionColor : 'rgba(17,17,17,.2)'}`, background: card.visualOverallScore === value ? currentConditionColor : '#ffffff', color: card.visualOverallScore === value ? '#ffffff' : '#333333', borderRadius: 6, padding: '5px 0', fontSize: 11, fontWeight: card.visualOverallScore === value ? 800 : 600, cursor: 'pointer' }}
+                                    >
+                                      {value}
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+
+                              <div style={{ border: '1px solid rgba(17,17,17,.08)', borderRadius: 8, padding: 8 }}>
+                                <div style={{ fontSize: 12, fontWeight: 800, color: '#111111', marginBottom: 4 }}>주된 판단 기준</div>
+                                <div style={{ fontSize: 10, color: '#666666', lineHeight: 1.5, marginBottom: 7 }}>
+                                  판단에 가장 크게 영향을 준 기준을 최소 1개, 최대 2개 선택해 주세요.
+                                </div>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: 5 }}>
+                                  {MAIN_JUDGMENT_CRITERIA.map((criterion) => {
+                                    const selected = card.mainJudgmentCriteria.includes(criterion)
+                                    return (
+                                      <button
+                                        key={`${card.stimulus.id}-criterion-${criterion}`}
+                                        onClick={() => toggleMainJudgmentCriterion(card.stimulus.id, criterion)}
+                                        className={`btn-choice ${selected ? 'btn-selected' : ''}`}
+                                        style={{ border: `1px solid ${selected ? currentConditionColor : 'rgba(17,17,17,.16)'}`, background: selected ? currentConditionColor : '#ffffff', color: selected ? '#ffffff' : '#333333', borderRadius: 999, padding: '6px 8px', fontSize: 10, fontWeight: selected ? 800 : 600, cursor: 'pointer' }}
+                                      >
+                                        {criterion}
+                                      </button>
+                                    )
+                                  })}
+                                </div>
+                                {cardDetailNotice && (
+                                  <div style={{ marginTop: 7, fontSize: 10, color: '#4b5563', lineHeight: 1.5 }}>
+                                    {cardDetailNotice}
+                                  </div>
+                                )}
+                              </div>
                             </div>
                           )}
 
                           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6 }}>
                             <button
                               onClick={() => setEditingCardId(editing ? null : card.stimulus.id)}
-                              style={{ border: '1px solid rgba(17,17,17,.2)', background: '#ffffff', color: '#333333', borderRadius: 7, padding: '7px 0', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
+                              className={`btn-interact ${editing ? 'btn-final btn-selected' : ''}`}
+                              style={{ border: '1px solid rgba(17,17,17,.2)', background: editing ? '#111827' : '#ffffff', color: editing ? '#ffffff' : '#333333', borderRadius: 7, padding: '7px 0', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
                             >
-                              점수 수정
+                              {editing ? '상세 평가 닫기' : '상세 평가'}
                             </button>
                             <button
                               onClick={() => updateFinalDecision(card.stimulus.id, moveDecision)}
-                              disabled={!!finalSelectedStimulusId}
-                              style={{ border: '1px solid rgba(17,17,17,.18)', background: '#f7f7f7', color: '#333333', borderRadius: 7, padding: '7px 0', fontSize: 11, fontWeight: 700, cursor: finalSelectedStimulusId ? 'not-allowed' : 'pointer', opacity: finalSelectedStimulusId ? .45 : 1 }}
+                              className={`btn-interact ${bucket.key === 'hold' ? 'btn-exclude' : 'btn-hold'}`}
+                              style={{ border: '1px solid rgba(17,17,17,.18)', background: '#f7f7f7', color: '#333333', borderRadius: 7, padding: '7px 0', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
                             >
                               {bucket.move}
                             </button>
                             <button
                               onClick={() => selectFinal(card.stimulus.id)}
-                              disabled={!!finalSelectedStimulusId && finalSelectedStimulusId !== card.stimulus.id}
-                              style={{ border: '1px solid rgba(17,17,17,.35)', background: finalSelectedStimulusId === card.stimulus.id ? '#111827' : '#f3f4f6', color: finalSelectedStimulusId === card.stimulus.id ? '#ffffff' : '#111827', borderRadius: 7, padding: '7px 0', fontSize: 11, fontWeight: 800, cursor: finalSelectedStimulusId && finalSelectedStimulusId !== card.stimulus.id ? 'not-allowed' : 'pointer', opacity: finalSelectedStimulusId && finalSelectedStimulusId !== card.stimulus.id ? .45 : 1 }}
+                              className={`btn-interact btn-final ${finalSelectedStimulusId === card.stimulus.id ? 'btn-selected' : ''}`}
+                              style={{ border: '1px solid rgba(17,17,17,.35)', background: finalSelectedStimulusId === card.stimulus.id ? '#111827' : detailComplete ? '#f3f4f6' : '#ffffff', color: finalSelectedStimulusId === card.stimulus.id ? '#ffffff' : '#111827', borderRadius: 7, padding: '7px 0', fontSize: 11, fontWeight: 800, cursor: 'pointer' }}
                             >
-                              최종선택
+                              {finalButtonLabel}
                             </button>
                           </div>
                         </div>
@@ -1502,7 +2185,7 @@ export default function Home() {
                 disabled={!finalSelectedStimulusId}
                 style={{ border: 'none', background: finalSelectedStimulusId ? currentConditionColor : '#d1d5db', color: finalSelectedStimulusId ? '#ffffff' : '#6b7280', borderRadius: 10, padding: '10px 14px', fontSize: 13, fontWeight: 700, cursor: finalSelectedStimulusId ? 'pointer' : 'not-allowed' }}
               >
-                {currentConditionIndex >= assignments.length - 1 ? '전체 조건 완료' : '다음 조건으로 이동'}
+                {currentConditionIndex >= assignments.length - 1 ? '최종 선택 1개 확정 및 전체 완료' : '최종 선택 1개 확정 후 다음 조건'}
               </button>
             </div>
           </div>
@@ -1740,6 +2423,121 @@ export default function Home() {
           </div>
         )}
       </main>
+
+      {screeningBlockMessage && (
+        <div
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.52)', display: 'grid', placeItems: 'center', zIndex: 9999, padding: 20 }}
+          onClick={() => {
+            setScreeningBlockMessage('')
+            resetToConsent()
+          }}
+        >
+          <div
+            style={{ background: '#ffffff', borderRadius: 18, padding: '30px 28px', maxWidth: 520, width: '90vw', textAlign: 'center', boxShadow: '0 24px 80px rgba(0,0,0,.28)' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ fontSize: 22, fontWeight: 900, color: '#111111', marginBottom: 12 }}>
+              실험 참여 안내
+            </div>
+            <div style={{ fontSize: 14, color: '#333333', lineHeight: 1.75, marginBottom: 14 }}>
+              {screeningBlockMessage}
+            </div>
+            <div style={{ background: '#f7f7f7', border: '1px solid rgba(17,17,17,.1)', borderRadius: 10, padding: '11px 12px', fontSize: 13, color: '#4b5563', lineHeight: 1.6, marginBottom: 22 }}>
+              연구 관련 문의는 연구자 연락처와 이메일로 문의 바랍니다.<br />
+              이메일: researcher@example.com
+            </div>
+            <button
+              onClick={() => {
+                setScreeningBlockMessage('')
+                resetToConsent()
+              }}
+              style={{ width: '100%', border: 'none', background: '#111111', color: '#ffffff', borderRadius: 10, padding: '13px 0', fontSize: 14, fontWeight: 800, cursor: 'pointer' }}
+            >
+              처음 화면으로 이동
+            </button>
+          </div>
+        </div>
+      )}
+
+      {finalGuardNotice && (
+        <div
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.52)', display: 'grid', placeItems: 'center', zIndex: 9999 }}
+          onClick={() => setFinalGuardNotice(null)}
+        >
+          <div
+            style={{ background: '#ffffff', borderRadius: 18, padding: '30px 28px', maxWidth: 480, width: '90vw', textAlign: 'center', boxShadow: '0 24px 80px rgba(0,0,0,.28)' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ fontSize: 22, fontWeight: 900, color: '#111111', marginBottom: 10 }}>
+              보류 시안 미션 체크가 필요합니다.
+            </div>
+            <div style={{ fontSize: 13, color: '#555555', lineHeight: 1.75, marginBottom: 10 }}>
+              최종선택 전에 <strong style={{ color: '#111111' }}>보류 탭에 있는 모든 시안</strong>의
+              브랜드 종합 적합도, 시각 종합 완성도, 주된 판단 기준을 모두 입력해야 합니다.
+            </div>
+            <div style={{ background: '#f7f7f7', border: '1px solid rgba(17,17,17,.1)', borderRadius: 10, padding: '10px 12px', fontSize: 12, color: '#333333', lineHeight: 1.6, marginBottom: 22 }}>
+              미완료 시안: <strong>{finalGuardNotice.incompleteIds.join(', ')}</strong>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              <button
+                onClick={() => setFinalGuardNotice(null)}
+                style={{ border: '1px solid rgba(17,17,17,.22)', background: '#ffffff', color: '#333333', borderRadius: 10, padding: '12px 0', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}
+              >
+                계속 검토
+              </button>
+              <button
+                onClick={() => {
+                  const firstIncompleteId = finalGuardNotice.incompleteIds[0]
+                  setRightTab('hold')
+                  setActiveStimulusId(firstIncompleteId)
+                  setEditingCardId(firstIncompleteId)
+                  setFinalGuardNotice(null)
+                }}
+                style={{ border: 'none', background: currentConditionColor, color: '#ffffff', borderRadius: 10, padding: '12px 0', fontSize: 14, fontWeight: 800, cursor: 'pointer' }}
+              >
+                미완료 시안 확인
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showFinalModal && (
+        <div
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.5)', display: 'grid', placeItems: 'center', zIndex: 9999 }}
+          onClick={() => setShowFinalModal(false)}
+        >
+          <div
+            style={{ background: '#ffffff', borderRadius: 18, padding: '32px 28px', maxWidth: 420, width: '90vw', textAlign: 'center', boxShadow: '0 24px 80px rgba(0,0,0,.28)' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ fontSize: 22, fontWeight: 800, color: '#111111', marginBottom: 10 }}>실험을 완료하시겠습니까?</div>
+            <div style={{ fontSize: 13, color: '#555555', lineHeight: 1.7, marginBottom: 8 }}>
+              <strong style={{ color: '#111111' }}>{finalSelectedStimulusId}</strong> 시안을 최종 시안으로 확정합니다.
+            </div>
+            <div style={{ fontSize: 12, color: '#888888', marginBottom: 28 }}>
+              {currentConditionIndex < assignments.length - 1
+                ? '확정 후 다음 조건으로 이동합니다.'
+                : '확정 후 모든 조건이 완료됩니다.'}
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              <button
+                onClick={() => setShowFinalModal(false)}
+                style={{ border: '1px solid rgba(17,17,17,.22)', background: '#ffffff', color: '#333333', borderRadius: 10, padding: '12px 0', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}
+              >
+                계속 검토
+              </button>
+              <button
+                onClick={() => { setShowFinalModal(false); moveToNextCondition() }}
+                style={{ border: 'none', background: currentConditionColor, color: '#ffffff', borderRadius: 10, padding: '12px 0', fontSize: 14, fontWeight: 800, cursor: 'pointer' }}
+              >
+                완료하기
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
+

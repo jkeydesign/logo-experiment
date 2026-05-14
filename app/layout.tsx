@@ -2,8 +2,8 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'Logo Judgment Experiment',
-  description: 'AI 협업 개입 수준 실험 프로토타입',
+  title: 'AI Logotics | 브랜드 로고 시안 판단 실험',
+  description: '생성형 AI 기반 브랜드 로고 시안 판단 실험',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

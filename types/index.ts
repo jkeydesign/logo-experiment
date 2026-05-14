@@ -1,9 +1,9 @@
 ﻿export type Condition = 'human' | 'collab' | 'ai' | 'mixed'
 
 export type ConditionLabel =
-  | '인간 전략 주도형'
-  | '협업 전략 주도형'
-  | 'AI 전략 주도형'
+  | '시안 제시형'
+  | '추천 제시형'
+  | '평가 제시형'
 
 export type SetId = 'A' | 'B' | 'C'
 
@@ -50,6 +50,7 @@ export interface Logo {
   meta: string
   style: string
   color: string
+  imageSrc?: string
   isAiRecommended?: boolean
   aiRank?: number
 }
@@ -95,6 +96,10 @@ export interface StimulusLogRow {
   user_score_naturalness_final: number | null
   user_score_harmony_final: number | null
   user_score_elaboration_final: number | null
+  brand_overall_fit_score_final: number | null
+  visual_overall_quality_score_final: number | null
+  main_judgment_criteria: string | null
+  main_judgment_criteria_count: number
   brand_5axis_avg_initial: number | null
   visual_3axis_avg_initial: number | null
   total_score_initial: number | null

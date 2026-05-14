@@ -45,6 +45,12 @@ function getWordmarkFromName(name: string): string {
 }
 
 function renderLogoSvg(logo: Logo): string {
+  if (logo.imageSrc) {
+    const src = escapeSvgText(logo.imageSrc)
+    const alt = escapeSvgText(logo.name)
+    return `<img src="${src}" alt="${alt}" style="width:100%;height:100%;object-fit:contain;display:block;background:#ffffff;" />`
+  }
+
   const symbolFn = SYMBOL_SVG[logo.style] ?? SYMBOL_SVG.serif
   const color = logo.color
   const wordmark = escapeSvgText(getWordmarkFromName(logo.name))
