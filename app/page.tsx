@@ -1816,7 +1816,6 @@ export default function Home() {
       {showAppHeader && (
         <header style={{ padding: '12px 16px', borderBottom: '1px solid rgba(17,17,17,.12)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
-            <div style={{ fontWeight: 800, color: '#111111' }}>AI Logotics</div>
             <div style={{ fontSize: 12, color: '#666666' }}>생성형 AI 기반 브랜드 로고 시안 판단 실험</div>
           </div>
           <div style={{ textAlign: 'right', fontSize: 12, color: '#4d4d4d' }}>
@@ -1834,7 +1833,6 @@ export default function Home() {
                 <h1 style={{ fontSize: 28, fontWeight: 900, letterSpacing: '-.02em', marginBottom: 12 }}>
                   생성형 AI 기반 브랜드 로고 시안 판단 실험
                 </h1>
-                <div style={{ fontSize: 16, color: '#6b7280', fontWeight: 500 }}>AI Logotics</div>
               </div>
 
               <div style={{ maxWidth: 820, margin: '0 auto', display: 'grid', gap: 34, fontSize: 16, lineHeight: 1.85, color: '#1f2937' }}>
@@ -2174,8 +2172,7 @@ export default function Home() {
                         minHeight: 142,
                       }}
                     >
-                      <button
-                        onClick={() => switchConditionTab(idx)}
+                      <div
                         style={{
                           width: '100%',
                           border: `1px solid ${conditionStyle.border}`,
@@ -2185,13 +2182,12 @@ export default function Home() {
                           padding: '8px 8px',
                           fontSize: 11,
                           fontWeight: 800,
-                          cursor: 'pointer',
+                          cursor: 'default',
                           textAlign: 'left',
-                          boxShadow: isActive ? '0 0 0 2px rgba(17,17,17,.12)' : 'none',
                         }}
                       >
                         {idx + 1}. {assignment.conditionLabel}
-                      </button>
+                      </div>
                       <ul style={{ margin: '9px 0 0', paddingLeft: 18, color: conditionStyle.text, lineHeight: 1.65, fontSize: 12 }}>
                         {CONDITION_GUIDES[assignment.condition].map((line) => (
                           <li key={`${assignment.condition}-${line}`}>{line}</li>
