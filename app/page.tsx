@@ -2327,13 +2327,14 @@ export default function Home() {
                         <div style={{ width: '100%', aspectRatio: '1 / 1', borderRadius: 10, background: '#f7f7f7', border: '1px solid rgba(17,17,17,.08)', display: 'grid', placeItems: 'center', marginBottom: 8, overflow: 'hidden' }} dangerouslySetInnerHTML={{ __html: renderLogoSvg(card.stimulus) }} />
 
                         {activeAssignment.condition === 'ai' && (
-                          <>
-                            <div style={{ fontSize: 13, fontWeight: 700, color: '#111111', marginBottom: 2 }}>{card.stimulus.name}</div>
-                            <div style={{ fontSize: 11, color: '#666666', marginBottom: 6 }}>{card.stimulus.meta}</div>
-                            <div style={{ fontSize: 11, color: '#4d4d4d', marginBottom: 8 }}>
-                              {isDecided ? `1단계 분류: ${card.initialDecision}` : '1단계 분류: 미선택'}
+                          <div style={{ marginBottom: 8 }}>
+                            <div style={{ fontSize: 14, fontWeight: 800, color: '#111111', marginBottom: 2 }}>
+                              {card.stimulus.aiRank != null ? `${card.stimulus.aiRank}위` : '-'}
                             </div>
-                          </>
+                            <div style={{ fontSize: 11, fontStyle: 'italic', color: '#555555' }}>
+                              AI 시각 평가 {card.stimulus.aiRank != null ? `${100 - Math.floor((card.stimulus.aiRank - 1) * 3.75)}점` : '-'}
+                            </div>
+                          </div>
                         )}
 
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
