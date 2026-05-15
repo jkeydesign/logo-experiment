@@ -35,12 +35,19 @@ export interface AxisScores {
 export interface BrandBrief {
   code: string
   name: string
+  namingMeaning?: string
   category: string
+  priceRange?: string
+  overview?: string
   target: string
   positioning: string
   competitors: string
+  competitiveContext?: string
   environments: string[]
+  applicationMedia?: string[]
   keywords: string[]
+  toneManner?: string
+  developmentDirection?: string
   judgeAxes: string[]
 }
 
