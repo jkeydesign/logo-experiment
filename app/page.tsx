@@ -337,9 +337,9 @@ const CONDITION_COLOR: Record<ConditionLabel, string> = {
 }
 
 const INSTRUCTION_CONDITION_STYLE: Record<ConditionLabel, { button: string; surface: string; border: string; text: string }> = {
-  '시안 제시형': { button: '#111111', surface: '#f7f7f7', border: '#111111', text: '#111111' },
-  '추천 제시형': { button: '#4b5563', surface: '#f1f2f4', border: '#4b5563', text: '#1f2937' },
-  '평가 제시형': { button: '#8a8f98', surface: '#e8eaed', border: '#8a8f98', text: '#111827' },
+  '시안 제시형': { button: '#525d6e', surface: '#f5f6f7', border: '#525d6e', text: '#2d3748' },
+  '추천 제시형': { button: '#6b7280', surface: '#f1f2f4', border: '#6b7280', text: '#374151' },
+  '평가 제시형': { button: '#8a8f98', surface: '#e8eaed', border: '#8a8f98', text: '#4b5563' },
 }
 
 const SYMBOL_SVG: Record<string, (color: string) => string> = {
@@ -2153,7 +2153,7 @@ export default function Home() {
                 Set {activeAssignment.setId} 실험 안내
               </div>
               <div style={{ fontSize: 13, color: '#333333', lineHeight: 1.75, marginBottom: 12 }}>
-                본 실험에서는 AI 판단 정보 제시 유형이 서로 다른 세 가지 조건을 모두 경험하게 됩니다.<br />
+                본 실험에서는 AI 판단 정보 제시유형에 따라 세 가지 조건을 모두 수행합니다. 각 조건에서는 동일한 브랜드 브리프를 기준으로 각기 다른 9개씩 27개의 AI 생성 로고 시안을 검토하며, 조건 순서와 시안 세트는 균형화하여 배정됩니다.<br />
                 각 조건을 시작하기 전, 해당 조건에서 제공되는 정보 범위를 먼저 확인해 주세요.<br />
                 안내 내용을 읽은 뒤 실제 실무에서 로고 시안을 검토하듯이 판단해 주시면 됩니다.
               </div>
@@ -2165,7 +2165,7 @@ export default function Home() {
                     <div
                       key={`${assignment.conditionLabel}-${assignment.setId}-${idx}`}
                       style={{
-                        border: `1px solid ${isActive ? conditionStyle.border : 'rgba(17,17,17,.14)'}`,
+                        border: '1px solid rgba(17,17,17,.14)',
                         background: conditionStyle.surface,
                         borderRadius: 10,
                         padding: 8,
