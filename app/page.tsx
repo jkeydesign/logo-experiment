@@ -2332,7 +2332,7 @@ export default function Home() {
                             <div style={{ fontSize: 14, fontWeight: 800, color: '#111111', marginBottom: 2 }}>
                               {card.stimulus.aiRank != null ? `${card.stimulus.aiRank}위` : '-'}
                             </div>
-                            <div style={{ fontSize: 11, fontStyle: 'italic', color: '#555555' }}>
+                            <div style={{ fontSize: 12, fontWeight: 500, color: '#555555' }}>
                               AI 시각 평가 {card.stimulus.aiRank != null ? `${100 - Math.floor((card.stimulus.aiRank - 1) * 3.75)}점` : '-'}
                             </div>
                           </div>
