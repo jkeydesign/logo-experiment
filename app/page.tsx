@@ -60,7 +60,9 @@ type CompSurveyAnswers = {
   preferredFinalSelection: string | null; freeText: string
 }
 type DebriefCheckAnswers = {
-  suspected: 'yes' | 'no' | null; suspectedTiming: string | null; suspectedReason: string
+  sourceUnderstanding: string | null
+  sourceInfluence: number | null
+  sourceComment: string
 }
 const INITIAL_POST_SURVEY: PostSurveyAnswers = {
   infoType: null, q3: null, q4: null,
@@ -73,8 +75,14 @@ const INITIAL_COMP_SURVEY: CompSurveyAnswers = {
   preferredFinalSelection: null, freeText: '',
 }
 const INITIAL_DEBRIEF_CHECK: DebriefCheckAnswers = {
-  suspected: null, suspectedTiming: null, suspectedReason: '',
+  sourceUnderstanding: null, sourceInfluence: null, sourceComment: '',
 }
+const DEBRIEF_SOURCE_UNDERSTANDING_OPTIONS: Array<{ label: string; value: string }> = [
+  { label: '실시간 AI가 산출한 정보라고 이해했다', value: 'realtime_ai' },
+  { label: '조건 간 비교를 위해 사전에 구성된 정보일 수 있다고 이해했다', value: 'preconfigured_possible' },
+  { label: '두 가능성이 모두 있다고 이해했다', value: 'both_possible' },
+  { label: '잘 모르겠다', value: 'unknown' },
+]
 const POST_SURVEY_INFO_TYPE_OPTIONS: Array<{ label: string; value: string }> = [
   { label: 'AI 관련 정보 없이 로고 시안만 제시되었다', value: 'visual_only' },
   { label: 'AI 추천 시안이 표시되었다', value: 'recommendation' },
@@ -1664,26 +1672,22 @@ export default function Home() {
   }, [compSurveyAnswers, participantId, logEvent])
 
   const submitDebriefCheck = useCallback(() => {
-    if (debriefCheckAnswers.suspected === null) {
-      setDebriefCheckError('응답을 선택해 주세요.')
+    if (debriefCheckAnswers.sourceUnderstanding === null) {
+      setDebriefCheckError('AI 정보 구성 방식에 대한 이해를 선택해 주세요.')
       return
     }
-    if (debriefCheckAnswers.suspected === 'yes' && !debriefCheckAnswers.suspectedTiming?.trim()) {
-      setDebriefCheckError('언제 그렇게 느꼈는지 입력해 주세요.')
-      return
-    }
-    if (debriefCheckAnswers.suspected === 'yes' && !debriefCheckAnswers.suspectedReason?.trim()) {
-      setDebriefCheckError('왜 그렇게 느꼈는지 입력해 주세요.')
+    if (debriefCheckAnswers.sourceInfluence === null) {
+      setDebriefCheckError('판단 영향 정도를 선택해 주세요.')
       return
     }
     setDebriefCheckError('')
     logEvent('debriefing_check', {
-      detail: '의심 여부 확인',
+      detail: 'AI 정보 인식 확인',
       payload: {
         participantId,
-        suspectedWoZ: debriefCheckAnswers.suspected === 'yes',
-        suspectedTiming: debriefCheckAnswers.suspectedTiming,
-        suspectedReason: debriefCheckAnswers.suspectedReason || null,
+        ai_info_source_understanding: debriefCheckAnswers.sourceUnderstanding,
+        ai_info_source_influence: debriefCheckAnswers.sourceInfluence,
+        ai_info_source_comment: debriefCheckAnswers.sourceComment || null,
       },
     })
     setStep('debriefing')
@@ -2851,56 +2855,72 @@ export default function Home() {
           <div style={{ maxWidth: 720, margin: '0 auto', display: 'grid', gap: 0, padding: '24px 0 48px' }}>
             <div style={{ border: '1px solid rgba(17,17,17,.14)', borderRadius: 14, padding: 20, background: '#f7f7f7', marginBottom: 14 }}>
               <div style={{ fontSize: 12, fontWeight: 700, color: '#4d4d4d', marginBottom: 6 }}>실험 종료 전 확인</div>
-              <div style={{ fontSize: 20, fontWeight: 800, color: '#111111' }}>의심 여부 확인</div>
+              <div style={{ fontSize: 20, fontWeight: 800, color: '#111111' }}>AI 정보 인식 확인</div>
             </div>
 
             <div style={{ display: 'grid', gap: 10 }}>
+              {/* Q1: 단일선택 */}
               <div style={{ border: '1px solid rgba(17,17,17,.12)', borderRadius: 12, padding: 14, background: '#ffffff' }}>
                 <div style={{ fontSize: 13, fontWeight: 700, color: '#111111', marginBottom: 12, lineHeight: 1.6 }}>
-                  실험 중 제시된 AI 추천 또는 AI 평가 정보가 실제 AI가 실시간으로 산출한 정보가 아닐 수 있다고 의심한 적이 있습니까?
+                  실험 중 제시된 AI 추천 또는 AI 평가 순위·설명의 구성 방식에 대해 어떻게 이해하셨습니까?
                 </div>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  {(['yes', 'no'] as const).map((v) => (
+                <div style={{ display: 'grid', gap: 8 }}>
+                  {DEBRIEF_SOURCE_UNDERSTANDING_OPTIONS.map(({ label, value }) => (
                     <button
-                      key={v}
-                      onClick={() => setDebriefCheckAnswers((prev) => ({ ...prev, suspected: v, suspectedTiming: v === 'no' ? null : prev.suspectedTiming }))}
+                      key={value}
+                      onClick={() => setDebriefCheckAnswers((prev) => ({ ...prev, sourceUnderstanding: value }))}
                       style={{
-                        border: `1px solid ${debriefCheckAnswers.suspected === v ? '#111111' : 'rgba(17,17,17,.18)'}`,
-                        background: debriefCheckAnswers.suspected === v ? '#111111' : '#ffffff',
-                        color: debriefCheckAnswers.suspected === v ? '#ffffff' : '#333333',
-                        borderRadius: 8, padding: '8px 22px', fontSize: 13, fontWeight: debriefCheckAnswers.suspected === v ? 700 : 400, cursor: 'pointer',
+                        border: `1px solid ${debriefCheckAnswers.sourceUnderstanding === value ? '#111111' : 'rgba(17,17,17,.18)'}`,
+                        background: debriefCheckAnswers.sourceUnderstanding === value ? '#111111' : '#ffffff',
+                        color: debriefCheckAnswers.sourceUnderstanding === value ? '#ffffff' : '#333333',
+                        borderRadius: 8, padding: '9px 14px', fontSize: 13,
+                        fontWeight: debriefCheckAnswers.sourceUnderstanding === value ? 700 : 400,
+                        cursor: 'pointer', textAlign: 'left',
                       }}
-                    >{v === 'yes' ? '예' : '아니오'}</button>
+                    >{label}</button>
                   ))}
                 </div>
               </div>
 
-              {debriefCheckAnswers.suspected === 'yes' && (
-                <>
-                  <div style={{ border: '1px solid rgba(17,17,17,.12)', borderRadius: 12, padding: 14, background: '#ffffff' }}>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: '#111111', marginBottom: 4 }}>언제 그렇게 느꼈습니까?</div>
-                    <div style={{ fontSize: 11, color: '#6b7280', marginBottom: 8 }}>필수 입력</div>
-                    <textarea
-                      value={debriefCheckAnswers.suspectedTiming ?? ''}
-                      onChange={(e) => setDebriefCheckAnswers((prev) => ({ ...prev, suspectedTiming: e.target.value }))}
-                      placeholder='예: 추천 제시형 조건 진행 중, 평가 점수를 확인했을 때 등'
-                      rows={2}
-                      style={{ width: '100%', border: '1px solid rgba(17,17,17,.18)', borderRadius: 8, padding: '8px 10px', fontSize: 13, resize: 'vertical', outline: 'none', fontFamily: 'inherit' }}
-                    />
-                  </div>
-                  <div style={{ border: '1px solid rgba(17,17,17,.12)', borderRadius: 12, padding: 14, background: '#ffffff' }}>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: '#111111', marginBottom: 4 }}>왜 그렇게 느꼈습니까?</div>
-                    <div style={{ fontSize: 11, color: '#6b7280', marginBottom: 8 }}>필수 입력</div>
-                    <textarea
-                      value={debriefCheckAnswers.suspectedReason}
-                      onChange={(e) => setDebriefCheckAnswers((prev) => ({ ...prev, suspectedReason: e.target.value }))}
-                      placeholder='자유롭게 입력해 주세요.'
-                      rows={3}
-                      style={{ width: '100%', border: '1px solid rgba(17,17,17,.18)', borderRadius: 8, padding: '8px 10px', fontSize: 13, resize: 'vertical', outline: 'none', fontFamily: 'inherit' }}
-                    />
-                  </div>
-                </>
-              )}
+              {/* Q2: 5점 리커트 */}
+              <div style={{ border: '1px solid rgba(17,17,17,.12)', borderRadius: 12, padding: 14, background: '#ffffff' }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: '#111111', marginBottom: 12, lineHeight: 1.55 }}>
+                  위와 같은 이해가 로고 시안 판단에 영향을 주었다고 생각하십니까?
+                </div>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  {[1, 2, 3, 4, 5].map((v) => (
+                    <button
+                      key={v}
+                      onClick={() => setDebriefCheckAnswers((prev) => ({ ...prev, sourceInfluence: v }))}
+                      style={{
+                        flex: 1, border: `1px solid ${debriefCheckAnswers.sourceInfluence === v ? '#111111' : 'rgba(17,17,17,.18)'}`,
+                        background: debriefCheckAnswers.sourceInfluence === v ? '#111111' : '#ffffff',
+                        color: debriefCheckAnswers.sourceInfluence === v ? '#ffffff' : '#333333',
+                        borderRadius: 8, padding: '8px 0', fontSize: 13, fontWeight: debriefCheckAnswers.sourceInfluence === v ? 700 : 400, cursor: 'pointer',
+                      }}
+                    >{v}</button>
+                  ))}
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 5 }}>
+                  <span style={{ fontSize: 10, color: '#6b7280' }}>1 전혀 그렇지 않다</span>
+                  <span style={{ fontSize: 10, color: '#6b7280' }}>5 매우 그렇다</span>
+                </div>
+              </div>
+
+              {/* Q3: 자유 응답 (선택) */}
+              <div style={{ border: '1px solid rgba(17,17,17,.12)', borderRadius: 12, padding: 14, background: '#ffffff' }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: '#111111', marginBottom: 4 }}>
+                  추가로 설명하고 싶은 내용이 있다면 작성해 주세요.
+                </div>
+                <div style={{ fontSize: 11, color: '#6b7280', marginBottom: 8 }}>선택 입력</div>
+                <textarea
+                  value={debriefCheckAnswers.sourceComment}
+                  onChange={(e) => setDebriefCheckAnswers((prev) => ({ ...prev, sourceComment: e.target.value }))}
+                  placeholder='자유롭게 입력해 주세요.'
+                  rows={3}
+                  style={{ width: '100%', border: '1px solid rgba(17,17,17,.18)', borderRadius: 8, padding: '8px 10px', fontSize: 13, resize: 'vertical', outline: 'none', fontFamily: 'inherit' }}
+                />
+              </div>
 
               {debriefCheckError && (
                 <div style={{ border: '1px solid #dc2626', background: '#fff5f5', borderRadius: 8, padding: '10px 12px', color: '#b91c1c', fontSize: 13, fontWeight: 700 }}>
