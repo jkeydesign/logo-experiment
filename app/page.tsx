@@ -2697,7 +2697,7 @@ export default function Home() {
                 {/* 조작 점검 — 단일선택 */}
                 <div style={{ border: '1px solid rgba(17,17,17,.12)', borderRadius: 12, padding: 14, background: '#ffffff' }}>
                   <div style={{ fontSize: 13, fontWeight: 700, color: '#111111', marginBottom: 12, lineHeight: 1.55 }}>
-                    이번 조건에서 화면에 추가로 제공된 정보는 무엇이었습니까?
+                    이번 단계에서 AI가 생성한 로고 시안과 함께 제시된 정보는 다음 중 무엇입니까?
                   </div>
                   <div style={{ display: 'grid', gap: 8 }}>
                     {POST_SURVEY_INFO_TYPE_OPTIONS.map((opt) => (
