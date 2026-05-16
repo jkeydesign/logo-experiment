@@ -81,7 +81,7 @@ const POST_SURVEY_COMMON: Array<{ key: PostSurveyKey; text: string }> = [
 ]
 const POST_SURVEY_COLLAB: Array<{ key: PostSurveyKey; text: string }> = [
   { key: 'q6', text: 'Q6. AI 추천 정보는 신뢰할 만하다고 느꼈다.' },
-  { key: 'q7', text: 'Q7. AI 추천 정보는 보류/제외 판단에 영향을 주었다.' },
+  { key: 'q7', text: 'Q7. AI 추천 정보는 후보유지/제외 판단에 영향을 주었다.' },
   { key: 'q8', text: 'Q8. AI 추천 정보는 최종 선택에 영향을 주었다.' },
 ]
 const POST_SURVEY_AI_ONLY: Array<{ key: PostSurveyKey; text: string }> = [
@@ -98,7 +98,7 @@ const COMP_QUESTIONS: Array<{ key: keyof CompSurveyAnswers; text: string; option
   { key: 'preferred', text: '다시 사용한다면 선호하는 조건은 무엇입니까?', options: COND_LABELS_ALL },
   { key: 'mostUsefulAi', text: 'AI 정보가 가장 유용하다고 느껴진 조건은 무엇입니까?', options: AI_USEFUL_OPTIONS },
   { key: 'preferredExploration', text: '초기 후보 검토 단계에서 적절한 방식은 무엇입니까?', options: COND_LABELS_ALL },
-  { key: 'preferredComparison', text: '보류·제외 비교 단계에서 적절한 방식은 무엇입니까?', options: COND_LABELS_ALL },
+  { key: 'preferredComparison', text: '후보유지·제외 비교 단계에서 적절한 방식은 무엇입니까?', options: COND_LABELS_ALL },
   { key: 'preferredFinalSelection', text: '최종 선택 단계에서 적절한 방식은 무엇입니까?', options: COND_LABELS_ALL },
 ]
 const DEBRIEF_TIMING_OPTIONS: string[] = ['추천 제시형', '평가 제시형', '최종 선택 단계', '기타']
@@ -1667,7 +1667,7 @@ export default function Home() {
       })
       setDetailNotice({
         stimulusId: firstIncomplete.stimulus.id,
-        message: '보류된 모든 시안의 미션 체크를 완료해야 최종선택을 할 수 있습니다.',
+        message: '후보유지된 모든 시안의 미션 체크를 완료해야 최종선택을 할 수 있습니다.',
       })
       logEvent('final_selection_blocked_hold_mission_incomplete', {
         condition: activeAssignment?.condition,
@@ -1748,7 +1748,7 @@ export default function Home() {
       })
       setDetailNotice({
         stimulusId: firstIncomplete.stimulus.id,
-        message: '보류된 모든 시안의 미션 체크를 완료해야 조건을 완료할 수 있습니다.',
+        message: '후보유지된 모든 시안의 미션 체크를 완료해야 조건을 완료할 수 있습니다.',
       })
       logEvent('condition_complete_blocked_hold_mission_incomplete', {
         condition: activeAssignment.condition,
@@ -2010,7 +2010,7 @@ export default function Home() {
                   <h2 style={{ fontSize: 18, fontWeight: 800, color: '#111111', marginBottom: 10 }}>실험 목적</h2>
                   <p>
                     본 실험은 생성형 AI 기반 로고 디자인 환경에서 전문 디자이너가 로고 시안을 판단하는 과정을
-                    분석하기 위한 연구입니다. AI 판단 정보가 제시되는 범위에 따라 참가자가 시안을 어떻게 보류,
+                    분석하기 위한 연구입니다. AI 판단 정보가 제시되는 범위에 따라 참가자가 시안을 어떻게 후보유지,
                     제외, 변경, 최종 선택하는지를 확인하고자 합니다.
                   </p>
                   <p style={{ marginTop: 14 }}>
@@ -2042,8 +2042,8 @@ export default function Home() {
                   <ol style={{ display: 'grid', gap: 4, paddingLeft: 20 }}>
                     <li>브랜드 브리프 확인</li>
                     <li>AI 로고 시안 확인</li>
-                    <li>시안 보류 / 제외</li>
-                    <li>보류 시안 상세 평가</li>
+                    <li>시안 후보유지 / 제외</li>
+                    <li>후보유지 시안 상세 평가</li>
                     <li>최종 시안 선택</li>
                     <li>사후 설문 응답</li>
                   </ol>
@@ -2516,7 +2516,7 @@ export default function Home() {
                             className={`btn-interact btn-hold btn-choice ${card.initialDecision === '보류' ? 'btn-selected' : ''}`}
                             style={{ border: '1px solid rgba(75,85,99,.45)', background: card.initialDecision === '보류' ? '#4b5563' : '#f3f4f6', color: card.initialDecision === '보류' ? '#ffffff' : '#111827', borderRadius: 7, padding: '7px 0', fontSize: 11, fontWeight: 700, cursor: isDecided ? 'not-allowed' : 'pointer', opacity: isDecided && card.initialDecision !== '보류' ? .45 : 1 }}
                           >
-                            보류
+                            후보유지
                           </button>
                           <button
                             onClick={(e) => { e.stopPropagation(); requestInitialDecision(card.stimulus.id, '제외') }}
@@ -2558,7 +2558,7 @@ export default function Home() {
             <aside style={{ border: '1px solid rgba(17,17,17,.12)', borderRadius: 12, background: '#ffffff', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', borderBottom: '1px solid rgba(17,17,17,.1)' }}>
                 {[
-                  { id: 'hold' as RightTab, label: `보류 (${initialHoldCards.length})` },
+                  { id: 'hold' as RightTab, label: `후보유지 (${initialHoldCards.length})` },
                   { id: 'exclude' as RightTab, label: `제외 (${initialExcludeCards.length})` },
                 ].map((tab) => (
                   <button
@@ -2584,7 +2584,7 @@ export default function Home() {
                 {rightTab === 'hold' && (
                   initialHoldCards.length === 0 ? (
                     <div style={{ minHeight: 220, display: 'grid', placeItems: 'center', color: '#666666', textAlign: 'center', fontSize: 12 }}>
-                      보류 시안이 없습니다.
+                      후보유지 시안이 없습니다.
                     </div>
                   ) : (
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 10, alignItems: 'start' }}>
@@ -2673,7 +2673,7 @@ export default function Home() {
                                 className='btn-interact btn-hold'
                                 style={{ border: '1px solid rgba(75,85,99,.3)', background: '#ffffff', color: '#333333', borderRadius: 7, padding: '6px 0', fontSize: 13, fontWeight: 800, cursor: 'pointer' }}
                               >
-                                보류취소
+                                후보유지 취소
                               </button>
                               <button
                                 onClick={() => {
@@ -2757,14 +2757,14 @@ export default function Home() {
                 조건 {activeAssignment.order}/3 · {activeAssignment.conditionLabel}
               </div>
               <div style={{ fontSize: 12, color: '#333333' }}>
-                보류/제외 영역 내부 자동 순위는 브랜드 종합 적합도와 시각 종합 완성도 기준입니다. 상세 평가와 영역 이동 후 순위가 즉시 업데이트됩니다.
+                후보유지/제외 영역 내부 자동 순위는 브랜드 종합 적합도와 시각 종합 완성도 기준입니다. 상세 평가와 영역 이동 후 순위가 즉시 업데이트됩니다.
               </div>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               {[
-                { key: 'hold', title: `보류 영역 (${holdCards.length})`, cards: holdCards, color: '#111827', bg: '#f7f7f7', move: '보류→제외' as const },
-                { key: 'exclude', title: `제외 영역 (${excludeCards.length})`, cards: excludeCards, color: '#1f2937', bg: '#f5f5f5', move: '제외→보류 복원' as const },
+                { key: 'hold', title: `후보유지 영역 (${holdCards.length})`, cards: holdCards, color: '#111827', bg: '#f7f7f7', move: '후보유지→제외' as const },
+                { key: 'exclude', title: `제외 영역 (${excludeCards.length})`, cards: excludeCards, color: '#1f2937', bg: '#f5f5f5', move: '제외→후보유지 복원' as const },
               ].map((bucket) => (
                 <div key={bucket.key} style={{ border: '1px solid rgba(17,17,17,.18)', borderRadius: 12, background: bucket.bg }}>
                   <div style={{ padding: '10px 12px', borderBottom: '1px solid rgba(17,17,17,.12)', fontSize: 14, fontWeight: 800, color: bucket.color }}>
@@ -3521,10 +3521,10 @@ export default function Home() {
             onClick={(e) => e.stopPropagation()}
           >
             <div style={{ fontSize: 22, fontWeight: 900, color: '#111111', marginBottom: 10 }}>
-              보류 시안 미션 체크가 필요합니다.
+              후보유지 시안 미션 체크가 필요합니다.
             </div>
             <div style={{ fontSize: 13, color: '#555555', lineHeight: 1.75, marginBottom: 10 }}>
-              최종선택 전에 <strong style={{ color: '#111111' }}>보류 탭에 있는 모든 시안</strong>의
+              최종선택 전에 <strong style={{ color: '#111111' }}>후보유지 탭에 있는 모든 시안</strong>의
               브랜드 종합 적합도, 시각 종합 완성도, 주된 판단 기준을 모두 입력해야 합니다.
             </div>
             <div style={{ background: '#f7f7f7', border: '1px solid rgba(17,17,17,.1)', borderRadius: 10, padding: '10px 12px', fontSize: 12, color: '#333333', lineHeight: 1.6, marginBottom: 22 }}>
