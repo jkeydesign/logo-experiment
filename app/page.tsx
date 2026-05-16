@@ -2170,7 +2170,7 @@ export default function Home() {
                     const cardBorder = isActive
                       ? `2px solid ${currentConditionColor}`
                       : showBadge && !isAiCond
-                        ? '1.5px solid rgba(37,99,235,.55)'
+                        ? '1.5px solid rgba(17,17,17,.6)'
                         : isAiCond
                           ? '1px solid rgba(17,17,17,.18)'
                           : '1px solid rgba(17,17,17,.14)'
@@ -2185,11 +2185,11 @@ export default function Home() {
                       >
                         {/* 평가 제시형: 상단에 AI 순위/점수 헤더 */}
                         {isAiCond && aiRank != null && (
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 7, background: aiRank <= 3 ? '#eff6ff' : '#f8f8f8', borderRadius: 8, padding: '6px 8px' }}>
-                            <div style={{ fontSize: 15, fontWeight: 900, color: aiRank <= 3 ? '#1d4ed8' : '#374151' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 7, background: aiRank <= 3 ? '#111111' : '#f0f0f0', borderRadius: 8, padding: '6px 8px' }}>
+                            <div style={{ fontSize: 15, fontWeight: 900, color: aiRank <= 3 ? '#ffffff' : '#374151' }}>
                               {aiRank}위
                             </div>
-                            <div style={{ fontSize: 11, fontWeight: 700, color: aiRank <= 3 ? '#1d4ed8' : '#6b7280' }}>
+                            <div style={{ fontSize: 11, fontWeight: 700, color: aiRank <= 3 ? '#ffffff' : '#6b7280' }}>
                               AI 시각 평가 {aiScore}점
                             </div>
                           </div>
@@ -2202,7 +2202,7 @@ export default function Home() {
                               시안 ID {card.stimulus.id}
                             </div>
                             {showBadge && (
-                              <div style={{ background: '#1d4ed8', color: '#ffffff', borderRadius: 999, padding: '3px 9px', fontSize: 11, fontWeight: 800, letterSpacing: '.02em' }}>
+                              <div style={{ background: '#111111', color: '#ffffff', borderRadius: 999, padding: '3px 9px', fontSize: 11, fontWeight: 800, letterSpacing: '.02em' }}>
                                 AI 추천
                               </div>
                             )}
@@ -2214,7 +2214,7 @@ export default function Home() {
                         {/* 평가 제시형: 이미지 하단 AI 추천 배지(상위 3개만) */}
                         {isAiCond && showBadge && (
                           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 6 }}>
-                            <div style={{ background: '#1d4ed8', color: '#ffffff', borderRadius: 999, padding: '3px 10px', fontSize: 11, fontWeight: 800 }}>
+                            <div style={{ background: '#111111', color: '#ffffff', borderRadius: 999, padding: '3px 10px', fontSize: 11, fontWeight: 800 }}>
                               AI 추천
                             </div>
                           </div>
