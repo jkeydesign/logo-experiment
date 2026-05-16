@@ -3384,7 +3384,7 @@ export default function Home() {
             style={{ background: '#ffffff', borderRadius: 18, padding: '32px 28px', maxWidth: 420, width: '90vw', textAlign: 'center', boxShadow: '0 24px 80px rgba(0,0,0,.28)' }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div style={{ fontSize: 22, fontWeight: 800, color: '#111111', marginBottom: 10 }}>실험을 완료하시겠습니까?</div>
+            <div style={{ fontSize: 22, fontWeight: 800, color: '#111111', marginBottom: 10 }}>최종 시안 선택을 완료하시겠습니까?</div>
             <div style={{ fontSize: 13, color: '#555555', lineHeight: 1.7, marginBottom: 8 }}>
               <strong style={{ color: '#111111' }}>{finalSelectedStimulusId}</strong> 시안을 최종 시안으로 확정합니다.
             </div>
