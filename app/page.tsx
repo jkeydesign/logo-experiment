@@ -1584,7 +1584,7 @@ export default function Home() {
         conditionType: activeAssignment.conditionLabel,
         setId: activeAssignment.setId,
         selectedFinalLogoId: finalSelectedStimulusId,
-        manipulationCheckInfoType: postSurveyAnswers.infoType,
+        manipulation_check_info_type: postSurveyAnswers.infoType,
         confidenceScore: postSurveyAnswers.q3,
         agencyScore: postSurveyAnswers.q4,
         perceivedAiInterventionScore: postSurveyAnswers.q5,
