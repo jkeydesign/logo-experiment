@@ -564,6 +564,8 @@ export default function Home() {
   const [postExperimentAnswers, setPostExperimentAnswers] = useState<PostExperimentAnswers>(INITIAL_POST_EXPERIMENT)
   const [postExperimentError, setPostExperimentError] = useState('')
   const [isSubmittingPostExperiment, setIsSubmittingPostExperiment] = useState(false)
+  const [portfolioFile, setPortfolioFile] = useState<File | null>(null)
+  const [portfolioFileError, setPortfolioFileError] = useState('')
   const [currentConditionIndex, setCurrentConditionIndex] = useState(0)
   const [cards, setCards] = useState<StimulusCardState[]>([])
   const [editingCardId, setEditingCardId] = useState<string | null>(null)
@@ -952,6 +954,8 @@ export default function Home() {
           field: postExperimentAnswers.field,
           aiUse: postExperimentAnswers.aiUse,
           portfolioUrl: postExperimentAnswers.portfolioUrl,
+          portfolioFileName: portfolioFile?.name ?? '',
+          portfolioFileSize: portfolioFile ? portfolioFile.size : '',
         }),
       }).catch(() => {})
     }
@@ -2947,16 +2951,25 @@ export default function Home() {
               <div style={{ fontSize: 20, fontWeight: 800, color: '#111111', marginBottom: 20 }}>본 연구에 참여해 주셔서 감사합니다.</div>
               <div style={{ display: 'grid', gap: 16, fontSize: 14, lineHeight: 1.85, color: '#1f2937' }}>
                 <p>
-                  본 연구는 생성형 AI 기반 브랜드 로고 디자인 환경에서 AI 판단 정보 제시 범위가 전문 디자이너의 판단 과정에 미치는 영향을 확인하기 위한 연구입니다.
+                  본 연구는 생성형 AI 기반 브랜드 로고 디자인 환경에서 AI 판단 정보 유형이 전문 디자이너의 시안 판단 과정에 어떤 영향을 미치는지 확인하기 위한 연구입니다.
                 </p>
                 <p>
-                  실험 중 제시된 AI 추천 및 AI 평가 정보는 조건 간 비교와 자극 통제를 위해 사전에 구성된 정보일 수 있습니다. 이는 실시간 AI 산출 결과의 우연성이나 변동성을 줄이고, 참가자 간 동일한 조건을 비교하기 위한 절차입니다.
+                  본 실험에서 제시된 로고 시안은 실험 중 실시간으로 생성된 것이 아니라, 동일한 브랜드 브리프를 기준으로 사전에 제작된 실험 자극입니다. 시안 제작 과정에는 ChatGPT를 활용한 프롬프트 구성과 Midjourney 등 생성형 AI 이미지 도구를 활용한 이미지 생성 과정이 포함될 수 있습니다. 이후 실험에 적합하도록 시안 세트를 정리하여 제시하였습니다.
                 </p>
                 <p>
-                  본 연구의 목적은 AI가 더 우수한 로고를 생성했는지를 평가하는 것이 아닙니다. 연구의 목적은 AI 추천 또는 평가 정보가 전문 디자이너의 후보 유지, 제외, 변경, 최종 선택 판단에 어떤 영향을 미치는지를 분석하는 데 있습니다.
+                  실험 중 제시된 AI 추천 정보와 AI 평가 순위·설명 역시 실시간 AI가 현장에서 산출한 정보가 아니라, 조건 간 비교와 자극 통제를 위해 사전에 구성된 정보입니다. 이는 참가자마다 서로 다른 AI 결과가 제시되는 것을 방지하고, 동일한 조건에서 판단 과정을 비교하기 위한 절차입니다.
                 </p>
                 <p>
-                  수집된 자료는 참가자 코드로 가명처리되며, 개인을 식별할 수 있는 이름, 이메일, 포트폴리오, 소속 정보는 연구 결과에 포함되지 않습니다.
+                  AI 추천 및 평가 정보는 브랜드 전략 전체를 평가한 것이 아니라, 로고 시안의 시각적 특성인 자연성, 조화성, 정교성을 중심으로 구성되었습니다. 따라서 AI 정보는 시각적 완성도에 가까운 판단 정보이며, 참가자께서 수행한 브랜드 맥락 기반의 전문적 판단과 다를 수 있습니다.
+                </p>
+                <p>
+                  본 연구의 목적은 AI가 더 우수한 로고를 생성했는지를 평가하는 것이 아닙니다. 연구의 목적은 AI 추천, AI 평가 순위, AI 평가 설명과 같은 판단 정보가 전문 디자이너의 후보 유지, 제외, 변경, 최종 선택 판단에 어떤 영향을 미치는지를 분석하는 데 있습니다.
+                </p>
+                <p>
+                  수집된 자료는 참가자 코드로 가명처리되며, 성명, 이메일, 포트폴리오, 소속 등 개인을 식별할 수 있는 정보는 연구 결과에 포함되지 않습니다. 포트폴리오는 연구대상자 자격 확인 목적으로만 사용되며, 확인 후 폐기됩니다.
+                </p>
+                <p>
+                  본 디브리핑 내용을 확인한 뒤 연구 참여 자료의 사용을 원하지 않는 경우, 연구책임자에게 철회를 요청할 수 있습니다. 철회를 요청하더라도 불이익은 없습니다.
                 </p>
                 <p>
                   연구 참여 중 궁금한 점이나 중도 철회, 개인정보 처리와 관련한 문의가 있는 경우 연구책임자에게 연락할 수 있습니다.
@@ -2971,6 +2984,8 @@ export default function Home() {
                 onClick={() => {
                   setPostExperimentAnswers(INITIAL_POST_EXPERIMENT)
                   setPostExperimentError('')
+                  setPortfolioFile(null)
+                  setPortfolioFileError('')
                   setStep('eligibility_collection')
                 }}
                 style={{ border: 'none', background: '#111111', color: '#ffffff', borderRadius: 10, padding: '12px 24px', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}
@@ -3083,6 +3098,42 @@ export default function Home() {
                     type='url'
                     style={{ width: '100%', border: '1px solid rgba(17,17,17,.18)', borderRadius: 8, padding: '11px 12px', fontSize: 14, outline: 'none', background: '#ffffff', boxSizing: 'border-box' }}
                   />
+                </div>
+
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#111111', marginBottom: 6 }}>포트폴리오 파일 <span style={{ color: '#6b7280', fontWeight: 400 }}>(선택 — JPEG 또는 PDF, 10MB 이내)</span></div>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 10, border: `1px solid ${portfolioFileError ? '#dc2626' : 'rgba(17,17,17,.18)'}`, borderRadius: 8, padding: '10px 12px', cursor: 'pointer', background: '#fafafa' }}>
+                    <span style={{ flexShrink: 0, border: '1px solid rgba(17,17,17,.22)', background: '#ffffff', borderRadius: 6, padding: '4px 10px', fontSize: 12, fontWeight: 700, color: '#111111' }}>파일 선택</span>
+                    <span style={{ fontSize: 13, color: portfolioFile ? '#111111' : '#9ca3af', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {portfolioFile ? `${portfolioFile.name} (${(portfolioFile.size / 1024 / 1024).toFixed(1)} MB)` : '선택된 파일 없음'}
+                    </span>
+                    <input
+                      type='file'
+                      accept='.jpg,.jpeg,.pdf'
+                      style={{ display: 'none' }}
+                      onChange={(e) => {
+                        const file = e.target.files?.[0] ?? null
+                        setPortfolioFileError('')
+                        if (file) {
+                          if (file.size > 10 * 1024 * 1024) {
+                            setPortfolioFileError('파일 크기가 10MB를 초과합니다.')
+                            e.target.value = ''
+                            return
+                          }
+                          const ext = file.name.split('.').pop()?.toLowerCase() ?? ''
+                          if (!['jpg', 'jpeg', 'pdf'].includes(ext)) {
+                            setPortfolioFileError('JPEG 또는 PDF 파일만 업로드할 수 있습니다.')
+                            e.target.value = ''
+                            return
+                          }
+                        }
+                        setPortfolioFile(file)
+                      }}
+                    />
+                  </label>
+                  {portfolioFileError && (
+                    <div style={{ marginTop: 4, fontSize: 12, color: '#dc2626' }}>{portfolioFileError}</div>
+                  )}
                 </div>
 
                 {postExperimentError && (
