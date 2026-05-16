@@ -173,47 +173,40 @@ export function getStimulusSet(setId: SetId): Logo[] {
   return STIMULUS_SETS[setId].map((logo) => ({ ...logo }))
 }
 
-const CONDITION_ORDERS: Condition[][] = [
-  ['human', 'collab', 'ai'],
-  ['human', 'ai', 'collab'],
-  ['collab', 'human', 'ai'],
-  ['collab', 'ai', 'human'],
-  ['ai', 'human', 'collab'],
-  ['ai', 'collab', 'human'],
+// 라틴스퀘어 배정표 (LS01–LS06)
+// 각 조건(condition)이 어느 세트(setId)와 페어링되는지 정의
+// 세트 순서는 항상 A→B→C (S1→S2→S3), 조건 순서가 그룹별로 달라짐
+const LATIN_SQUARE: Array<{ condition: Condition; setId: SetId }[]> = [
+  // LS01: 시안제시형/A → 추천제시형/B → 평가제시형/C
+  [{ condition: 'human', setId: 'A' }, { condition: 'collab', setId: 'B' }, { condition: 'ai', setId: 'C' }],
+  // LS02: 시안제시형/A → 평가제시형/B → 추천제시형/C
+  [{ condition: 'human', setId: 'A' }, { condition: 'ai', setId: 'B' }, { condition: 'collab', setId: 'C' }],
+  // LS03: 추천제시형/A → 시안제시형/B → 평가제시형/C
+  [{ condition: 'collab', setId: 'A' }, { condition: 'human', setId: 'B' }, { condition: 'ai', setId: 'C' }],
+  // LS04: 추천제시형/A → 평가제시형/B → 시안제시형/C
+  [{ condition: 'collab', setId: 'A' }, { condition: 'ai', setId: 'B' }, { condition: 'human', setId: 'C' }],
+  // LS05: 평가제시형/A → 시안제시형/B → 추천제시형/C
+  [{ condition: 'ai', setId: 'A' }, { condition: 'human', setId: 'B' }, { condition: 'collab', setId: 'C' }],
+  // LS06: 평가제시형/A → 추천제시형/B → 시안제시형/C
+  [{ condition: 'ai', setId: 'A' }, { condition: 'collab', setId: 'B' }, { condition: 'human', setId: 'C' }],
 ]
 
-const SET_ORDERS: SetId[][] = [
-  ['A', 'B', 'C'],
-  ['A', 'C', 'B'],
-  ['B', 'A', 'C'],
-  ['B', 'C', 'A'],
-  ['C', 'A', 'B'],
-  ['C', 'B', 'A'],
-]
+export const LATIN_SQUARE_GROUP_LABELS = ['LS01', 'LS02', 'LS03', 'LS04', 'LS05', 'LS06'] as const
+export type LatinSquareGroup = typeof LATIN_SQUARE_GROUP_LABELS[number]
 
-function hashId(input: string): number {
-  let h = 0
-  for (let i = 0; i < input.length; i += 1) {
-    h = Math.imul(31, h) + input.charCodeAt(i)
-  }
-  return Math.abs(h)
-}
+export function createLatinSquareAssignments(lsIndex: number): ConditionAssignment[] {
+  const clampedIdx = ((lsIndex % 6) + 6) % 6
+  const group = LATIN_SQUARE[clampedIdx]
+  const lsLabel = LATIN_SQUARE_GROUP_LABELS[clampedIdx]
 
-export function createCounterBalancedAssignments(participantId: string): ConditionAssignment[] {
-  const idx = hashId(participantId || 'P000') % CONDITION_ORDERS.length
-  const conditionOrder = CONDITION_ORDERS[idx]
-  const setOrder = SET_ORDERS[idx]
-
-  return conditionOrder.map((condition, i) => {
-    const setId = setOrder[i]
-    return {
-      order: (i + 1) as 1 | 2 | 3,
-      condition,
-      conditionLabel: CONDITION_LABELS[condition],
-      setId,
-      setBriefCode: SET_BRIEF_MAP[setId],
-    }
-  })
+  return group.map(({ condition, setId }, i) => ({
+    order: (i + 1) as 1 | 2 | 3,
+    condition,
+    conditionLabel: CONDITION_LABELS[condition],
+    setId,
+    setBriefCode: SET_BRIEF_MAP[setId],
+    latinSquareGroup: lsLabel,
+  }))
 }
 
 function clamp1to5(value: number): number {

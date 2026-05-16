@@ -37,6 +37,7 @@ const ROW_HEADERS = [
   'received_at',
   'row_key',
   'participant_id',
+  'latin_square_group',
   'condition_order',
   'condition_type',
   'set_id',
@@ -135,7 +136,7 @@ function doPost(e) {
       upsertStimulusRow(ss, data, now)
     } else if (data.kind === 'assignment') {
       appendAssignment(ss, data, now)
-    } else if (data.kind === 'screening') {
+    } else if (data.kind === 'screening' || data.kind === 'eligibility') {
       appendScreening(ss, data, now)
     }
 
@@ -244,6 +245,7 @@ function buildRowData(row, now, key) {
     now,
     key,
     row.participant_id ?? '',
+    row.latin_square_group ?? '',
     row.condition_order ?? '',
     row.condition_type ?? '',
     row.set_id ?? '',

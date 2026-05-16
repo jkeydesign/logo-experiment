@@ -10,6 +10,7 @@ const makeSessionId = () => `session_${Date.now()}`
 
 const CSV_COLUMNS: Array<keyof StimulusLogRow> = [
   'participant_id',
+  'latin_square_group',
   'condition_order',
   'condition_type',
   'set_id',

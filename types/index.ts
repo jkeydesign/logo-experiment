@@ -68,10 +68,12 @@ export interface ConditionAssignment {
   conditionLabel: ConditionLabel
   setId: SetId
   setBriefCode: string
+  latinSquareGroup: string
 }
 
 export interface StimulusLogRow {
   participant_id: string
+  latin_square_group: string | null
   condition_order: string
   condition_type: ConditionLabel
   set_id: SetId

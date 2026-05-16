@@ -7,6 +7,7 @@ import {
   CONDITION_GUIDES,
   VISUAL_AXIS_IDS,
   createAiSuggestedScores,
+  createLatinSquareAssignments,
   getBriefByCode,
   getSetBrief,
   getStimulusSet,
@@ -23,29 +24,22 @@ import type {
   StimulusLogRow,
 } from '@/types'
 
-type ScreenStep = 'consent' | 'screening' | 'participant' | 'brief' | 'instruction' | 'evaluation' | 'result' | 'post_survey' | 'comparison_survey' | 'debriefing_check' | 'debriefing' | 'completed'
+type ScreenStep = 'consent' | 'screening' | 'brief' | 'instruction' | 'evaluation' | 'result' | 'post_survey' | 'comparison_survey' | 'debriefing_check' | 'debriefing' | 'eligibility_collection' | 'completed'
 type RightTab = 'hold' | 'exclude'
-type ScreeningAnswers = {
+type EligibilityCheck = {
+  q1: 'yes' | 'no' | null
+  q2: 'yes' | 'no' | null
+  q3: 'yes' | 'no' | null
+}
+type PostExperimentAnswers = {
   fullName: string
   gender: string
-  currentPractice: string
+  email: string
   career: string
   logoProjects: string
-  portfolioFileName: string
-  portfolioFileSize: string
-  portfolioFileMimeType: string
   field: string
   aiUse: string
-  email: string
-}
-
-type ScreeningQuestion = {
-  id: keyof ScreeningAnswers
-  title: string
-  type: 'text' | 'radio' | 'file'
-  options?: string[]
-  placeholder?: string
-  helper?: string
+  portfolioUrl: string
 }
 
 type PostSurveyYesNoKey = 'q1' | 'q2'
@@ -100,19 +94,17 @@ const POST_SURVEY_AI_ONLY: Array<{ key: PostSurveyLikertKey; text: string }> = [
   { key: 'q8', text: 'AI 점수 또는 순위 때문에 자신의 판단 기준이 흔들렸다고 느끼는 정도는 어느 정도입니까?' },
 ]
 const COND_LABELS_ALL: string[] = ['시안 제시형', '추천 제시형', '평가 제시형']
-const AI_USEFUL_OPTIONS: string[] = ['추천 제시형', '평가 제시형', '해당 없음']
 const COMP_QUESTIONS: Array<{ key: keyof CompSurveyAnswers; text: string; options: string[] }> = [
-  { key: 'easiest', text: '가장 판단하기 쉬웠던 조건은 무엇입니까?', options: COND_LABELS_ALL },
-  { key: 'strongestAgency', text: '가장 전문적 판단을 유지하기 쉬웠던 조건은 무엇입니까?', options: COND_LABELS_ALL },
-  { key: 'highestConfidence', text: '최종 선택에 가장 확신을 느낀 조건은 무엇입니까?', options: COND_LABELS_ALL },
-  { key: 'mostPractical', text: '실제 실무에 가장 가까웠던 조건은 무엇입니까?', options: COND_LABELS_ALL },
-  { key: 'preferred', text: '다시 사용한다면 선호하는 조건은 무엇입니까?', options: COND_LABELS_ALL },
-  { key: 'mostUsefulAi', text: 'AI 정보가 가장 유용하다고 느껴진 조건은 무엇입니까?', options: AI_USEFUL_OPTIONS },
-  { key: 'preferredExploration', text: '초기 후보 검토 단계에서 적절한 방식은 무엇입니까?', options: COND_LABELS_ALL },
-  { key: 'preferredComparison', text: '후보유지·제외 비교 단계에서 적절한 방식은 무엇입니까?', options: COND_LABELS_ALL },
-  { key: 'preferredFinalSelection', text: '최종 선택 단계에서 적절한 방식은 무엇입니까?', options: COND_LABELS_ALL },
+  { key: 'easiest', text: '세 조건 중 로고 시안을 판단하기 가장 쉬웠던 조건은 무엇입니까?', options: COND_LABELS_ALL },
+  { key: 'strongestAgency', text: '세 조건 중 자신의 전문적 판단을 유지하기 가장 쉬웠던 조건은 무엇입니까?', options: COND_LABELS_ALL },
+  { key: 'highestConfidence', text: '세 조건 중 최종 선택에 대한 확신이 가장 높았던 조건은 무엇입니까?', options: COND_LABELS_ALL },
+  { key: 'mostPractical', text: '세 조건 중 실제 디자인 실무의 검토 과정에 가장 가깝다고 느낀 조건은 무엇입니까?', options: COND_LABELS_ALL },
+  { key: 'preferred', text: '향후 유사한 로고 시안 검토 상황에서 다시 사용하고 싶은 조건은 무엇입니까?', options: COND_LABELS_ALL },
+  { key: 'mostUsefulAi', text: '세 조건 중 AI 정보가 가장 유용하다고 느껴진 조건은 무엇입니까?', options: COND_LABELS_ALL },
+  { key: 'preferredExploration', text: '초기 후보 검토 단계에 가장 적절하다고 느낀 조건은 무엇입니까?', options: COND_LABELS_ALL },
+  { key: 'preferredComparison', text: '후보 유지/제외를 비교하며 판단하는 단계에 가장 적절하다고 느낀 조건은 무엇입니까?', options: COND_LABELS_ALL },
+  { key: 'preferredFinalSelection', text: '최종 시안 1개를 선택하는 단계에 가장 적절하다고 느낀 조건은 무엇입니까?', options: COND_LABELS_ALL },
 ]
-const DEBRIEF_TIMING_OPTIONS: string[] = ['추천 제시형', '평가 제시형', '최종 선택 단계', '기타']
 
 interface StimulusCardState {
   stimulus: Logo
@@ -136,13 +128,8 @@ interface AppHistoryState {
   currentConditionIndex: number
   participantInput: string
   participantError: string
-  screeningAnswers: ScreeningAnswers
-  screeningError: string
-  screeningBlockMessage: string
-  missingScreeningFields: Array<keyof ScreeningAnswers>
-  showScreeningThanks: boolean
-  isSubmittingScreening: boolean
-  screeningSubmitMessage: string
+  eligibilityCheck: EligibilityCheck
+  eligibilityError: string
   cards: StimulusCardState[]
   editingCardId: string | null
   rightTab: RightTab
@@ -208,187 +195,36 @@ const MAIN_JUDGMENT_CRITERIA = [
 ] as const
 
 const LOGO_ASSET_VERSION = '20260515-ovbne-g-crop'
-const SCREENING_RECIPIENT_EMAIL = 'kjully1492@gmail.com'
-const SCREENING_API_URL = 'https://script.google.com/macros/s/AKfycbxb_THQiRE2c6c-JItd0R1OxhjuraSirzONWi-pb85rnZbz9IVfKda1NFJxjFLAuUWC/exec'
-const MAX_PORTFOLIO_ATTACHMENT_BYTES = 10 * 1024 * 1024
+const RESEARCHER_EMAIL = 'kjully1492@gmail.com'
 
-const INITIAL_SCREENING_ANSWERS: ScreeningAnswers = {
-  fullName: '',
-  gender: '',
-  currentPractice: '',
-  career: '',
-  logoProjects: '',
-  portfolioFileName: '',
-  portfolioFileSize: '',
-  portfolioFileMimeType: '',
-  field: '',
-  aiUse: '',
-  email: '',
+const INITIAL_ELIGIBILITY_CHECK: EligibilityCheck = { q1: null, q2: null, q3: null }
+const INITIAL_POST_EXPERIMENT: PostExperimentAnswers = {
+  fullName: '', gender: '', email: '', career: '', logoProjects: '', field: '', aiUse: '', portfolioUrl: '',
 }
 
-const SCREENING_QUESTIONS: ScreeningQuestion[] = [
-  {
-    id: 'fullName',
-    title: '1. 당신의 이름은 무엇입니까?',
-    type: 'text',
-    placeholder: '이름을 입력해 주세요.',
-  },
-  {
-    id: 'gender',
-    title: '2. 성별은 무엇인가요?',
-    type: 'radio',
-    options: ['남성', '여성'],
-  },
-  {
-    id: 'currentPractice',
-    title: '3. 현재 디자인 실무에 종사하고 있습니까?',
-    type: 'radio',
-    options: ['예', '아니요'],
-  },
-  {
-    id: 'career',
-    title: '4. 디자인 실무 경력',
-    type: 'radio',
-    options: ['1년 미만', '1~3년', '3~5년', '5년 이상', '10년 이상'],
-  },
-  {
-    id: 'logoProjects',
-    title: '5. 로고 디자인 또는 브랜드 아이덴티티 프로젝트 경험이 있습니까?',
-    type: 'radio',
-    options: ['없음', '1~2건', '3건 이상', '5건 이상'],
-  },
-  {
-    id: 'portfolioFileName',
-    title: '6. 포트폴리오 업로드(브랜드 로고 디자인 프로젝트 이미지, pdf 혹은 jpeg, 10MB 이하)',
-    type: 'file',
-  },
-  {
-    id: 'field',
-    title: '7. 주요 실무 분야',
-    type: 'radio',
-    options: ['브랜드 디자인', '시각디자인', '그래픽 디자인', 'BX 디자인', 'UI/UX 디자인', '편집디자인', '기타'],
-  },
-  {
-    id: 'aiUse',
-    title: '8. 생성형 AI 이미지 도구 사용 경험',
-    type: 'radio',
-    options: ['없음', '1~2회', '가끔 사용', '자주 사용'],
-  },
-  {
-    id: 'email',
-    title: '9. 이메일을 기입해주세요.',
-    type: 'text',
-    placeholder: '예: name@example.com',
-  },
+const ELIGIBILITY_QUESTIONS: Array<{ key: keyof EligibilityCheck; text: string }> = [
+  { key: 'q1', text: '현재 디자인 분야에서 실무에 종사하고 있습니까?' },
+  { key: 'q2', text: '디자인 실무 경력이 3년 이상입니까?' },
+  { key: 'q3', text: '브랜드 로고 또는 CI 관련 프로젝트 경험이 3건 이상 있습니까?' },
 ]
-
-function getScreeningInvalidReason(answers: ScreeningAnswers): string | null {
-  if (answers.currentPractice === '아니요') return '3번 문항에서 실험 조건에 맞지 않는 응답이 선택되었습니다.'
-  if (answers.career === '1년 미만' || answers.career === '1~3년') return '4번 문항에서 실험 조건에 맞지 않는 응답이 선택되었습니다.'
-  if (answers.logoProjects === '없음' || answers.logoProjects === '1~2건') return '5번 문항에서 실험 조건에 맞지 않는 응답이 선택되었습니다.'
-  return null
-}
-
-function getMissingScreeningFields(answers: ScreeningAnswers): Array<keyof ScreeningAnswers> {
-  return SCREENING_QUESTIONS
-    .filter((question) => !String(answers[question.id] ?? '').trim())
-    .map((question) => question.id)
-}
 
 function isValidEmailAddress(value: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim())
 }
 
-function formatPortfolioSize(sizeText: string): string {
-  const size = Number(sizeText)
-  if (!Number.isFinite(size) || size <= 0) return '-'
-  if (size < 1024 * 1024) return `${Math.round(size / 1024)}KB`
-  return `${(size / 1024 / 1024).toFixed(1)}MB`
+const LS_COUNTER_KEY = 'logoexp_participant_counter'
+
+function assignNextParticipant(): { code: string; lsIndex: number; lsGroup: string } {
+  const stored = typeof window !== 'undefined' ? localStorage.getItem(LS_COUNTER_KEY) : null
+  const prev = stored ? parseInt(stored, 10) : 0
+  const n = prev + 1
+  if (typeof window !== 'undefined') localStorage.setItem(LS_COUNTER_KEY, String(n))
+  const lsIndex = (n - 1) % 6
+  const lsGroup = `LS0${lsIndex + 1}`
+  const code = `P${String(n).padStart(3, '0')}`
+  return { code, lsIndex, lsGroup }
 }
 
-function createScreeningEmailHref(answers: ScreeningAnswers): string {
-  const subject = `[AI Logotics] 실험 참여자 신청 문항 - ${answers.fullName || '이름 미입력'}`
-  const body = [
-    'AI Logotics 실험 참여자 신청 문항',
-    '',
-    `1. 실험 신청자: ${answers.fullName || '-'}`,
-    `2. 성별: ${answers.gender || '-'}`,
-    `3. 현재 디자인 실무 종사 여부: ${answers.currentPractice || '-'}`,
-    `4. 디자인 실무 경력: ${answers.career || '-'}`,
-    `5. 로고/브랜드 아이덴티티 프로젝트 경험: ${answers.logoProjects || '-'}`,
-    `6. 포트폴리오 파일명: ${answers.portfolioFileName || '-'}`,
-    `   포트폴리오 파일 크기: ${formatPortfolioSize(answers.portfolioFileSize)}`,
-    `7. 주요 실무 분야: ${answers.field || '-'}`,
-    `8. 생성형 AI 이미지 도구 사용 경험: ${answers.aiUse || '-'}`,
-    `9. 이메일: ${answers.email || '-'}`,
-    '',
-    '참고: 포트폴리오 원본 파일은 메일 첨부로 함께 전송됩니다.',
-  ].join('\n')
-
-  return `mailto:${SCREENING_RECIPIENT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
-}
-
-function readFileAsBase64(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onerror = () => reject(new Error('포트폴리오 파일을 읽지 못했습니다.'))
-    reader.onload = () => {
-      const result = String(reader.result ?? '')
-      resolve(result.includes(',') ? result.split(',')[1] : result)
-    }
-    reader.readAsDataURL(file)
-  })
-}
-
-async function buildScreeningApplicationPayload(answers: ScreeningAnswers, portfolioFile: File) {
-  const portfolioFileBase64 = await readFileAsBase64(portfolioFile)
-
-  return {
-    ...answers,
-    portfolioFileSizeReadable: formatPortfolioSize(answers.portfolioFileSize),
-    portfolioFileMimeType: portfolioFile.type,
-    portfolioFileBase64,
-    submittedAt: new Date().toISOString(),
-  }
-}
-
-async function sendScreeningApplication(answers: ScreeningAnswers, portfolioFile: File) {
-  await fetch(SCREENING_API_URL, {
-    method: 'POST',
-    mode: 'no-cors',
-    body: JSON.stringify(await buildScreeningApplicationPayload(answers, portfolioFile)),
-  })
-}
-
-function createAutoParticipantId(answers: ScreeningAnswers): string {
-  const stamp = new Date().toISOString().replace(/[-:TZ.]/g, '').slice(0, 14)
-  const emailSeed = answers.email.trim().split('@')[0].replace(/[^a-zA-Z0-9]/g, '').slice(0, 6).toUpperCase()
-  return `P-${stamp}${emailSeed ? `-${emailSeed}` : ''}`
-}
-
-const MANUAL_CONDITION_ASSIGNMENTS: ConditionAssignment[] = [
-  {
-    order: 1,
-    condition: 'human',
-    conditionLabel: '시안 제시형',
-    setId: 'A',
-    setBriefCode: 'B0002',
-  },
-  {
-    order: 2,
-    condition: 'collab',
-    conditionLabel: '추천 제시형',
-    setId: 'B',
-    setBriefCode: 'B0002',
-  },
-  {
-    order: 3,
-    condition: 'ai',
-    conditionLabel: '평가 제시형',
-    setId: 'C',
-    setBriefCode: 'B0002',
-  },
-]
 
 const CONDITION_SURFACE: Record<ConditionLabel, string> = {
   '시안 제시형': '#f8f8f8',
@@ -629,6 +465,7 @@ function createEmptyStimulusRow(
 
   return {
     participant_id: participantId,
+    latin_square_group: assignment.latinSquareGroup,
     condition_order: conditionOrderLabel,
     condition_type: assignment.conditionLabel,
     set_id: assignment.setId,
@@ -712,13 +549,11 @@ export default function Home() {
   const [step, setStep] = useState<ScreenStep>('consent')
   const [participantInput, setParticipantInput] = useState(participantId)
   const [participantError, setParticipantError] = useState('')
-  const [screeningAnswers, setScreeningAnswers] = useState<ScreeningAnswers>(INITIAL_SCREENING_ANSWERS)
-  const [screeningError, setScreeningError] = useState('')
-  const [screeningBlockMessage, setScreeningBlockMessage] = useState('')
-  const [missingScreeningFields, setMissingScreeningFields] = useState<Array<keyof ScreeningAnswers>>([])
-  const [showScreeningThanks, setShowScreeningThanks] = useState(false)
-  const [isSubmittingScreening, setIsSubmittingScreening] = useState(false)
-  const [screeningSubmitMessage, setScreeningSubmitMessage] = useState('')
+  const [eligibilityCheck, setEligibilityCheck] = useState<EligibilityCheck>(INITIAL_ELIGIBILITY_CHECK)
+  const [eligibilityError, setEligibilityError] = useState('')
+  const [postExperimentAnswers, setPostExperimentAnswers] = useState<PostExperimentAnswers>(INITIAL_POST_EXPERIMENT)
+  const [postExperimentError, setPostExperimentError] = useState('')
+  const [isSubmittingPostExperiment, setIsSubmittingPostExperiment] = useState(false)
   const [currentConditionIndex, setCurrentConditionIndex] = useState(0)
   const [cards, setCards] = useState<StimulusCardState[]>([])
   const [editingCardId, setEditingCardId] = useState<string | null>(null)
@@ -744,7 +579,6 @@ export default function Home() {
   const [compSurveyError, setCompSurveyError] = useState('')
   const [debriefCheckAnswers, setDebriefCheckAnswers] = useState<DebriefCheckAnswers>(INITIAL_DEBRIEF_CHECK)
   const [debriefCheckError, setDebriefCheckError] = useState('')
-  const screeningPortfolioFileRef = useRef<File | null>(null)
   const hasInitializedHistoryRef = useRef(false)
   const isApplyingHistoryRef = useRef(false)
   const lastHistorySignatureRef = useRef('')
@@ -755,13 +589,8 @@ export default function Home() {
     currentConditionIndex,
     participantInput,
     participantError,
-    screeningAnswers,
-    screeningError,
-    screeningBlockMessage,
-    missingScreeningFields,
-    showScreeningThanks,
-    isSubmittingScreening,
-    screeningSubmitMessage,
+    eligibilityCheck,
+    eligibilityError,
     cards,
     editingCardId,
     rightTab,
@@ -785,13 +614,8 @@ export default function Home() {
     currentConditionIndex,
     participantInput,
     participantError,
-    screeningAnswers,
-    screeningError,
-    screeningBlockMessage,
-    missingScreeningFields,
-    showScreeningThanks,
-    isSubmittingScreening,
-    screeningSubmitMessage,
+    eligibilityCheck,
+    eligibilityError,
     cards,
     editingCardId,
     rightTab,
@@ -823,13 +647,8 @@ export default function Home() {
       setCurrentConditionIndex(snapshot.currentConditionIndex)
       setParticipantInput(snapshot.participantInput ?? '')
       setParticipantError(snapshot.participantError ?? '')
-      setScreeningAnswers(snapshot.screeningAnswers ?? INITIAL_SCREENING_ANSWERS)
-      setScreeningError(snapshot.screeningError ?? '')
-      setScreeningBlockMessage(snapshot.screeningBlockMessage ?? '')
-      setMissingScreeningFields(snapshot.missingScreeningFields ?? [])
-      setShowScreeningThanks(snapshot.showScreeningThanks ?? false)
-      setIsSubmittingScreening(snapshot.isSubmittingScreening ?? false)
-      setScreeningSubmitMessage(snapshot.screeningSubmitMessage ?? '')
+      setEligibilityCheck(snapshot.eligibilityCheck ?? INITIAL_ELIGIBILITY_CHECK)
+      setEligibilityError(snapshot.eligibilityError ?? '')
       setCards(snapshot.cards ?? [])
       setEditingCardId(snapshot.editingCardId ?? null)
       setRightTab(snapshot.rightTab ?? 'hold')
@@ -923,6 +742,11 @@ export default function Home() {
         revisionTs: null,
       }
     })
+
+    if (assignment.condition === 'ai') {
+      nextCards.sort((a, b) => (a.stimulus.aiRank ?? 99) - (b.stimulus.aiRank ?? 99))
+      nextCards.forEach((card, i) => { card.displayOrder = i + 1 })
+    }
 
     setCards(nextCards)
     setEditingCardId(null)
@@ -1043,16 +867,9 @@ export default function Home() {
     rebuildRows(cards, finalSelectedStimulusId, finalSelectionTs)
   }, [cards, finalSelectedStimulusId, finalSelectionTs, rebuildRows])
 
-  const startExperimentSession = useCallback((participantIdForSession: string, source: 'screening_auto' | 'manual') => {
-    const id = participantIdForSession.trim()
-    if (!id) {
-      setParticipantError('참가자 ID를 입력해 주세요.')
-      return
-    }
-
-    const assigned = MANUAL_CONDITION_ASSIGNMENTS.map((item) => ({ ...item }))
-    setParticipant(id)
-    setParticipantInput(id)
+  const startExperimentSession = useCallback((code: string, assigned: ConditionAssignment[]) => {
+    setParticipant(code)
+    setParticipantInput(code)
     setAssignments(assigned)
     startExperiment(Date.now())
     setParticipantError('')
@@ -1062,183 +879,79 @@ export default function Home() {
     logEvent('experiment_start', {
       detail: '실험 시작',
       payload: {
-        participant_id: id,
-        participant_id_source: source,
-        condition_order: assigned.map((item) => item.conditionLabel).join(' > '),
-        set_order: assigned.map((item) => item.setId).join(' > '),
+        participant_code: code,
+        latin_square_group: assigned[0]?.latinSquareGroup ?? '',
+        condition_order: assigned.map((a) => a.conditionLabel).join(' > '),
+        set_order: assigned.map((a) => a.setId).join(' > '),
       },
     })
   }, [setParticipant, setAssignments, startExperiment, logEvent])
 
-  const updateScreeningAnswer = useCallback((id: keyof ScreeningAnswers, value: string) => {
-    setScreeningAnswers((prev) => ({ ...prev, [id]: value }))
-    setMissingScreeningFields((prev) => prev.filter((field) => field !== id))
-    setScreeningError('')
-    setScreeningSubmitMessage('')
-  }, [])
-
-  const updateScreeningPortfolio = useCallback((file: File | null) => {
-    if (file) {
-      const isAllowedType = file.type === 'application/pdf' || file.type === 'image/jpeg'
-      if (!isAllowedType) {
-        screeningPortfolioFileRef.current = null
-        setScreeningAnswers((prev) => ({
-          ...prev,
-          portfolioFileName: '',
-          portfolioFileSize: '',
-          portfolioFileMimeType: '',
-        }))
-        setMissingScreeningFields(['portfolioFileName'])
-        setScreeningError('포트폴리오는 PDF 또는 JPEG 파일만 업로드해 주세요.')
-        return
-      }
-
-      if (file.size > MAX_PORTFOLIO_ATTACHMENT_BYTES) {
-        screeningPortfolioFileRef.current = null
-        setScreeningAnswers((prev) => ({
-          ...prev,
-          portfolioFileName: '',
-          portfolioFileSize: '',
-          portfolioFileMimeType: '',
-        }))
-        setMissingScreeningFields(['portfolioFileName'])
-        setScreeningError('포트폴리오 파일은 이메일 첨부 전송 안정성을 위해 10MB 이하로 업로드해 주세요.')
-        return
-      }
-    }
-
-    screeningPortfolioFileRef.current = file
-    setScreeningAnswers((prev) => ({
-      ...prev,
-      portfolioFileName: file?.name ?? '',
-      portfolioFileSize: file ? String(file.size) : '',
-      portfolioFileMimeType: file?.type ?? '',
-    }))
-    if (file) {
-      setMissingScreeningFields((prev) => prev.filter((field) => field !== 'portfolioFileName'))
-    }
-    setScreeningError('')
-    setScreeningSubmitMessage('')
-  }, [])
-
   const resetToConsent = useCallback(() => {
-    setScreeningAnswers(INITIAL_SCREENING_ANSWERS)
-    setScreeningError('')
-    setMissingScreeningFields([])
-    setShowScreeningThanks(false)
-    setIsSubmittingScreening(false)
-    setScreeningSubmitMessage('')
-    screeningPortfolioFileRef.current = null
+    setEligibilityCheck(INITIAL_ELIGIBILITY_CHECK)
+    setEligibilityError('')
     setParticipantInput('')
     setParticipantError('')
     setStep('consent')
   }, [])
 
-  const confirmScreening = useCallback(() => {
-    const missingFields = getMissingScreeningFields(screeningAnswers)
-    if (missingFields.length > 0) {
-      setMissingScreeningFields(missingFields)
-      setScreeningError('기입하지 않은 문항을 확인해 주세요. 빨간색으로 표시된 항목은 필수입니다.')
+  const confirmEligibility = useCallback(() => {
+    if (eligibilityCheck.q1 === null || eligibilityCheck.q2 === null || eligibilityCheck.q3 === null) {
+      setEligibilityError('모든 문항에 응답해 주세요.')
       return
     }
-
-    if (!isValidEmailAddress(screeningAnswers.email)) {
-      setMissingScreeningFields(['email'])
-      setScreeningError('이메일 주소가 올바르지 않습니다. 예: name@example.com 형식으로 다시 확인해 주세요.')
+    if (eligibilityCheck.q1 === 'no' || eligibilityCheck.q2 === 'no' || eligibilityCheck.q3 === 'no') {
+      setEligibilityError('rejection')
       return
     }
+    setEligibilityError('')
+    const { code, lsIndex, lsGroup } = assignNextParticipant()
+    const assigned = createLatinSquareAssignments(lsIndex)
+    logEvent('eligibility_passed', {
+      detail: '참여 자격 확인 및 라틴스퀘어 배정 완료',
+      payload: {
+        participant_code: code,
+        latin_square_group: lsGroup,
+        condition_order: assigned.map((a) => a.conditionLabel).join(' > '),
+        set_order: assigned.map((a) => a.setId).join(' > '),
+      },
+    })
+    startExperimentSession(code, assigned)
+  }, [eligibilityCheck, logEvent, startExperimentSession])
 
-    if (!screeningPortfolioFileRef.current) {
-      setMissingScreeningFields(['portfolioFileName'])
-      setScreeningError('포트폴리오 첨부를 위해 파일을 다시 선택해 주세요.')
+  const submitPostExperiment = useCallback(() => {
+    if (!isValidEmailAddress(postExperimentAnswers.email) && postExperimentAnswers.email.trim()) {
+      setPostExperimentError('이메일 주소 형식이 올바르지 않습니다. 예: name@example.com')
       return
     }
-
-    const invalidReason = getScreeningInvalidReason(screeningAnswers)
-    if (invalidReason) {
-      setMissingScreeningFields([])
-      setScreeningBlockMessage(
-        `${invalidReason} 본 실험의 참여 조건에 해당하지 않아 다음 단계로 이동할 수 없습니다. 연락처와 메일로 문의 바랍니다.`
-      )
-      logEvent('screening_blocked', {
-        detail: '실험 조건 불일치로 참여 차단',
-        payload: {
-          answers: screeningAnswers,
-          reason: invalidReason,
-        },
-      })
-      setShowScreeningThanks(false)
-      return
+    setPostExperimentError('')
+    setIsSubmittingPostExperiment(true)
+    const gasUrl = process.env.NEXT_PUBLIC_GAS_URL ?? ''
+    if (gasUrl) {
+      fetch(gasUrl, {
+        method: 'POST',
+        body: JSON.stringify({
+          kind: 'eligibility',
+          participantId,
+          submittedAt: new Date().toISOString(),
+          fullName: postExperimentAnswers.fullName,
+          gender: postExperimentAnswers.gender,
+          email: postExperimentAnswers.email,
+          career: postExperimentAnswers.career,
+          logoProjects: postExperimentAnswers.logoProjects,
+          field: postExperimentAnswers.field,
+          aiUse: postExperimentAnswers.aiUse,
+          portfolioUrl: postExperimentAnswers.portfolioUrl,
+        }),
+      }).catch(() => {})
     }
-
-    setScreeningError('')
-    setMissingScreeningFields([])
-    setScreeningSubmitMessage('')
-    setShowScreeningThanks(true)
-  }, [screeningAnswers, logEvent])
-
-  const submitScreeningApplication = useCallback(async () => {
-    if (isSubmittingScreening) return
-
-    setScreeningError('')
-    setScreeningSubmitMessage('')
-    setIsSubmittingScreening(true)
-    try {
-      const portfolioFile = screeningPortfolioFileRef.current
-      if (!portfolioFile) {
-        throw new Error('포트폴리오 파일이 선택되지 않았습니다.')
-      }
-
-      await sendScreeningApplication(screeningAnswers, portfolioFile)
-
-      const autoId = createAutoParticipantId(screeningAnswers)
-
-      // 스크리닝 응답을 GAS 실험 데이터 시트에도 저장 (포트폴리오 파일 본문 제외)
-      const gasUrl = process.env.NEXT_PUBLIC_GAS_URL ?? ''
-      if (gasUrl) {
-        fetch(gasUrl, {
-          method: 'POST',
-          body: JSON.stringify({
-            kind: 'screening',
-            participantId: autoId,
-            submittedAt: new Date().toISOString(),
-            fullName: screeningAnswers.fullName,
-            gender: screeningAnswers.gender,
-            email: screeningAnswers.email,
-            currentPractice: screeningAnswers.currentPractice,
-            career: screeningAnswers.career,
-            logoProjects: screeningAnswers.logoProjects,
-            field: screeningAnswers.field,
-            aiUse: screeningAnswers.aiUse,
-            portfolioFileName: screeningAnswers.portfolioFileName,
-            portfolioFileSize: screeningAnswers.portfolioFileSize,
-          }),
-        }).catch(() => {})
-      }
-
-      logEvent('screening_passed', {
-        detail: '실험참여자 기본 문항 신청 완료 및 이메일 전송 요청',
-        payload: {
-          answers: screeningAnswers,
-          delivery: 'google_apps_script',
-          endpoint: SCREENING_API_URL,
-        },
-      })
-      setShowScreeningThanks(false)
-      startExperimentSession(autoId, 'screening_auto')
-    } catch (error) {
-      setScreeningSubmitMessage('신청 내용을 이메일 시스템으로 보내지 못했습니다. 네트워크 연결을 확인한 뒤 다시 눌러 주세요.')
-      logEvent('screening_submit_failed', {
-        detail: '실험참여자 기본 문항 이메일 전송 실패',
-        payload: {
-          error: String(error),
-          answers: screeningAnswers,
-        },
-      })
-    } finally {
-      setIsSubmittingScreening(false)
-    }
-  }, [isSubmittingScreening, screeningAnswers, logEvent, startExperimentSession])
+    logEvent('post_experiment_info_submitted', {
+      detail: '실험 후 개인정보 제출',
+      payload: { hasName: !!postExperimentAnswers.fullName, hasEmail: !!postExperimentAnswers.email },
+    })
+    setIsSubmittingPostExperiment(false)
+    setStep('completed')
+  }, [postExperimentAnswers, participantId, logEvent])
 
   const startCondition = useCallback(() => {
     if (!activeAssignment) return
@@ -1760,8 +1473,27 @@ export default function Home() {
       payload: {
         ai_recommended: toRecommended(target.stimulus),
         previous_selected_id: previousSelectedId,
+        selection_changed: !!(previousSelectedId && previousSelectedId !== stimulusId),
       },
     })
+
+    if (previousSelectedId && previousSelectedId !== stimulusId) {
+      const prevCard = cards.find((c) => c.stimulus.id === previousSelectedId)
+      logEvent('final_selection_changed', {
+        condition: activeAssignment?.condition,
+        conditionLabel: activeAssignment?.conditionLabel,
+        setId: activeAssignment?.setId,
+        stimulusId,
+        detail: '최종선택 변경',
+        payload: {
+          previous_selected_id: previousSelectedId,
+          new_selected_id: stimulusId,
+          previous_ai_recommended: prevCard ? toRecommended(prevCard.stimulus) : null,
+          new_ai_recommended: toRecommended(target.stimulus),
+          condition_order: conditionOrderLabel,
+        },
+      })
+    }
     return true
   }, [finalSelectedStimulusId, cards, updateFinalDecision, logEvent, activeAssignment])
 
@@ -1825,7 +1557,7 @@ export default function Home() {
   const submitPostSurvey = useCallback(() => {
     if (!activeAssignment) return
     const cond = activeAssignment.condition
-    const needsCollab = cond === 'collab' || cond === 'ai'
+    const needsCollab = cond === 'collab'
     const needsAiOnly = cond === 'ai'
     const missingYesNo = postSurveyAnswers.q1 === null || postSurveyAnswers.q2 === null
     const missingLikert = [postSurveyAnswers.q3, postSurveyAnswers.q4, postSurveyAnswers.q5].some((v) => v === null)
@@ -1922,8 +1654,12 @@ export default function Home() {
       setDebriefCheckError('응답을 선택해 주세요.')
       return
     }
-    if (debriefCheckAnswers.suspected === 'yes' && debriefCheckAnswers.suspectedTiming === null) {
-      setDebriefCheckError('의심한 시점을 선택해 주세요.')
+    if (debriefCheckAnswers.suspected === 'yes' && !debriefCheckAnswers.suspectedTiming?.trim()) {
+      setDebriefCheckError('언제 그렇게 느꼈는지 입력해 주세요.')
+      return
+    }
+    if (debriefCheckAnswers.suspected === 'yes' && !debriefCheckAnswers.suspectedReason?.trim()) {
+      setDebriefCheckError('왜 그렇게 느꼈는지 입력해 주세요.')
       return
     }
     setDebriefCheckError('')
@@ -1976,9 +1712,8 @@ export default function Home() {
   const showCompSurvey = step === 'comparison_survey'
   const showDebriefCheck = step === 'debriefing_check'
   const showDebriefing = step === 'debriefing'
+  const showEligibilityCollection = step === 'eligibility_collection'
   const showAppHeader = !showConsentScreen && !showScreeningScreen
-  const screeningEmailIsCompleteAndValid = isValidEmailAddress(screeningAnswers.email)
-  const screeningAllRequiredComplete = getMissingScreeningFields(screeningAnswers).length === 0 && screeningEmailIsCompleteAndValid
 
   const handleUiClickCapture = useCallback((event: React.MouseEvent<HTMLElement>) => {
     const origin = event.target as HTMLElement | null
@@ -2021,7 +1756,8 @@ export default function Home() {
             <div style={{ fontSize: 12, color: '#666666' }}>생성형 AI 기반 브랜드 로고 시안 판단 실험</div>
           </div>
           <div style={{ textAlign: 'right', fontSize: 12, color: '#4d4d4d' }}>
-            <div>참가자 ID: {participantId || '-'}</div>
+            <div>참가자 코드: {participantId || '-'}</div>
+            <div>LS 그룹: {assignments[0]?.latinSquareGroup ?? '-'}</div>
             <div>저장된 로그 행: {rows.length}</div>
           </div>
         </header>
@@ -2039,26 +1775,39 @@ export default function Home() {
 
               <div style={{ maxWidth: 820, margin: '0 auto', display: 'grid', gap: 34, fontSize: 16, lineHeight: 1.85, color: '#1f2937' }}>
                 <section>
-                  <h2 style={{ fontSize: 18, fontWeight: 800, color: '#111111', marginBottom: 10 }}>실험 목적</h2>
+                  <h2 style={{ fontSize: 18, fontWeight: 800, color: '#111111', marginBottom: 10 }}>실험 안내</h2>
                   <p>
                     본 실험은 생성형 AI 기반 로고 디자인 환경에서 전문 디자이너가 로고 시안을 판단하는 과정을
-                    분석하기 위한 연구입니다. AI 판단 정보가 제시되는 범위에 따라 참가자가 시안을 어떻게 후보유지,
-                    제외, 변경, 최종 선택하는지를 확인하고자 합니다.
+                    분석하기 위한 연구입니다.
+                  </p>
+                </section>
+
+                <section>
+                  <h2 style={{ fontSize: 18, fontWeight: 800, color: '#111111', marginBottom: 10 }}>실험 참여 대상</h2>
+                  <ul style={{ display: 'grid', gap: 6, paddingLeft: 20 }}>
+                    <li>현재 디자인 분야에서 실무에 종사하고 있는 분</li>
+                    <li>디자인 실무 경력 3년 이상인 분</li>
+                    <li>브랜드 로고 또는 CI 관련 프로젝트 경험이 3건 이상인 분</li>
+                  </ul>
+                </section>
+
+                <section>
+                  <h2 style={{ fontSize: 18, fontWeight: 800, color: '#111111', marginBottom: 10 }}>실험 진행 방식</h2>
+                  <p>
+                    본 실험은 동일한 브랜드 브리프를 기준으로 AI 판단 정보 제시 범위가 다른 3가지 조건을
+                    순차적으로 수행합니다. 각 조건에서 로고 시안을 검토하고, 후보유지·제외 분류 후 상세 평가를
+                    거쳐 최종 1개 시안을 선택합니다. 조건 완료 후 간단한 사후 설문에 응답합니다.
                   </p>
                   <p style={{ marginTop: 14 }}>
-                    본 실험은 로고 시안의 단순한 미적 우열을 평가하는 것이 아니라, 브랜드 브리프를 바탕으로 전문
-                    디자이너가 어떤 기준과 과정으로 시안을 판단하는지를 살펴보는 데 목적이 있습니다. 참가자께서는
-                    실제 실무에서 후보 시안을 검토하듯이, 제시된 브랜드 맥락과 로고 시안을 바탕으로 판단해 주시면
-                    됩니다.
+                    예상 소요 시간은 약 40~60분이며, 본 실험에는 정답이 없습니다. 실제 실무에서 후보 시안을
+                    검토하듯이 자연스럽게 판단해 주시면 됩니다.
                   </p>
-                  <p style={{ marginTop: 14 }}>
-                    수집되는 자료는 시안 판단 과정과 간단한 평가 응답이며, 연구 목적 이외의 용도로 사용되지 않습니다.
-                    모든 자료는 익명화하여 분석됩니다. 또한 제출해 주신 포트폴리오는 참가자 자격 요건 확인을 위한
-                    참고 자료로만 사용되며, 실험 자료로 수집·분석되지 않습니다. 자격 확인이 완료된 후 포트폴리오
-                    자료는 별도로 보관하지 않고 폐기됩니다.
-                  </p>
-                  <p style={{ marginTop: 14 }}>
-                    본 실험에는 정답이 없으므로, 본인의 전문적 판단에 따라 자연스럽게 응답해 주시면 됩니다.
+                </section>
+
+                <section>
+                  <h2 style={{ fontSize: 18, fontWeight: 800, color: '#111111', marginBottom: 10 }}>사례비 안내</h2>
+                  <p>
+                    실험 완료 후 소정의 사례비가 제공됩니다. 사례비 지급 방식은 실험 종료 후 안내해 드립니다.
                   </p>
                 </section>
 
@@ -2070,37 +1819,20 @@ export default function Home() {
                 </section>
 
                 <section>
-                  <h2 style={{ fontSize: 18, fontWeight: 800, color: '#111111', marginBottom: 10 }}>실험 내용</h2>
-                  <ol style={{ display: 'grid', gap: 4, paddingLeft: 20 }}>
-                    <li>브랜드 브리프 확인</li>
-                    <li>AI 로고 시안 확인</li>
-                    <li>시안 후보유지 / 제외</li>
-                    <li>후보유지 시안 상세 평가</li>
-                    <li>최종 시안 선택</li>
-                    <li>사후 설문 응답</li>
-                  </ol>
-                </section>
-
-                <section>
-                  <h2 style={{ fontSize: 18, fontWeight: 800, color: '#111111', marginBottom: 10 }}>예상 소요 시간</h2>
-                  <p>약 20~30분</p>
-                </section>
-
-                <section>
                   <h2 style={{ fontSize: 18, fontWeight: 800, color: '#111111', marginBottom: 10 }}>윤리 및 개인정보 안내</h2>
                   <ul style={{ display: 'grid', gap: 4, paddingLeft: 20 }}>
                     <li>응답 데이터는 연구 목적으로만 사용됩니다.</li>
                     <li>개인 식별 정보는 익명화 처리됩니다.</li>
                     <li>실험 중 언제든 참여를 중단할 수 있습니다.</li>
                     <li>일부 실험 정보는 조건 간 비교를 위해 사전에 구성된 자극일 수 있습니다.</li>
-                    <li>실험 종료 후 디브리핑(실험 과정 보고)가 제공됩니다.</li>
+                    <li>실험 종료 후 디브리핑(실험 과정 보고)이 제공됩니다.</li>
                   </ul>
                 </section>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, paddingTop: 8 }}>
                   <button
                     onClick={() => {
-                      setScreeningError('')
+                      setEligibilityError('')
                       setStep('screening')
                     }}
                     style={{ border: 'none', background: '#000000', color: '#ffffff', borderRadius: 8, padding: '16px 12px', fontSize: 16, fontWeight: 800, cursor: 'pointer' }}
@@ -2109,7 +1841,7 @@ export default function Home() {
                   </button>
                   <button
                     onClick={() => {
-                      setScreeningBlockMessage('참여하지 않습니다. 실험 참여가 종료됩니다.')
+                      setEligibilityError('declined')
                     }}
                     style={{ border: '1px solid rgba(17,17,17,.18)', background: '#ffffff', color: '#1f2937', borderRadius: 8, padding: '16px 12px', fontSize: 16, fontWeight: 700, cursor: 'pointer' }}
                   >
@@ -2123,128 +1855,64 @@ export default function Home() {
 
         {showScreeningScreen && (
           <div style={{ minHeight: '100%', display: 'grid', placeItems: 'start center', padding: '42px 0 36px' }}>
-            <section style={{ width: 'min(760px, 92vw)', background: '#ffffff', color: '#111111' }}>
+            <section style={{ width: 'min(620px, 92vw)', background: '#ffffff', color: '#111111' }}>
               <div style={{ textAlign: 'center', marginBottom: 36 }}>
                 <h1 style={{ fontSize: 22, fontWeight: 900, letterSpacing: '-.02em', marginBottom: 10 }}>
-                  실험 참여자 신청 문항
+                  실험 참여 자격 확인
                 </h1>
+                <p style={{ fontSize: 14, color: '#6b7280', lineHeight: 1.65 }}>
+                  아래 3가지 항목 모두 해당되는 경우에만 실험에 참여할 수 있습니다.
+                </p>
               </div>
 
-              <div style={{ display: 'grid', gap: 30 }}>
-                {SCREENING_QUESTIONS.map((question) => {
-                  const isMissing = missingScreeningFields.includes(question.id)
-
+              <div style={{ display: 'grid', gap: 14 }}>
+                {ELIGIBILITY_QUESTIONS.map(({ key, text }, idx) => {
+                  const val = eligibilityCheck[key]
                   return (
-                    <section
-                      key={question.id}
-                      style={{
-                        display: 'grid',
-                        gap: 12,
-                        border: `1px solid ${isMissing ? '#dc2626' : 'transparent'}`,
-                        background: isMissing ? '#fff5f5' : '#ffffff',
-                        borderRadius: 10,
-                        padding: isMissing ? 12 : 0,
-                      }}
-                    >
-                      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center' }}>
-                        <div style={{ fontSize: 14, fontWeight: 800, color: isMissing ? '#b91c1c' : '#111111' }}>{question.title}</div>
-                        {isMissing && <div style={{ fontSize: 12, fontWeight: 800, color: '#dc2626' }}>필수 입력</div>}
+                    <div key={key} style={{ border: '1px solid rgba(17,17,17,.14)', borderRadius: 12, padding: 16, background: '#fafafa' }}>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: '#111111', marginBottom: 12, lineHeight: 1.55 }}>
+                        {idx + 1}. {text}
                       </div>
-
-                      {question.type === 'text' && (
-                        <input
-                          value={screeningAnswers[question.id]}
-                          onChange={(event) => updateScreeningAnswer(question.id, event.target.value)}
-                          placeholder={question.placeholder}
-                          style={{
-                            width: '100%',
-                            border: `1px solid ${isMissing ? '#dc2626' : 'rgba(17,17,17,.18)'}`,
-                            borderRadius: 8,
-                            padding: '12px 13px',
-                            fontSize: 14,
-                            outline: 'none',
-                            background: '#ffffff',
-                          }}
-                        />
-                      )}
-
-                      {question.type === 'file' && (
-                        <div style={{ display: 'grid', gap: 8 }}>
-                          <input
-                            type='file'
-                            accept='.pdf,.jpg,.jpeg,application/pdf,image/jpeg'
-                            onChange={(event) => updateScreeningPortfolio(event.target.files?.[0] ?? null)}
-                            style={{
-                              width: '100%',
-                              border: `1px solid ${isMissing ? '#dc2626' : 'rgba(17,17,17,.18)'}`,
-                              borderRadius: 8,
-                              padding: '11px 12px',
-                              fontSize: 14,
-                              background: '#ffffff',
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        {(['yes', 'no'] as const).map((v) => (
+                          <button
+                            key={v}
+                            onClick={() => {
+                              setEligibilityCheck((prev) => ({ ...prev, [key]: v }))
+                              setEligibilityError('')
                             }}
-                          />
-                          {screeningAnswers.portfolioFileName && (
-                            <div style={{ fontSize: 12, color: '#374151' }}>
-                              선택된 파일: {screeningAnswers.portfolioFileName}
-                            </div>
-                          )}
-                          {question.helper && (
-                            <div style={{ fontSize: 12, color: '#6b7280', lineHeight: 1.5 }}>{question.helper}</div>
-                          )}
-                        </div>
-                      )}
-
-                      {question.type === 'radio' && (
-                        <div style={{ display: 'grid', gap: 11 }}>
-                          {(question.options ?? []).map((option) => {
-                            const selected = screeningAnswers[question.id] === option
-                            return (
-                              <label
-                                key={`${question.id}-${option}`}
-                                style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14, color: '#111827', cursor: 'pointer' }}
-                              >
-                                <input
-                                  type='radio'
-                                  name={question.id}
-                                  value={option}
-                                  checked={selected}
-                                  onChange={() => updateScreeningAnswer(question.id, option)}
-                                  style={{ width: 17, height: 17, accentColor: isMissing ? '#dc2626' : '#111111' }}
-                                />
-                                {option}
-                              </label>
-                            )
-                          })}
-                        </div>
-                      )}
-                    </section>
+                            style={{
+                              border: `1px solid ${val === v ? (v === 'yes' ? '#111111' : '#dc2626') : 'rgba(17,17,17,.18)'}`,
+                              background: val === v ? (v === 'yes' ? '#111111' : '#dc2626') : '#ffffff',
+                              color: val === v ? '#ffffff' : '#333333',
+                              borderRadius: 8, padding: '8px 28px', fontSize: 14, fontWeight: val === v ? 700 : 400, cursor: 'pointer',
+                            }}
+                          >{v === 'yes' ? '예' : '아니오'}</button>
+                        ))}
+                      </div>
+                    </div>
                   )
                 })}
               </div>
 
-              {screeningError && (
-                <div style={{ marginTop: 20, border: '1px solid #dc2626', background: '#fff5f5', borderRadius: 8, padding: '10px 12px', color: '#b91c1c', fontSize: 13, fontWeight: 800 }}>
-                  {screeningError}
+              {eligibilityError && eligibilityError !== 'rejection' && (
+                <div style={{ marginTop: 16, border: '1px solid #dc2626', background: '#fff5f5', borderRadius: 8, padding: '10px 12px', color: '#b91c1c', fontSize: 13, fontWeight: 700 }}>
+                  {eligibilityError}
                 </div>
               )}
 
               <button
-                onClick={confirmScreening}
-                disabled={isSubmittingScreening}
-                style={{
-                  width: '100%',
-                  marginTop: 30,
-                  border: 'none',
-                  background: isSubmittingScreening ? '#6b7280' : screeningAllRequiredComplete ? '#111111' : '#9ca3af',
-                  color: '#ffffff',
-                  borderRadius: 6,
-                  padding: '15px 12px',
-                  fontSize: 15,
-                  fontWeight: 800,
-                  cursor: isSubmittingScreening ? 'wait' : 'pointer',
-                }}
+                onClick={confirmEligibility}
+                style={{ width: '100%', marginTop: 24, border: 'none', background: '#111111', color: '#ffffff', borderRadius: 8, padding: '15px 12px', fontSize: 15, fontWeight: 800, cursor: 'pointer' }}
               >
-                {isSubmittingScreening ? '신청 내용 전송 중...' : '확인'}
+                확인
+              </button>
+
+              <button
+                onClick={resetToConsent}
+                style={{ width: '100%', marginTop: 10, border: '1px solid rgba(17,17,17,.18)', background: '#ffffff', color: '#555555', borderRadius: 8, padding: '12px 12px', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}
+              >
+                이전으로
               </button>
             </section>
           </div>
@@ -2510,37 +2178,62 @@ export default function Home() {
                   {cards.map((card) => {
                     const isActive = activeStimulusId === card.stimulus.id
                     const isDecided = !!card.initialDecision
+                    const isCollab = activeAssignment.condition === 'collab'
+                    const isAiCond = activeAssignment.condition === 'ai'
+                    const isRecommended = toRecommended(card.stimulus)
+                    const showBadge = (isCollab || isAiCond) && isRecommended
+                    const aiRank = card.stimulus.aiRank ?? null
+                    const aiScore = aiRank != null ? 100 - Math.floor((aiRank - 1) * 3.75) : null
+
+                    const cardBorder = isActive
+                      ? `2px solid ${currentConditionColor}`
+                      : showBadge && !isAiCond
+                        ? '1.5px solid rgba(37,99,235,.55)'
+                        : isAiCond
+                          ? '1px solid rgba(17,17,17,.18)'
+                          : '1px solid rgba(17,17,17,.14)'
 
                     return (
                       <div
                         key={card.stimulus.id}
-                        onClick={() => {
-                          setActiveStimulusId(card.stimulus.id)
-                        }}
+                        onClick={() => { setActiveStimulusId(card.stimulus.id) }}
                         data-click-log={`시안 카드 선택:${card.stimulus.id}`}
                         data-stimulus-id={card.stimulus.id}
-                        style={{ border: `1px solid ${isActive ? currentConditionColor : 'rgba(17,17,17,.14)'}`, borderRadius: 12, background: '#ffffff', padding: 8, cursor: 'pointer' }}
+                        style={{ border: cardBorder, borderRadius: 12, background: '#ffffff', padding: 8, cursor: 'pointer' }}
                       >
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                          <div style={{ fontSize: 12, fontWeight: 700, color: '#333333' }}>
-                            시안 ID {card.stimulus.id}
-                          </div>
-                          {toRecommended(card.stimulus) && activeAssignment.condition !== 'human' && (
-                            <div style={{ border: '1px solid rgba(107,114,128,.45)', background: 'rgba(107,114,128,.12)', color: '#374151', borderRadius: 999, padding: '2px 8px', fontSize: 11, fontWeight: 700 }}>
-                              AI 추천
+                        {/* 평가 제시형: 상단에 AI 순위/점수 헤더 */}
+                        {isAiCond && aiRank != null && (
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 7, background: aiRank <= 3 ? '#eff6ff' : '#f8f8f8', borderRadius: 8, padding: '6px 8px' }}>
+                            <div style={{ fontSize: 15, fontWeight: 900, color: aiRank <= 3 ? '#1d4ed8' : '#374151' }}>
+                              {aiRank}위
                             </div>
-                          )}
-                        </div>
+                            <div style={{ fontSize: 11, fontWeight: 700, color: aiRank <= 3 ? '#1d4ed8' : '#6b7280' }}>
+                              AI 시각 평가 {aiScore}점
+                            </div>
+                          </div>
+                        )}
+
+                        {/* 추천 제시형: 상단 ID + 배지 행 */}
+                        {!isAiCond && (
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                            <div style={{ fontSize: 12, fontWeight: 700, color: '#333333' }}>
+                              시안 ID {card.stimulus.id}
+                            </div>
+                            {showBadge && (
+                              <div style={{ background: '#1d4ed8', color: '#ffffff', borderRadius: 999, padding: '3px 9px', fontSize: 11, fontWeight: 800, letterSpacing: '.02em' }}>
+                                AI 추천
+                              </div>
+                            )}
+                          </div>
+                        )}
 
                         <div style={{ width: '100%', aspectRatio: '1 / 1', borderRadius: 10, background: '#f7f7f7', border: '1px solid rgba(17,17,17,.08)', display: 'grid', placeItems: 'center', marginBottom: 8, overflow: 'hidden' }} dangerouslySetInnerHTML={{ __html: renderLogoSvg(card.stimulus) }} />
 
-                        {activeAssignment.condition === 'ai' && (
-                          <div style={{ marginBottom: 8 }}>
-                            <div style={{ fontSize: 14, fontWeight: 800, color: '#111111', marginBottom: 2 }}>
-                              {card.stimulus.aiRank != null ? `${card.stimulus.aiRank}위` : '-'}
-                            </div>
-                            <div style={{ fontSize: 12, fontWeight: 500, color: '#555555' }}>
-                              AI 시각 평가 {card.stimulus.aiRank != null ? `${100 - Math.floor((card.stimulus.aiRank - 1) * 3.75)}점` : '-'}
+                        {/* 평가 제시형: 이미지 하단 AI 추천 배지(상위 3개만) */}
+                        {isAiCond && showBadge && (
+                          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 6 }}>
+                            <div style={{ background: '#1d4ed8', color: '#ffffff', borderRadius: 999, padding: '3px 10px', fontSize: 11, fontWeight: 800 }}>
+                              AI 추천
                             </div>
                           </div>
                         )}
@@ -2992,7 +2685,7 @@ export default function Home() {
 
         {showPostSurvey && activeAssignment && (() => {
           const cond = activeAssignment.condition
-          const needsCollab = cond === 'collab' || cond === 'ai'
+          const needsCollab = cond === 'collab'
           const needsAiOnly = cond === 'ai'
           const likertQuestions = [
             ...POST_SURVEY_COMMON,
@@ -3128,9 +2821,9 @@ export default function Home() {
 
               <div style={{ border: '1px solid rgba(17,17,17,.12)', borderRadius: 12, padding: 14, background: '#ffffff' }}>
                 <div style={{ fontSize: 13, fontWeight: 700, color: '#111111', marginBottom: 4 }}>
-                  AI 추천 또는 평가 정보가 판단에 도움이 되었거나 방해가 되었다고 느낀 이유를 간단히 적어 주세요.
+                  위와 같이 응답한 이유나, 조건 간 차이에 대해 느낀 점이 있다면 자유롭게 작성해 주세요.
                 </div>
-                <div style={{ fontSize: 11, color: '#6b7280', marginBottom: 8 }}>선택 입력</div>
+                <div style={{ fontSize: 11, color: '#6b7280', marginBottom: 8 }}>선택 입력 · 응답하지 않아도 다음 단계로 이동 가능합니다</div>
                 <textarea
                   value={compSurveyAnswers.freeText}
                   onChange={(e) => setCompSurveyAnswers((prev) => ({ ...prev, freeText: e.target.value }))}
@@ -3189,25 +2882,19 @@ export default function Home() {
               {debriefCheckAnswers.suspected === 'yes' && (
                 <>
                   <div style={{ border: '1px solid rgba(17,17,17,.12)', borderRadius: 12, padding: 14, background: '#ffffff' }}>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: '#111111', marginBottom: 10 }}>어느 시점에서 그렇게 느꼈습니까?</div>
-                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                      {DEBRIEF_TIMING_OPTIONS.map((opt) => (
-                        <button
-                          key={opt}
-                          onClick={() => setDebriefCheckAnswers((prev) => ({ ...prev, suspectedTiming: opt }))}
-                          style={{
-                            border: `1px solid ${debriefCheckAnswers.suspectedTiming === opt ? '#111111' : 'rgba(17,17,17,.18)'}`,
-                            background: debriefCheckAnswers.suspectedTiming === opt ? '#111111' : '#ffffff',
-                            color: debriefCheckAnswers.suspectedTiming === opt ? '#ffffff' : '#333333',
-                            borderRadius: 8, padding: '8px 14px', fontSize: 13, fontWeight: debriefCheckAnswers.suspectedTiming === opt ? 700 : 400, cursor: 'pointer',
-                          }}
-                        >{opt}</button>
-                      ))}
-                    </div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: '#111111', marginBottom: 4 }}>언제 그렇게 느꼈습니까?</div>
+                    <div style={{ fontSize: 11, color: '#6b7280', marginBottom: 8 }}>필수 입력</div>
+                    <textarea
+                      value={debriefCheckAnswers.suspectedTiming ?? ''}
+                      onChange={(e) => setDebriefCheckAnswers((prev) => ({ ...prev, suspectedTiming: e.target.value }))}
+                      placeholder='예: 추천 제시형 조건 진행 중, 평가 점수를 확인했을 때 등'
+                      rows={2}
+                      style={{ width: '100%', border: '1px solid rgba(17,17,17,.18)', borderRadius: 8, padding: '8px 10px', fontSize: 13, resize: 'vertical', outline: 'none', fontFamily: 'inherit' }}
+                    />
                   </div>
                   <div style={{ border: '1px solid rgba(17,17,17,.12)', borderRadius: 12, padding: 14, background: '#ffffff' }}>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: '#111111', marginBottom: 4 }}>그렇게 느낀 이유를 간단히 적어 주세요.</div>
-                    <div style={{ fontSize: 11, color: '#6b7280', marginBottom: 8 }}>선택 입력</div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: '#111111', marginBottom: 4 }}>왜 그렇게 느꼈습니까?</div>
+                    <div style={{ fontSize: 11, color: '#6b7280', marginBottom: 8 }}>필수 입력</div>
                     <textarea
                       value={debriefCheckAnswers.suspectedReason}
                       onChange={(e) => setDebriefCheckAnswers((prev) => ({ ...prev, suspectedReason: e.target.value }))}
@@ -3239,32 +2926,164 @@ export default function Home() {
 
         {showDebriefing && (
           <div style={{ maxWidth: 720, margin: '0 auto', display: 'grid', gap: 14, padding: '24px 0 48px' }}>
-            <div style={{ border: '1px solid rgba(17,17,17,.14)', borderRadius: 14, padding: 20, background: '#f7f7f7' }}>
+            <div style={{ border: '1px solid rgba(17,17,17,.14)', borderRadius: 14, padding: 24, background: '#f7f7f7' }}>
               <div style={{ fontSize: 12, fontWeight: 700, color: '#4d4d4d', marginBottom: 6 }}>디브리핑</div>
-              <div style={{ fontSize: 20, fontWeight: 800, color: '#111111', marginBottom: 18 }}>연구 참여에 감사드립니다.</div>
-              <div style={{ display: 'grid', gap: 14, fontSize: 14, lineHeight: 1.8, color: '#1f2937' }}>
+              <div style={{ fontSize: 20, fontWeight: 800, color: '#111111', marginBottom: 20 }}>본 연구에 참여해 주셔서 감사합니다.</div>
+              <div style={{ display: 'grid', gap: 16, fontSize: 14, lineHeight: 1.85, color: '#1f2937' }}>
                 <p>
-                  본 실험은 AI 로고 생성 도구의 성능을 평가하는 연구가 아니라, AI 판단 정보 제시 범위에 따라 전문 디자이너의 로고 시안 판단 과정이 어떻게 달라지는지를 확인하기 위한 연구입니다.
+                  본 연구는 생성형 AI 기반 브랜드 로고 디자인 환경에서 AI 판단 정보 제시 범위가 전문 디자이너의 판단 과정에 미치는 영향을 확인하기 위한 연구입니다.
                 </p>
                 <p>
-                  실험에서 제시된 AI 추천 정보와 AI 평가 정보는 조건 간 비교와 자극 통제를 위해 사전에 구성된 정보일 수 있습니다. 이는 모든 참가자에게 동일한 조건을 제공하고, 실험 결과의 비교 가능성을 확보하기 위한 절차입니다.
+                  실험 중 제시된 AI 추천 및 AI 평가 정보는 조건 간 비교와 자극 통제를 위해 사전에 구성된 정보일 수 있습니다. 이는 실시간 AI 산출 결과의 우연성이나 변동성을 줄이고, 참가자 간 동일한 조건을 비교하기 위한 절차입니다.
                 </p>
                 <p>
-                  수집된 자료는 참가자 코드로 가명처리되어 분석되며, 이름, 이메일, 포트폴리오 등 개인 식별 정보는 실험 분석에 사용되지 않습니다.
+                  본 연구의 목적은 AI가 더 우수한 로고를 생성했는지를 평가하는 것이 아닙니다. 연구의 목적은 AI 추천 또는 평가 정보가 전문 디자이너의 후보 유지, 제외, 변경, 최종 선택 판단에 어떤 영향을 미치는지를 분석하는 데 있습니다.
                 </p>
                 <p>
-                  연구 참여에 감사드립니다. 연구 참여 후에도 자료 철회나 문의가 필요한 경우 연구자에게 연락하실 수 있습니다.
+                  수집된 자료는 참가자 코드로 가명처리되며, 개인을 식별할 수 있는 이름, 이메일, 포트폴리오, 소속 정보는 연구 결과에 포함되지 않습니다.
+                </p>
+                <p>
+                  연구 참여 중 궁금한 점이나 중도 철회, 개인정보 처리와 관련한 문의가 있는 경우 연구책임자에게 연락할 수 있습니다.
+                </p>
+                <p style={{ color: '#4b5563', fontSize: 13 }}>
+                  [실험 종료] 버튼을 누르면 모든 절차가 종료됩니다.
                 </p>
               </div>
             </div>
             <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
               <button
-                onClick={() => setStep('completed')}
+                onClick={() => {
+                  setPostExperimentAnswers(INITIAL_POST_EXPERIMENT)
+                  setPostExperimentError('')
+                  setStep('eligibility_collection')
+                }}
                 style={{ border: 'none', background: '#111111', color: '#ffffff', borderRadius: 10, padding: '12px 24px', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}
               >
                 실험 종료
               </button>
             </div>
+          </div>
+        )}
+
+        {showEligibilityCollection && (
+          <div style={{ minHeight: '100%', display: 'grid', placeItems: 'start center', padding: '42px 0 48px' }}>
+            <section style={{ width: 'min(680px, 92vw)', background: '#ffffff', color: '#111111' }}>
+              <div style={{ textAlign: 'center', marginBottom: 32 }}>
+                <h1 style={{ fontSize: 22, fontWeight: 900, letterSpacing: '-.02em', marginBottom: 10 }}>참가자 정보 입력</h1>
+                <p style={{ fontSize: 14, color: '#6b7280', lineHeight: 1.65 }}>
+                  실험이 모두 완료되었습니다. 사례비 지급 및 연구 분석을 위해 아래 정보를 입력해 주세요.<br />
+                  입력하신 정보는 실험 데이터와 분리하여 보관되며, 연구 목적 외에는 사용되지 않습니다.
+                </p>
+              </div>
+
+              <div style={{ display: 'grid', gap: 16 }}>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#111111', marginBottom: 6 }}>이름 <span style={{ color: '#6b7280', fontWeight: 400 }}>(필수)</span></div>
+                  <input
+                    value={postExperimentAnswers.fullName}
+                    onChange={(e) => setPostExperimentAnswers((prev) => ({ ...prev, fullName: e.target.value }))}
+                    placeholder='이름을 입력해 주세요.'
+                    style={{ width: '100%', border: '1px solid rgba(17,17,17,.18)', borderRadius: 8, padding: '11px 12px', fontSize: 14, outline: 'none', background: '#ffffff', boxSizing: 'border-box' }}
+                  />
+                </div>
+
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#111111', marginBottom: 8 }}>성별 <span style={{ color: '#6b7280', fontWeight: 400 }}>(필수)</span></div>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    {['남성', '여성', '기타'].map((opt) => (
+                      <button key={opt}
+                        onClick={() => setPostExperimentAnswers((prev) => ({ ...prev, gender: opt }))}
+                        style={{ border: `1px solid ${postExperimentAnswers.gender === opt ? '#111111' : 'rgba(17,17,17,.18)'}`, background: postExperimentAnswers.gender === opt ? '#111111' : '#ffffff', color: postExperimentAnswers.gender === opt ? '#ffffff' : '#333333', borderRadius: 8, padding: '8px 18px', fontSize: 13, fontWeight: postExperimentAnswers.gender === opt ? 700 : 400, cursor: 'pointer' }}
+                      >{opt}</button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#111111', marginBottom: 6 }}>이메일 <span style={{ color: '#6b7280', fontWeight: 400 }}>(사례비 지급용, 필수)</span></div>
+                  <input
+                    value={postExperimentAnswers.email}
+                    onChange={(e) => setPostExperimentAnswers((prev) => ({ ...prev, email: e.target.value }))}
+                    placeholder='예: name@example.com'
+                    type='email'
+                    style={{ width: '100%', border: '1px solid rgba(17,17,17,.18)', borderRadius: 8, padding: '11px 12px', fontSize: 14, outline: 'none', background: '#ffffff', boxSizing: 'border-box' }}
+                  />
+                </div>
+
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#111111', marginBottom: 8 }}>디자인 실무 경력</div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                    {['3~5년', '5~10년', '10년 이상'].map((opt) => (
+                      <button key={opt}
+                        onClick={() => setPostExperimentAnswers((prev) => ({ ...prev, career: opt }))}
+                        style={{ border: `1px solid ${postExperimentAnswers.career === opt ? '#111111' : 'rgba(17,17,17,.18)'}`, background: postExperimentAnswers.career === opt ? '#111111' : '#ffffff', color: postExperimentAnswers.career === opt ? '#ffffff' : '#333333', borderRadius: 8, padding: '8px 14px', fontSize: 13, fontWeight: postExperimentAnswers.career === opt ? 700 : 400, cursor: 'pointer' }}
+                      >{opt}</button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#111111', marginBottom: 8 }}>브랜드 로고 / CI 프로젝트 경험</div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                    {['3~5건', '6~10건', '11건 이상'].map((opt) => (
+                      <button key={opt}
+                        onClick={() => setPostExperimentAnswers((prev) => ({ ...prev, logoProjects: opt }))}
+                        style={{ border: `1px solid ${postExperimentAnswers.logoProjects === opt ? '#111111' : 'rgba(17,17,17,.18)'}`, background: postExperimentAnswers.logoProjects === opt ? '#111111' : '#ffffff', color: postExperimentAnswers.logoProjects === opt ? '#ffffff' : '#333333', borderRadius: 8, padding: '8px 14px', fontSize: 13, fontWeight: postExperimentAnswers.logoProjects === opt ? 700 : 400, cursor: 'pointer' }}
+                      >{opt}</button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#111111', marginBottom: 8 }}>주요 실무 분야</div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                    {['브랜드 디자인', '시각디자인', '그래픽 디자인', 'BX 디자인', 'UI/UX 디자인', '편집디자인', '기타'].map((opt) => (
+                      <button key={opt}
+                        onClick={() => setPostExperimentAnswers((prev) => ({ ...prev, field: opt }))}
+                        style={{ border: `1px solid ${postExperimentAnswers.field === opt ? '#111111' : 'rgba(17,17,17,.18)'}`, background: postExperimentAnswers.field === opt ? '#111111' : '#ffffff', color: postExperimentAnswers.field === opt ? '#ffffff' : '#333333', borderRadius: 8, padding: '8px 12px', fontSize: 13, fontWeight: postExperimentAnswers.field === opt ? 700 : 400, cursor: 'pointer' }}
+                      >{opt}</button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#111111', marginBottom: 8 }}>생성형 AI 이미지 도구 사용 경험</div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                    {['없음', '1~2회', '가끔 사용', '자주 사용'].map((opt) => (
+                      <button key={opt}
+                        onClick={() => setPostExperimentAnswers((prev) => ({ ...prev, aiUse: opt }))}
+                        style={{ border: `1px solid ${postExperimentAnswers.aiUse === opt ? '#111111' : 'rgba(17,17,17,.18)'}`, background: postExperimentAnswers.aiUse === opt ? '#111111' : '#ffffff', color: postExperimentAnswers.aiUse === opt ? '#ffffff' : '#333333', borderRadius: 8, padding: '8px 14px', fontSize: 13, fontWeight: postExperimentAnswers.aiUse === opt ? 700 : 400, cursor: 'pointer' }}
+                      >{opt}</button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#111111', marginBottom: 6 }}>포트폴리오 URL <span style={{ color: '#6b7280', fontWeight: 400 }}>(선택 — Behance, Notion 등)</span></div>
+                  <input
+                    value={postExperimentAnswers.portfolioUrl}
+                    onChange={(e) => setPostExperimentAnswers((prev) => ({ ...prev, portfolioUrl: e.target.value }))}
+                    placeholder='https://'
+                    type='url'
+                    style={{ width: '100%', border: '1px solid rgba(17,17,17,.18)', borderRadius: 8, padding: '11px 12px', fontSize: 14, outline: 'none', background: '#ffffff', boxSizing: 'border-box' }}
+                  />
+                </div>
+
+                {postExperimentError && (
+                  <div style={{ border: '1px solid #dc2626', background: '#fff5f5', borderRadius: 8, padding: '10px 12px', color: '#b91c1c', fontSize: 13, fontWeight: 700 }}>
+                    {postExperimentError}
+                  </div>
+                )}
+
+                <button
+                  onClick={submitPostExperiment}
+                  disabled={isSubmittingPostExperiment || !postExperimentAnswers.fullName.trim() || !postExperimentAnswers.gender || !postExperimentAnswers.email.trim()}
+                  style={{ marginTop: 4, border: 'none', background: (!postExperimentAnswers.fullName.trim() || !postExperimentAnswers.gender || !postExperimentAnswers.email.trim()) ? '#9ca3af' : '#111111', color: '#ffffff', borderRadius: 8, padding: '14px 0', fontSize: 15, fontWeight: 800, cursor: 'pointer', width: '100%' }}
+                >
+                  {isSubmittingPostExperiment ? '저장 중...' : '제출 후 실험 종료'}
+                </button>
+              </div>
+            </section>
           </div>
         )}
 
@@ -3501,82 +3320,28 @@ export default function Home() {
         )}
       </main>
 
-      {showScreeningThanks && (
+      {(eligibilityError === 'rejection' || eligibilityError === 'declined') && (
         <div
           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.52)', display: 'grid', placeItems: 'center', zIndex: 9999, padding: 20 }}
-          onClick={() => {
-            if (!isSubmittingScreening) setShowScreeningThanks(false)
-          }}
-        >
-          <div
-            style={{ background: '#ffffff', borderRadius: 18, padding: '30px 28px', maxWidth: 500, width: '90vw', textAlign: 'center', boxShadow: '0 24px 80px rgba(0,0,0,.28)' }}
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div style={{ fontSize: 22, fontWeight: 900, color: '#111111', marginBottom: 12 }}>
-              신청 내용 확인
-            </div>
-            <div style={{ fontSize: 15, color: '#333333', lineHeight: 1.75, marginBottom: 22 }}>
-              아래 신청 내용이 맞으면 확인을 눌러 주세요.<br />
-              확인을 누르면 이메일로 자동 전송됩니다.
-            </div>
-            {screeningSubmitMessage && (
-              <div style={{ border: '1px solid #dc2626', background: '#fff5f5', borderRadius: 10, padding: '10px 12px', fontSize: 13, color: '#b91c1c', lineHeight: 1.55, marginBottom: 14, fontWeight: 800 }}>
-                {screeningSubmitMessage}
-              </div>
-            )}
-            <div style={{ background: '#f7f7f7', border: '1px solid rgba(17,17,17,.1)', borderRadius: 10, padding: '11px 12px', fontSize: 13, color: '#4b5563', lineHeight: 1.6, marginBottom: 22 }}>
-              실험 신청자: {screeningAnswers.fullName || '-'}<br />
-              이메일: {screeningAnswers.email || '-'}<br />
-              포트폴리오: {screeningAnswers.portfolioFileName || '-'}
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-              <button
-                onClick={() => {
-                  setShowScreeningThanks(false)
-                  setScreeningSubmitMessage('')
-                }}
-                disabled={isSubmittingScreening}
-                style={{ width: '100%', border: '1px solid rgba(17,17,17,.18)', background: '#ffffff', color: '#111111', borderRadius: 10, padding: '13px 0', fontSize: 14, fontWeight: 800, cursor: isSubmittingScreening ? 'not-allowed' : 'pointer' }}
-              >
-                수정하기
-              </button>
-              <button
-                onClick={submitScreeningApplication}
-                disabled={isSubmittingScreening}
-                style={{ width: '100%', border: 'none', background: isSubmittingScreening ? '#6b7280' : '#111111', color: '#ffffff', borderRadius: 10, padding: '13px 0', fontSize: 14, fontWeight: 800, cursor: isSubmittingScreening ? 'wait' : 'pointer' }}
-              >
-                {isSubmittingScreening ? '전송 중...' : '확인'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {screeningBlockMessage && (
-        <div
-          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.52)', display: 'grid', placeItems: 'center', zIndex: 9999, padding: 20 }}
-          onClick={() => {
-            setScreeningBlockMessage('')
-          }}
+          onClick={() => setEligibilityError('')}
         >
           <div
             style={{ background: '#ffffff', borderRadius: 18, padding: '30px 28px', maxWidth: 520, width: '90vw', textAlign: 'center', boxShadow: '0 24px 80px rgba(0,0,0,.28)' }}
             onClick={(e) => e.stopPropagation()}
           >
             <div style={{ fontSize: 22, fontWeight: 900, color: '#111111', marginBottom: 12 }}>
-              실험 참여 안내
+              {eligibilityError === 'declined' ? '실험 참여 종료' : '실험 참여 안내'}
             </div>
             <div style={{ fontSize: 14, color: '#333333', lineHeight: 1.75, marginBottom: 14 }}>
-              {screeningBlockMessage}
+              {eligibilityError === 'declined'
+                ? '실험 참여를 선택하지 않으셨습니다. 참여해 주셔서 감사합니다.'
+                : '참여 자격 조건에 해당하지 않아 실험에 참여하실 수 없습니다. 관심을 가져 주셔서 감사합니다.'}
             </div>
             <div style={{ background: '#f7f7f7', border: '1px solid rgba(17,17,17,.1)', borderRadius: 10, padding: '11px 12px', fontSize: 13, color: '#4b5563', lineHeight: 1.6, marginBottom: 22 }}>
-              연구 관련 문의는 연구자 연락처와 이메일로 문의 바랍니다.<br />
-              이메일: {SCREENING_RECIPIENT_EMAIL}
+              문의: {RESEARCHER_EMAIL}
             </div>
             <button
-              onClick={() => {
-                setScreeningBlockMessage('')
-              }}
+              onClick={() => setEligibilityError('')}
               style={{ width: '100%', border: 'none', background: '#111111', color: '#ffffff', borderRadius: 10, padding: '13px 0', fontSize: 14, fontWeight: 800, cursor: 'pointer' }}
             >
               확인
