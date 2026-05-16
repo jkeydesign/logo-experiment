@@ -2221,14 +2221,6 @@ export default function Home() {
 
                         <div style={{ width: '100%', aspectRatio: '1 / 1', borderRadius: 10, background: '#f7f7f7', border: '1px solid rgba(17,17,17,.08)', display: 'grid', placeItems: 'center', marginBottom: 8, overflow: 'hidden' }} dangerouslySetInnerHTML={{ __html: renderLogoSvg(card.stimulus) }} />
 
-                        {/* 평가 제시형: 이미지 하단 AI 추천 배지(상위 3개만) */}
-                        {isAiCond && showBadge && (
-                          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 6 }}>
-                            <div style={{ background: '#111111', color: '#ffffff', borderRadius: 999, padding: '3px 10px', fontSize: 11, fontWeight: 800 }}>
-                              AI 추천
-                            </div>
-                          </div>
-                        )}
 
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
                           <button
