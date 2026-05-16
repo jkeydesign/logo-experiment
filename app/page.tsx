@@ -1839,7 +1839,7 @@ export default function Home() {
                     }}
                     style={{ border: 'none', background: '#000000', color: '#ffffff', borderRadius: 8, padding: '16px 12px', fontSize: 16, fontWeight: 800, cursor: 'pointer' }}
                   >
-                    참여합니다.
+                    동의 참여합니다.
                   </button>
                   <button
                     onClick={() => {
