@@ -75,23 +75,25 @@ const INITIAL_COMP_SURVEY: CompSurveyAnswers = {
 const INITIAL_DEBRIEF_CHECK: DebriefCheckAnswers = {
   suspected: null, suspectedTiming: null, suspectedReason: '',
 }
-const POST_SURVEY_INFO_TYPE_OPTIONS = [
-  '추가 정보 없이 로고 시안만 제시되었다',
-  'AI 추천 시안이 함께 제시되었다',
-  'AI 평가 점수 또는 순위가 함께 제시되었다',
-  '잘 모르겠다 / 기억나지 않는다',
+const POST_SURVEY_INFO_TYPE_OPTIONS: Array<{ label: string; value: string }> = [
+  { label: 'AI 관련 정보 없이 로고 시안만 제시되었다', value: 'visual_only' },
+  { label: 'AI 추천 시안이 표시되었다', value: 'recommendation' },
+  { label: 'AI 평가 점수 또는 순위가 표시되었다', value: 'score_rank' },
+  { label: '잘 모르겠다', value: 'unknown' },
 ]
 const POST_SURVEY_COMMON: Array<{ key: PostSurveyLikertKey; text: string }> = [
-  { key: 'q3', text: '이번 조건에서 최종 선택한 시안이 적절하다고 느끼는 정도는 어느 정도입니까?' },
-  { key: 'q4', text: '이번 조건에서 판단 과정이 자신에 의해 주도되었다고 느끼는 정도는 어느 정도입니까?' },
-  { key: 'q5', text: '이번 조건에서 AI가 판단 과정에 개입했다고 느끼는 정도는 어느 정도입니까?' },
+  { key: 'q3', text: '최종 선택한 시안은 적절하다고 생각한다.' },
+  { key: 'q4', text: '시안 판단 과정은 내가 주도했다고 생각한다.' },
+  { key: 'q5', text: 'AI가 나의 판단 과정에 개입했다고 생각한다.' },
 ]
 const POST_SURVEY_COLLAB: Array<{ key: PostSurveyLikertKey; text: string }> = [
-  { key: 'q6', text: '이번 조건에서 AI 추천 또는 평가 정보가 신뢰할 만하다고 느끼는 정도는 어느 정도입니까?' },
-  { key: 'q7', text: '이번 조건에서 AI 추천 또는 평가 정보가 판단에 유용했다고 느끼는 정도는 어느 정도입니까?' },
+  { key: 'q6', text: 'AI 추천 정보는 신뢰할 만하다고 생각한다.' },
+  { key: 'q7', text: 'AI 추천 정보는 시안 판단에 유용했다고 생각한다.' },
 ]
 const POST_SURVEY_AI_ONLY: Array<{ key: PostSurveyLikertKey; text: string }> = [
-  { key: 'q8', text: 'AI 점수 또는 순위 때문에 자신의 판단 기준이 흔들렸다고 느끼는 정도는 어느 정도입니까?' },
+  { key: 'q6', text: 'AI 평가 점수 또는 순위는 신뢰할 만하다고 생각한다.' },
+  { key: 'q7', text: 'AI 평가 점수 또는 순위는 시안 판단에 유용했다고 생각한다.' },
+  { key: 'q8', text: 'AI 점수 또는 순위 때문에 나의 판단 기준이 흔들렸다고 생각한다.' },
 ]
 const COND_LABELS_ALL: string[] = ['시안 제시형', '추천 제시형', '평가 제시형']
 const COMP_QUESTIONS: Array<{ key: keyof CompSurveyAnswers; text: string; options: string[] }> = [
@@ -1561,7 +1563,7 @@ export default function Home() {
     const needsAiOnly = cond === 'ai'
     const missingInfoType = postSurveyAnswers.infoType === null
     const missingLikert = [postSurveyAnswers.q3, postSurveyAnswers.q4, postSurveyAnswers.q5].some((v) => v === null)
-      || (needsCollab && [postSurveyAnswers.q6, postSurveyAnswers.q7].some((v) => v === null))
+      || ((needsCollab || needsAiOnly) && [postSurveyAnswers.q6, postSurveyAnswers.q7].some((v) => v === null))
       || (needsAiOnly && postSurveyAnswers.q8 === null)
     const missingFreeText = !postSurveyAnswers.freeText?.trim()
     if (missingInfoType || missingLikert) {
@@ -1569,7 +1571,7 @@ export default function Home() {
       return
     }
     if (missingFreeText) {
-      setPostSurveyError('가장 판단하기 어려웠던 점을 입력해 주세요.')
+      setPostSurveyError('이번 단계에서 가장 판단하기 어려웠던 점을 입력해 주세요.')
       return
     }
     setPostSurveyError('')
@@ -1580,18 +1582,22 @@ export default function Home() {
       stimulusId: finalSelectedStimulusId ?? undefined,
       detail: `조건별 사후 설문: ${activeAssignment.conditionLabel}`,
       payload: {
-        participantId,
-        conditionType: activeAssignment.conditionLabel,
-        setId: activeAssignment.setId,
-        selectedFinalLogoId: finalSelectedStimulusId,
-        manipulation_check_info_type: postSurveyAnswers.infoType,
-        confidenceScore: postSurveyAnswers.q3,
-        agencyScore: postSurveyAnswers.q4,
-        perceivedAiInterventionScore: postSurveyAnswers.q5,
-        aiTrustScore: postSurveyAnswers.q6 ?? null,
-        aiUsefulnessScore: postSurveyAnswers.q7 ?? null,
-        aiScoreBiasScore: postSurveyAnswers.q8 ?? null,
-        freeText: postSurveyAnswers.freeText || null,
+        participant_code: participantId,
+        latin_square_group: activeAssignment.latinSquareGroup,
+        trial_order: activeAssignment.order,
+        condition_type: cond === 'human' ? 'visual_only' : cond === 'collab' ? 'recommendation' : 'score_rank',
+        stimulus_set_id: activeAssignment.setId,
+        selected_final_logo_id: finalSelectedStimulusId,
+        manipulation_check_ai_info_type: postSurveyAnswers.infoType,
+        final_choice_appropriateness: postSurveyAnswers.q3,
+        perceived_control: postSurveyAnswers.q4,
+        perceived_ai_intervention: postSurveyAnswers.q5,
+        ai_recommendation_trust: needsCollab ? (postSurveyAnswers.q6 ?? null) : null,
+        ai_recommendation_usefulness: needsCollab ? (postSurveyAnswers.q7 ?? null) : null,
+        ai_score_rank_trust: needsAiOnly ? (postSurveyAnswers.q6 ?? null) : null,
+        ai_score_rank_usefulness: needsAiOnly ? (postSurveyAnswers.q7 ?? null) : null,
+        ai_score_rank_criterion_shift: needsAiOnly ? (postSurveyAnswers.q8 ?? null) : null,
+        condition_difficulty_comment: postSurveyAnswers.freeText || null,
       },
     })
     const nextIndex = currentConditionIndex + 1
@@ -2697,22 +2703,22 @@ export default function Home() {
                 {/* 조작 점검 — 단일선택 */}
                 <div style={{ border: '1px solid rgba(17,17,17,.12)', borderRadius: 12, padding: 14, background: '#ffffff' }}>
                   <div style={{ fontSize: 13, fontWeight: 700, color: '#111111', marginBottom: 12, lineHeight: 1.55 }}>
-                    이번 단계에서 AI가 생성한 로고 시안과 함께 제시된 정보는 다음 중 무엇입니까?
+                    이번 단계에서 로고 시안과 함께 제공된 AI 관련 정보는 무엇이었다고 기억하십니까?
                   </div>
                   <div style={{ display: 'grid', gap: 8 }}>
-                    {POST_SURVEY_INFO_TYPE_OPTIONS.map((opt) => (
+                    {POST_SURVEY_INFO_TYPE_OPTIONS.map(({ label, value }) => (
                       <button
-                        key={opt}
-                        onClick={() => setPostSurveyAnswers((prev) => ({ ...prev, infoType: opt }))}
+                        key={value}
+                        onClick={() => setPostSurveyAnswers((prev) => ({ ...prev, infoType: value }))}
                         style={{
-                          border: `1px solid ${postSurveyAnswers.infoType === opt ? '#111111' : 'rgba(17,17,17,.18)'}`,
-                          background: postSurveyAnswers.infoType === opt ? '#111111' : '#ffffff',
-                          color: postSurveyAnswers.infoType === opt ? '#ffffff' : '#333333',
+                          border: `1px solid ${postSurveyAnswers.infoType === value ? '#111111' : 'rgba(17,17,17,.18)'}`,
+                          background: postSurveyAnswers.infoType === value ? '#111111' : '#ffffff',
+                          color: postSurveyAnswers.infoType === value ? '#ffffff' : '#333333',
                           borderRadius: 8, padding: '9px 14px', fontSize: 13,
-                          fontWeight: postSurveyAnswers.infoType === opt ? 700 : 400,
+                          fontWeight: postSurveyAnswers.infoType === value ? 700 : 400,
                           cursor: 'pointer', textAlign: 'left',
                         }}
-                      >{opt}</button>
+                      >{label}</button>
                     ))}
                   </div>
                 </div>
@@ -2747,7 +2753,7 @@ export default function Home() {
 
                 <div style={{ border: '1px solid rgba(17,17,17,.12)', borderRadius: 12, padding: 14, background: '#ffffff' }}>
                   <div style={{ fontSize: 13, fontWeight: 700, color: '#111111', marginBottom: 4 }}>
-                    이번 조건에서 가장 판단하기 어려웠던 점이 있다면 간단히 적어 주세요.
+                    이번 단계에서 가장 판단하기 어려웠던 점이 있다면 간단히 적어 주세요.
                   </div>
                   <div style={{ fontSize: 11, color: '#dc2626', fontWeight: 700, marginBottom: 8 }}>필수 입력</div>
                   <textarea
