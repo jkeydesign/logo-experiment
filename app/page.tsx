@@ -2323,10 +2323,15 @@ export default function Home() {
                 Set {activeAssignment.setId} 실험 안내
               </div>
               <div style={{ fontSize: 13, color: '#333333', lineHeight: 1.75, marginBottom: 12 }}>
-                본 실험에서는 동일한 브랜드 브리프를 기준으로 AI 판단 정보 제시 유형에 따라 세 가지 조건을 모두 수행합니다.<br />
-                각기 다른 9개씩 27개의 AI 생성 로고 시안을 검토하며, 조건 순서와 시안 세트는 균형화하여 배정됩니다.<br />
-                각 조건을 시작하기 전, 해당 조건에서 제공되는 정보 범위를 먼저 확인해 주세요.<br />
-                안내 내용을 읽은 뒤 실제 실무에서 로고 시안을 검토하듯이 판단해 주시면 됩니다.
+                본 실험에서는 동일한 브랜드 브리프를 기준으로, AI 판단 정보 제시 범위가 다른 3가지 조건을 순차적으로 수행합니다.<br />
+                각 조건에서는 9개의 로고 시안을 검토하며, 조건에 따라 AI 추천 정보 또는 AI 평가 점수·순위 정보가 함께 제시될 수 있습니다.<br />
+                해당 AI 정보는 조건 간 비교와 자극 통제를 위해 사전에 구성된 정보일 수 있습니다.<br />
+                본 실험에는 정답이 없으며, 실제 실무에서 로고 시안 후보를 검토하듯이 판단해 주세요.
+              </div>
+              <div style={{ fontSize: 13, color: '#333333', lineHeight: 1.75, marginBottom: 12 }}>
+                <span style={{ fontWeight: 700, color: '#111111' }}>실험 순서</span><br />
+                <span style={{ fontWeight: 600 }}>1단계</span> : 브랜드 브리프와 판단 기준을 참고하여, 더 검토할 가능성이 있는 시안은 <span style={{ fontWeight: 600 }}>&apos;후보 유지&apos;</span>로, 더 이상 검토하지 않을 시안은 <span style={{ fontWeight: 600 }}>&apos;제외&apos;</span>로 분류해 주세요.<br />
+                <span style={{ fontWeight: 600 }}>2단계</span> : &apos;후보 유지&apos;한 시안만 상세 평가를 진행해 주시고 비교하시면서 1개의 적합한 로고 시안을 최종 선택합니다.
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 10 }}>
                 {assignments.map((assignment, idx) => {
