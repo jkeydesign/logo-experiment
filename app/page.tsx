@@ -1563,8 +1563,13 @@ export default function Home() {
     const missingLikert = [postSurveyAnswers.q3, postSurveyAnswers.q4, postSurveyAnswers.q5].some((v) => v === null)
       || (needsCollab && [postSurveyAnswers.q6, postSurveyAnswers.q7].some((v) => v === null))
       || (needsAiOnly && postSurveyAnswers.q8 === null)
+    const missingFreeText = !postSurveyAnswers.freeText?.trim()
     if (missingYesNo || missingLikert) {
       setPostSurveyError('모든 문항을 응답해 주세요.')
+      return
+    }
+    if (missingFreeText) {
+      setPostSurveyError('가장 판단하기 어려웠던 점을 입력해 주세요.')
       return
     }
     setPostSurveyError('')
@@ -2743,7 +2748,7 @@ export default function Home() {
                   <div style={{ fontSize: 13, fontWeight: 700, color: '#111111', marginBottom: 4 }}>
                     이번 조건에서 가장 판단하기 어려웠던 점이 있다면 간단히 적어 주세요.
                   </div>
-                  <div style={{ fontSize: 11, color: '#6b7280', marginBottom: 8 }}>선택 입력</div>
+                  <div style={{ fontSize: 11, color: '#dc2626', fontWeight: 700, marginBottom: 8 }}>필수 입력</div>
                   <textarea
                     value={postSurveyAnswers.freeText}
                     onChange={(e) => setPostSurveyAnswers((prev) => ({ ...prev, freeText: e.target.value }))}
