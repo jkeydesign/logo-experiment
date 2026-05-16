@@ -204,7 +204,7 @@ const INITIAL_POST_EXPERIMENT: PostExperimentAnswers = {
 
 const ELIGIBILITY_QUESTIONS: Array<{ key: keyof EligibilityCheck; text: string }> = [
   { key: 'q1', text: '현재 디자인 분야에서 실무에 종사하고 있습니까?' },
-  { key: 'q2', text: '디자인 실무 경력이 3년 이상입니까?' },
+  { key: 'q2', text: '디자인 실무 경력이 5년 이상입니까?' },
   { key: 'q3', text: '브랜드 로고 또는 CI 관련 프로젝트 경험이 3건 이상 있습니까?' },
 ]
 
@@ -1786,7 +1786,7 @@ export default function Home() {
                   <h2 style={{ fontSize: 18, fontWeight: 800, color: '#111111', marginBottom: 10 }}>실험 참여 대상</h2>
                   <ul style={{ display: 'grid', gap: 6, paddingLeft: 20 }}>
                     <li>현재 디자인 분야에서 실무에 종사하고 있는 분</li>
-                    <li>디자인 실무 경력 3년 이상인 분</li>
+                    <li>디자인 실무 경력 5년 이상인 분</li>
                     <li>브랜드 로고 또는 CI 관련 프로젝트 경험이 3건 이상인 분</li>
                   </ul>
                 </section>
