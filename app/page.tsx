@@ -1191,6 +1191,31 @@ export default function Home() {
 
       await sendScreeningApplication(screeningAnswers, portfolioFile)
 
+      const autoId = createAutoParticipantId(screeningAnswers)
+
+      // 스크리닝 응답을 GAS 실험 데이터 시트에도 저장 (포트폴리오 파일 본문 제외)
+      const gasUrl = process.env.NEXT_PUBLIC_GAS_URL ?? ''
+      if (gasUrl) {
+        fetch(gasUrl, {
+          method: 'POST',
+          body: JSON.stringify({
+            kind: 'screening',
+            participantId: autoId,
+            submittedAt: new Date().toISOString(),
+            fullName: screeningAnswers.fullName,
+            gender: screeningAnswers.gender,
+            email: screeningAnswers.email,
+            currentPractice: screeningAnswers.currentPractice,
+            career: screeningAnswers.career,
+            logoProjects: screeningAnswers.logoProjects,
+            field: screeningAnswers.field,
+            aiUse: screeningAnswers.aiUse,
+            portfolioFileName: screeningAnswers.portfolioFileName,
+            portfolioFileSize: screeningAnswers.portfolioFileSize,
+          }),
+        }).catch(() => {})
+      }
+
       logEvent('screening_passed', {
         detail: '실험참여자 기본 문항 신청 완료 및 이메일 전송 요청',
         payload: {
@@ -1200,7 +1225,7 @@ export default function Home() {
         },
       })
       setShowScreeningThanks(false)
-      startExperimentSession(createAutoParticipantId(screeningAnswers), 'screening_auto')
+      startExperimentSession(autoId, 'screening_auto')
     } catch (error) {
       setScreeningSubmitMessage('신청 내용을 이메일 시스템으로 보내지 못했습니다. 네트워크 연결을 확인한 뒤 다시 눌러 주세요.')
       logEvent('screening_submit_failed', {

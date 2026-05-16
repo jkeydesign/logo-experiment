@@ -105,6 +105,22 @@ const ASSIGNMENT_HEADERS = [
   'assignments_json',
 ]
 
+const SCREENING_HEADERS = [
+  'received_at',
+  'participantId',
+  'submittedAt',
+  'fullName',
+  'gender',
+  'email',
+  'currentPractice',
+  'career',
+  'logoProjects',
+  'field',
+  'aiUse',
+  'portfolioFileName',
+  'portfolioFileSize',
+]
+
 // ── 메인 엔드포인트 ───────────────────────────────────────
 
 function doPost(e) {
@@ -119,6 +135,8 @@ function doPost(e) {
       upsertStimulusRow(ss, data, now)
     } else if (data.kind === 'assignment') {
       appendAssignment(ss, data, now)
+    } else if (data.kind === 'screening') {
+      appendScreening(ss, data, now)
     }
 
     return jsonResponse({ ok: true })
@@ -197,6 +215,25 @@ function appendAssignment(ss, data, now) {
     data.sessionId ?? '',
     data.timestamp ?? '',
     JSON.stringify(data.assignments ?? []),
+  ])
+}
+
+function appendScreening(ss, data, now) {
+  const sheet = getOrCreateSheet(ss, 'screening', SCREENING_HEADERS)
+  sheet.appendRow([
+    now,
+    data.participantId ?? '',
+    data.submittedAt ?? '',
+    data.fullName ?? '',
+    data.gender ?? '',
+    data.email ?? '',
+    data.currentPractice ?? '',
+    data.career ?? '',
+    data.logoProjects ?? '',
+    data.field ?? '',
+    data.aiUse ?? '',
+    data.portfolioFileName ?? '',
+    data.portfolioFileSize ?? '',
   ])
 }
 
