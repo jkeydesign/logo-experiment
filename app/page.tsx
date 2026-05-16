@@ -23,7 +23,7 @@ import type {
   StimulusLogRow,
 } from '@/types'
 
-type ScreenStep = 'consent' | 'screening' | 'participant' | 'brief' | 'instruction' | 'evaluation' | 'result' | 'completed'
+type ScreenStep = 'consent' | 'screening' | 'participant' | 'brief' | 'instruction' | 'evaluation' | 'result' | 'post_survey' | 'comparison_survey' | 'debriefing_check' | 'debriefing' | 'completed'
 type RightTab = 'hold' | 'exclude'
 type ScreeningAnswers = {
   fullName: string
@@ -47,6 +47,61 @@ type ScreeningQuestion = {
   placeholder?: string
   helper?: string
 }
+
+type PostSurveyKey = 'q1' | 'q2' | 'q3' | 'q4' | 'q5' | 'q6' | 'q7' | 'q8' | 'q9' | 'q10'
+type PostSurveyAnswers = Record<PostSurveyKey, number | null> & { freeText: string }
+type CompSurveyAnswers = {
+  easiest: string | null; strongestAgency: string | null; highestConfidence: string | null
+  mostPractical: string | null; preferred: string | null; mostUsefulAi: string | null
+  preferredExploration: string | null; preferredComparison: string | null
+  preferredFinalSelection: string | null; freeText: string
+}
+type DebriefCheckAnswers = {
+  suspected: 'yes' | 'no' | null; suspectedTiming: string | null; suspectedReason: string
+}
+const INITIAL_POST_SURVEY: PostSurveyAnswers = {
+  q1: null, q2: null, q3: null, q4: null, q5: null,
+  q6: null, q7: null, q8: null, q9: null, q10: null, freeText: '',
+}
+const INITIAL_COMP_SURVEY: CompSurveyAnswers = {
+  easiest: null, strongestAgency: null, highestConfidence: null,
+  mostPractical: null, preferred: null, mostUsefulAi: null,
+  preferredExploration: null, preferredComparison: null,
+  preferredFinalSelection: null, freeText: '',
+}
+const INITIAL_DEBRIEF_CHECK: DebriefCheckAnswers = {
+  suspected: null, suspectedTiming: null, suspectedReason: '',
+}
+const POST_SURVEY_COMMON: Array<{ key: PostSurveyKey; text: string }> = [
+  { key: 'q1', text: 'Q1. 이번 조건에서 로고 시안 판단 과정은 내가 주도했다고 느꼈다.' },
+  { key: 'q2', text: 'Q2. 최종 선택한 로고 시안이 브랜드 브리프에 적합하다고 확신한다.' },
+  { key: 'q3', text: 'Q3. 이번 조건의 정보 제시 방식은 로고 시안을 비교하는 데 도움이 되었다.' },
+  { key: 'q4', text: 'Q4. 이번 조건에서 판단 과정이 과도하게 복잡하다고 느꼈다.' },
+  { key: 'q5', text: 'Q5. 이번 조건에서 AI가 판단 과정에 개입하고 있다고 느꼈다.' },
+]
+const POST_SURVEY_COLLAB: Array<{ key: PostSurveyKey; text: string }> = [
+  { key: 'q6', text: 'Q6. AI 추천 정보는 신뢰할 만하다고 느꼈다.' },
+  { key: 'q7', text: 'Q7. AI 추천 정보는 보류/제외 판단에 영향을 주었다.' },
+  { key: 'q8', text: 'Q8. AI 추천 정보는 최종 선택에 영향을 주었다.' },
+]
+const POST_SURVEY_AI_ONLY: Array<{ key: PostSurveyKey; text: string }> = [
+  { key: 'q9', text: 'Q9. AI 평가 점수 또는 순위는 시안 비교에 도움이 되었다.' },
+  { key: 'q10', text: 'Q10. AI 평가 점수 또는 순위 때문에 내 판단 기준이 흔들렸다고 느꼈다.' },
+]
+const COND_LABELS_ALL: string[] = ['시안 제시형', '추천 제시형', '평가 제시형']
+const AI_USEFUL_OPTIONS: string[] = ['추천 제시형', '평가 제시형', '해당 없음']
+const COMP_QUESTIONS: Array<{ key: keyof CompSurveyAnswers; text: string; options: string[] }> = [
+  { key: 'easiest', text: '가장 판단하기 쉬웠던 조건은 무엇입니까?', options: COND_LABELS_ALL },
+  { key: 'strongestAgency', text: '가장 전문적 판단을 유지하기 쉬웠던 조건은 무엇입니까?', options: COND_LABELS_ALL },
+  { key: 'highestConfidence', text: '최종 선택에 가장 확신을 느낀 조건은 무엇입니까?', options: COND_LABELS_ALL },
+  { key: 'mostPractical', text: '실제 실무에 가장 가까웠던 조건은 무엇입니까?', options: COND_LABELS_ALL },
+  { key: 'preferred', text: '다시 사용한다면 선호하는 조건은 무엇입니까?', options: COND_LABELS_ALL },
+  { key: 'mostUsefulAi', text: 'AI 정보가 가장 유용하다고 느껴진 조건은 무엇입니까?', options: AI_USEFUL_OPTIONS },
+  { key: 'preferredExploration', text: '초기 후보 검토 단계에서 적절한 방식은 무엇입니까?', options: COND_LABELS_ALL },
+  { key: 'preferredComparison', text: '보류·제외 비교 단계에서 적절한 방식은 무엇입니까?', options: COND_LABELS_ALL },
+  { key: 'preferredFinalSelection', text: '최종 선택 단계에서 적절한 방식은 무엇입니까?', options: COND_LABELS_ALL },
+]
+const DEBRIEF_TIMING_OPTIONS: string[] = ['추천 제시형', '평가 제시형', '최종 선택 단계', '기타']
 
 interface StimulusCardState {
   stimulus: Logo
@@ -672,6 +727,12 @@ export default function Home() {
   const [logCenterTab, setLogCenterTab] = useState<'view' | 'export'>('view')
   const [showFinalModal, setShowFinalModal] = useState(false)
   const [finalGuardNotice, setFinalGuardNotice] = useState<{ attemptedStimulusId: string; incompleteIds: string[] } | null>(null)
+  const [postSurveyAnswers, setPostSurveyAnswers] = useState<PostSurveyAnswers>(INITIAL_POST_SURVEY)
+  const [postSurveyError, setPostSurveyError] = useState('')
+  const [compSurveyAnswers, setCompSurveyAnswers] = useState<CompSurveyAnswers>(INITIAL_COMP_SURVEY)
+  const [compSurveyError, setCompSurveyError] = useState('')
+  const [debriefCheckAnswers, setDebriefCheckAnswers] = useState<DebriefCheckAnswers>(INITIAL_DEBRIEF_CHECK)
+  const [debriefCheckError, setDebriefCheckError] = useState('')
   const screeningPortfolioFileRef = useRef<File | null>(null)
   const hasInitializedHistoryRef = useRef(false)
   const isApplyingHistoryRef = useRef(false)
@@ -1720,26 +1781,131 @@ export default function Home() {
       detail: `${activeAssignment.conditionLabel} 종료`,
     })
 
-    if (currentConditionIndex >= assignments.length - 1) {
-      setStep('completed')
+    setPostSurveyAnswers(INITIAL_POST_SURVEY)
+    setPostSurveyError('')
+    setStep('post_survey')
+  }, [activeAssignment, finalSelectedStimulusId, cards, currentConditionIndex, assignments.length, logEvent])
+
+  const submitPostSurvey = useCallback(() => {
+    if (!activeAssignment) return
+    const cond = activeAssignment.condition
+    const needsCollab = cond === 'collab' || cond === 'ai'
+    const needsAiOnly = cond === 'ai'
+    const required: Array<number | null> = [
+      postSurveyAnswers.q1, postSurveyAnswers.q2, postSurveyAnswers.q3,
+      postSurveyAnswers.q4, postSurveyAnswers.q5,
+    ]
+    if (needsCollab) required.push(postSurveyAnswers.q6, postSurveyAnswers.q7, postSurveyAnswers.q8)
+    if (needsAiOnly) required.push(postSurveyAnswers.q9, postSurveyAnswers.q10)
+    if (required.some((v) => v === null)) {
+      setPostSurveyError('모든 척도 문항을 응답해 주세요.')
       return
     }
+    setPostSurveyError('')
+    logEvent('condition_post_survey', {
+      condition: activeAssignment.condition,
+      conditionLabel: activeAssignment.conditionLabel,
+      setId: activeAssignment.setId,
+      stimulusId: finalSelectedStimulusId ?? undefined,
+      detail: `조건별 사후 설문: ${activeAssignment.conditionLabel}`,
+      payload: {
+        participantId,
+        conditionType: activeAssignment.conditionLabel,
+        setId: activeAssignment.setId,
+        selectedFinalLogoId: finalSelectedStimulusId,
+        agencyScore: postSurveyAnswers.q1,
+        confidenceScore: postSurveyAnswers.q2,
+        usefulnessScore: postSurveyAnswers.q3,
+        complexityScore: postSurveyAnswers.q4,
+        perceivedAiInterventionScore: postSurveyAnswers.q5,
+        aiTrustScore: postSurveyAnswers.q6,
+        aiInfluenceHoldExcludeScore: postSurveyAnswers.q7,
+        aiInfluenceFinalScore: postSurveyAnswers.q8,
+        aiScoreUsefulnessScore: postSurveyAnswers.q9,
+        aiScoreBiasScore: postSurveyAnswers.q10,
+        difficultyFreeText: postSurveyAnswers.freeText || null,
+      },
+    })
+    const nextIndex = currentConditionIndex + 1
+    if (nextIndex < assignments.length) {
+      setCurrentConditionIndex(nextIndex)
+      setCards([])
+      setEditingCardId(null)
+      setRightTab('hold')
+      setActiveStimulusId(null)
+      setPendingDecision(null)
+      setDecisionNotice('')
+      setDetailNotice(null)
+      setHasGenerated(false)
+      setIsGenerating(false)
+      setFinalSelectedStimulusId(null)
+      setFinalSelectionTs(null)
+      setShowFinalModal(false)
+      setStep('brief')
+    } else {
+      setCompSurveyAnswers(INITIAL_COMP_SURVEY)
+      setCompSurveyError('')
+      setStep('comparison_survey')
+    }
+  }, [
+    activeAssignment, postSurveyAnswers, currentConditionIndex, assignments.length,
+    finalSelectedStimulusId, participantId, logEvent,
+  ])
 
-    setCurrentConditionIndex((prev) => prev + 1)
-    setStep('brief')
-    setCards([])
-    setEditingCardId(null)
-    setRightTab('hold')
-    setActiveStimulusId(null)
-    setPendingDecision(null)
-    setDecisionNotice('')
-    setDetailNotice(null)
-    setHasGenerated(false)
-    setIsGenerating(false)
-    setFinalSelectedStimulusId(null)
-    setFinalSelectionTs(null)
-    setShowFinalModal(false)
-  }, [activeAssignment, finalSelectedStimulusId, cards, currentConditionIndex, assignments.length, logEvent])
+  const submitCompSurvey = useCallback(() => {
+    const required = [
+      compSurveyAnswers.easiest, compSurveyAnswers.strongestAgency, compSurveyAnswers.highestConfidence,
+      compSurveyAnswers.mostPractical, compSurveyAnswers.preferred, compSurveyAnswers.mostUsefulAi,
+      compSurveyAnswers.preferredExploration, compSurveyAnswers.preferredComparison,
+      compSurveyAnswers.preferredFinalSelection,
+    ]
+    if (required.some((v) => v === null)) {
+      setCompSurveyError('모든 선택 문항을 응답해 주세요.')
+      return
+    }
+    setCompSurveyError('')
+    logEvent('final_comparison_survey', {
+      detail: '전체 조건 비교 설문',
+      payload: {
+        participantId,
+        easiestCondition: compSurveyAnswers.easiest,
+        strongestAgencyCondition: compSurveyAnswers.strongestAgency,
+        highestConfidenceCondition: compSurveyAnswers.highestConfidence,
+        mostPracticalCondition: compSurveyAnswers.mostPractical,
+        preferredCondition: compSurveyAnswers.preferred,
+        mostUsefulAiCondition: compSurveyAnswers.mostUsefulAi,
+        preferredExplorationStageCondition: compSurveyAnswers.preferredExploration,
+        preferredComparisonStageCondition: compSurveyAnswers.preferredComparison,
+        preferredFinalSelectionStageCondition: compSurveyAnswers.preferredFinalSelection,
+        aiHelpOrInterferenceFreeText: compSurveyAnswers.freeText || null,
+      },
+    })
+    setDebriefCheckAnswers(INITIAL_DEBRIEF_CHECK)
+    setDebriefCheckError('')
+    setStep('debriefing_check')
+  }, [compSurveyAnswers, participantId, logEvent])
+
+  const submitDebriefCheck = useCallback(() => {
+    if (debriefCheckAnswers.suspected === null) {
+      setDebriefCheckError('응답을 선택해 주세요.')
+      return
+    }
+    if (debriefCheckAnswers.suspected === 'yes' && debriefCheckAnswers.suspectedTiming === null) {
+      setDebriefCheckError('의심한 시점을 선택해 주세요.')
+      return
+    }
+    setDebriefCheckError('')
+    logEvent('debriefing_check', {
+      detail: '의심 여부 확인',
+      payload: {
+        participantId,
+        suspectedWoZ: debriefCheckAnswers.suspected === 'yes',
+        suspectedTiming: debriefCheckAnswers.suspectedTiming,
+        suspectedReason: debriefCheckAnswers.suspectedReason || null,
+      },
+    })
+    setStep('debriefing')
+  }, [debriefCheckAnswers, participantId, logEvent])
 
   const activeCard = useMemo(
     () => cards.find((card) => card.stimulus.id === activeStimulusId) ?? null,
@@ -1774,6 +1940,10 @@ export default function Home() {
   const showInstruction = step === 'instruction' && activeAssignment && activeBrief
   const showEvaluation = step === 'evaluation' && activeAssignment && activeBrief
   const showResult = step === 'result' && activeAssignment && activeBrief
+  const showPostSurvey = step === 'post_survey' && activeAssignment
+  const showCompSurvey = step === 'comparison_survey'
+  const showDebriefCheck = step === 'debriefing_check'
+  const showDebriefing = step === 'debriefing'
   const showAppHeader = !showConsentScreen && !showScreeningScreen
   const screeningEmailIsCompleteAndValid = isValidEmailAddress(screeningAnswers.email)
   const screeningAllRequiredComplete = getMissingScreeningFields(screeningAnswers).length === 0 && screeningEmailIsCompleteAndValid
@@ -2767,6 +2937,258 @@ export default function Home() {
                 style={{ border: 'none', background: finalSelectedStimulusId ? currentConditionColor : '#d1d5db', color: finalSelectedStimulusId ? '#ffffff' : '#6b7280', borderRadius: 10, padding: '10px 14px', fontSize: 13, fontWeight: 700, cursor: finalSelectedStimulusId ? 'pointer' : 'not-allowed' }}
               >
                 {currentConditionIndex >= assignments.length - 1 ? '최종 선택 1개 확정 및 전체 완료' : '최종 선택 1개 확정 후 다음 조건'}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {showPostSurvey && activeAssignment && (() => {
+          const cond = activeAssignment.condition
+          const needsCollab = cond === 'collab' || cond === 'ai'
+          const needsAiOnly = cond === 'ai'
+          const allQuestions = [
+            ...POST_SURVEY_COMMON,
+            ...(needsCollab ? POST_SURVEY_COLLAB : []),
+            ...(needsAiOnly ? POST_SURVEY_AI_ONLY : []),
+          ]
+          return (
+            <div style={{ maxWidth: 720, margin: '0 auto', display: 'grid', gap: 0, padding: '24px 0 48px' }}>
+              <div style={{ border: '1px solid rgba(17,17,17,.14)', borderRadius: 14, padding: 20, background: currentConditionSurface, marginBottom: 14 }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: currentConditionColor, marginBottom: 6 }}>
+                  조건 {activeAssignment.order}/3 · {activeAssignment.conditionLabel}
+                </div>
+                <div style={{ fontSize: 20, fontWeight: 800, color: '#111111' }}>조건별 사후 설문</div>
+              </div>
+
+              <div style={{ display: 'grid', gap: 10 }}>
+                {allQuestions.map(({ key, text }) => {
+                  const val = postSurveyAnswers[key]
+                  return (
+                    <div key={key} style={{ border: '1px solid rgba(17,17,17,.12)', borderRadius: 12, padding: 14, background: '#ffffff' }}>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: '#111111', marginBottom: 12, lineHeight: 1.55 }}>{text}</div>
+                      <div style={{ display: 'flex', gap: 6 }}>
+                        {[1, 2, 3, 4, 5].map((v) => (
+                          <button
+                            key={v}
+                            onClick={() => setPostSurveyAnswers((prev) => ({ ...prev, [key]: v }))}
+                            style={{
+                              flex: 1, border: `1px solid ${val === v ? '#111111' : 'rgba(17,17,17,.18)'}`,
+                              background: val === v ? '#111111' : '#ffffff',
+                              color: val === v ? '#ffffff' : '#333333',
+                              borderRadius: 8, padding: '8px 0', fontSize: 13, fontWeight: val === v ? 700 : 400, cursor: 'pointer',
+                            }}
+                          >{v}</button>
+                        ))}
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 5 }}>
+                        <span style={{ fontSize: 10, color: '#6b7280' }}>전혀 그렇지 않다</span>
+                        <span style={{ fontSize: 10, color: '#6b7280' }}>매우 그렇다</span>
+                      </div>
+                    </div>
+                  )
+                })}
+
+                <div style={{ border: '1px solid rgba(17,17,17,.12)', borderRadius: 12, padding: 14, background: '#ffffff' }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#111111', marginBottom: 4 }}>
+                    이번 조건에서 가장 판단하기 어려웠던 점이 있다면 간단히 적어 주세요.
+                  </div>
+                  <div style={{ fontSize: 11, color: '#6b7280', marginBottom: 8 }}>선택 입력</div>
+                  <textarea
+                    value={postSurveyAnswers.freeText}
+                    onChange={(e) => setPostSurveyAnswers((prev) => ({ ...prev, freeText: e.target.value }))}
+                    placeholder='자유롭게 입력해 주세요.'
+                    rows={3}
+                    style={{ width: '100%', border: '1px solid rgba(17,17,17,.18)', borderRadius: 8, padding: '8px 10px', fontSize: 13, resize: 'vertical', outline: 'none', fontFamily: 'inherit' }}
+                  />
+                </div>
+
+                {postSurveyError && (
+                  <div style={{ border: '1px solid #dc2626', background: '#fff5f5', borderRadius: 8, padding: '10px 12px', color: '#b91c1c', fontSize: 13, fontWeight: 700 }}>
+                    {postSurveyError}
+                  </div>
+                )}
+
+                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 4 }}>
+                  <button
+                    onClick={submitPostSurvey}
+                    style={{ border: 'none', background: currentConditionColor, color: '#ffffff', borderRadius: 10, padding: '11px 20px', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}
+                  >
+                    {currentConditionIndex < assignments.length - 1 ? '저장 후 다음 조건' : '저장 후 비교 설문'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )
+        })()}
+
+        {showCompSurvey && (
+          <div style={{ maxWidth: 720, margin: '0 auto', display: 'grid', gap: 0, padding: '24px 0 48px' }}>
+            <div style={{ border: '1px solid rgba(17,17,17,.14)', borderRadius: 14, padding: 20, background: '#f7f7f7', marginBottom: 14 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: '#4d4d4d', marginBottom: 6 }}>전체 조건 완료</div>
+              <div style={{ fontSize: 20, fontWeight: 800, color: '#111111' }}>전체 조건 비교 설문</div>
+            </div>
+
+            <div style={{ display: 'grid', gap: 10 }}>
+              {COMP_QUESTIONS.map(({ key, text, options }) => {
+                const val = compSurveyAnswers[key]
+                return (
+                  <div key={key} style={{ border: '1px solid rgba(17,17,17,.12)', borderRadius: 12, padding: 14, background: '#ffffff' }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: '#111111', marginBottom: 10 }}>{text}</div>
+                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                      {options.map((opt) => (
+                        <button
+                          key={opt}
+                          onClick={() => setCompSurveyAnswers((prev) => ({ ...prev, [key]: opt }))}
+                          style={{
+                            border: `1px solid ${val === opt ? '#111111' : 'rgba(17,17,17,.18)'}`,
+                            background: val === opt ? '#111111' : '#ffffff',
+                            color: val === opt ? '#ffffff' : '#333333',
+                            borderRadius: 8, padding: '8px 14px', fontSize: 13, fontWeight: val === opt ? 700 : 400, cursor: 'pointer',
+                          }}
+                        >{opt}</button>
+                      ))}
+                    </div>
+                  </div>
+                )
+              })}
+
+              <div style={{ border: '1px solid rgba(17,17,17,.12)', borderRadius: 12, padding: 14, background: '#ffffff' }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: '#111111', marginBottom: 4 }}>
+                  AI 추천 또는 평가 정보가 판단에 도움이 되었거나 방해가 되었다고 느낀 이유를 간단히 적어 주세요.
+                </div>
+                <div style={{ fontSize: 11, color: '#6b7280', marginBottom: 8 }}>선택 입력</div>
+                <textarea
+                  value={compSurveyAnswers.freeText}
+                  onChange={(e) => setCompSurveyAnswers((prev) => ({ ...prev, freeText: e.target.value }))}
+                  placeholder='자유롭게 입력해 주세요.'
+                  rows={3}
+                  style={{ width: '100%', border: '1px solid rgba(17,17,17,.18)', borderRadius: 8, padding: '8px 10px', fontSize: 13, resize: 'vertical', outline: 'none', fontFamily: 'inherit' }}
+                />
+              </div>
+
+              {compSurveyError && (
+                <div style={{ border: '1px solid #dc2626', background: '#fff5f5', borderRadius: 8, padding: '10px 12px', color: '#b91c1c', fontSize: 13, fontWeight: 700 }}>
+                  {compSurveyError}
+                </div>
+              )}
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 4 }}>
+                <button
+                  onClick={submitCompSurvey}
+                  style={{ border: 'none', background: '#111111', color: '#ffffff', borderRadius: 10, padding: '11px 20px', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}
+                >
+                  저장 후 다음 단계
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {showDebriefCheck && (
+          <div style={{ maxWidth: 720, margin: '0 auto', display: 'grid', gap: 0, padding: '24px 0 48px' }}>
+            <div style={{ border: '1px solid rgba(17,17,17,.14)', borderRadius: 14, padding: 20, background: '#f7f7f7', marginBottom: 14 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: '#4d4d4d', marginBottom: 6 }}>실험 종료 전 확인</div>
+              <div style={{ fontSize: 20, fontWeight: 800, color: '#111111' }}>의심 여부 확인</div>
+            </div>
+
+            <div style={{ display: 'grid', gap: 10 }}>
+              <div style={{ border: '1px solid rgba(17,17,17,.12)', borderRadius: 12, padding: 14, background: '#ffffff' }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: '#111111', marginBottom: 12, lineHeight: 1.6 }}>
+                  실험 중 제시된 AI 추천 또는 AI 평가 정보가 실제 AI가 실시간으로 산출한 정보가 아닐 수 있다고 의심한 적이 있습니까?
+                </div>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  {(['yes', 'no'] as const).map((v) => (
+                    <button
+                      key={v}
+                      onClick={() => setDebriefCheckAnswers((prev) => ({ ...prev, suspected: v, suspectedTiming: v === 'no' ? null : prev.suspectedTiming }))}
+                      style={{
+                        border: `1px solid ${debriefCheckAnswers.suspected === v ? '#111111' : 'rgba(17,17,17,.18)'}`,
+                        background: debriefCheckAnswers.suspected === v ? '#111111' : '#ffffff',
+                        color: debriefCheckAnswers.suspected === v ? '#ffffff' : '#333333',
+                        borderRadius: 8, padding: '8px 22px', fontSize: 13, fontWeight: debriefCheckAnswers.suspected === v ? 700 : 400, cursor: 'pointer',
+                      }}
+                    >{v === 'yes' ? '예' : '아니오'}</button>
+                  ))}
+                </div>
+              </div>
+
+              {debriefCheckAnswers.suspected === 'yes' && (
+                <>
+                  <div style={{ border: '1px solid rgba(17,17,17,.12)', borderRadius: 12, padding: 14, background: '#ffffff' }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: '#111111', marginBottom: 10 }}>어느 시점에서 그렇게 느꼈습니까?</div>
+                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                      {DEBRIEF_TIMING_OPTIONS.map((opt) => (
+                        <button
+                          key={opt}
+                          onClick={() => setDebriefCheckAnswers((prev) => ({ ...prev, suspectedTiming: opt }))}
+                          style={{
+                            border: `1px solid ${debriefCheckAnswers.suspectedTiming === opt ? '#111111' : 'rgba(17,17,17,.18)'}`,
+                            background: debriefCheckAnswers.suspectedTiming === opt ? '#111111' : '#ffffff',
+                            color: debriefCheckAnswers.suspectedTiming === opt ? '#ffffff' : '#333333',
+                            borderRadius: 8, padding: '8px 14px', fontSize: 13, fontWeight: debriefCheckAnswers.suspectedTiming === opt ? 700 : 400, cursor: 'pointer',
+                          }}
+                        >{opt}</button>
+                      ))}
+                    </div>
+                  </div>
+                  <div style={{ border: '1px solid rgba(17,17,17,.12)', borderRadius: 12, padding: 14, background: '#ffffff' }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: '#111111', marginBottom: 4 }}>그렇게 느낀 이유를 간단히 적어 주세요.</div>
+                    <div style={{ fontSize: 11, color: '#6b7280', marginBottom: 8 }}>선택 입력</div>
+                    <textarea
+                      value={debriefCheckAnswers.suspectedReason}
+                      onChange={(e) => setDebriefCheckAnswers((prev) => ({ ...prev, suspectedReason: e.target.value }))}
+                      placeholder='자유롭게 입력해 주세요.'
+                      rows={3}
+                      style={{ width: '100%', border: '1px solid rgba(17,17,17,.18)', borderRadius: 8, padding: '8px 10px', fontSize: 13, resize: 'vertical', outline: 'none', fontFamily: 'inherit' }}
+                    />
+                  </div>
+                </>
+              )}
+
+              {debriefCheckError && (
+                <div style={{ border: '1px solid #dc2626', background: '#fff5f5', borderRadius: 8, padding: '10px 12px', color: '#b91c1c', fontSize: 13, fontWeight: 700 }}>
+                  {debriefCheckError}
+                </div>
+              )}
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 4 }}>
+                <button
+                  onClick={submitDebriefCheck}
+                  style={{ border: 'none', background: '#111111', color: '#ffffff', borderRadius: 10, padding: '11px 20px', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}
+                >
+                  확인 후 다음 단계
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {showDebriefing && (
+          <div style={{ maxWidth: 720, margin: '0 auto', display: 'grid', gap: 14, padding: '24px 0 48px' }}>
+            <div style={{ border: '1px solid rgba(17,17,17,.14)', borderRadius: 14, padding: 20, background: '#f7f7f7' }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: '#4d4d4d', marginBottom: 6 }}>디브리핑</div>
+              <div style={{ fontSize: 20, fontWeight: 800, color: '#111111', marginBottom: 18 }}>연구 참여에 감사드립니다.</div>
+              <div style={{ display: 'grid', gap: 14, fontSize: 14, lineHeight: 1.8, color: '#1f2937' }}>
+                <p>
+                  본 실험은 AI 로고 생성 도구의 성능을 평가하는 연구가 아니라, AI 판단 정보 제시 범위에 따라 전문 디자이너의 로고 시안 판단 과정이 어떻게 달라지는지를 확인하기 위한 연구입니다.
+                </p>
+                <p>
+                  실험에서 제시된 AI 추천 정보와 AI 평가 정보는 조건 간 비교와 자극 통제를 위해 사전에 구성된 정보일 수 있습니다. 이는 모든 참가자에게 동일한 조건을 제공하고, 실험 결과의 비교 가능성을 확보하기 위한 절차입니다.
+                </p>
+                <p>
+                  수집된 자료는 참가자 코드로 가명처리되어 분석되며, 이름, 이메일, 포트폴리오 등 개인 식별 정보는 실험 분석에 사용되지 않습니다.
+                </p>
+                <p>
+                  연구 참여에 감사드립니다. 연구 참여 후에도 자료 철회나 문의가 필요한 경우 연구자에게 연락하실 수 있습니다.
+                </p>
+              </div>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => setStep('completed')}
+                style={{ border: 'none', background: '#111111', color: '#ffffff', borderRadius: 10, padding: '12px 24px', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}
+              >
+                실험 종료
               </button>
             </div>
           </div>
