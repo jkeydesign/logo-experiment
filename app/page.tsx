@@ -1632,6 +1632,10 @@ export default function Home() {
       setCompSurveyError('모든 선택 문항을 응답해 주세요.')
       return
     }
+    if (!compSurveyAnswers.freeText?.trim()) {
+      setCompSurveyError('자유 응답을 입력해 주세요.')
+      return
+    }
     setCompSurveyError('')
     logEvent('final_comparison_survey', {
       detail: '전체 조건 비교 설문',
@@ -2812,7 +2816,7 @@ export default function Home() {
                 <div style={{ fontSize: 13, fontWeight: 700, color: '#111111', marginBottom: 4 }}>
                   위와 같이 응답한 이유나, 조건 간 차이에 대해 느낀 점이 있다면 자유롭게 작성해 주세요.
                 </div>
-                <div style={{ fontSize: 11, color: '#6b7280', marginBottom: 8 }}>선택 입력 · 응답하지 않아도 다음 단계로 이동 가능합니다</div>
+                <div style={{ fontSize: 11, color: '#dc2626', fontWeight: 700, marginBottom: 8 }}>필수 입력</div>
                 <textarea
                   value={compSurveyAnswers.freeText}
                   onChange={(e) => setCompSurveyAnswers((prev) => ({ ...prev, freeText: e.target.value }))}
