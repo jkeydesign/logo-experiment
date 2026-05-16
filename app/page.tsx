@@ -2090,24 +2090,6 @@ export default function Home() {
               <div style={{ fontSize: 12, color: currentConditionColor, fontWeight: 800, marginBottom: 8 }}>
                 조건 {activeAssignment.order}/3 · {activeAssignment.conditionLabel}
               </div>
-              <div style={{ fontSize: 14, fontWeight: 700, color: '#111111', marginBottom: 8 }}>브랜드 브리프</div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 6, marginBottom: 8 }}>
-                <input
-                  value={briefCodeInput}
-                  onChange={(e) => setBriefCodeInput(e.target.value)}
-                  placeholder='예: F0001'
-                  style={{ width: '100%', border: '1px solid rgba(17,17,17,.18)', borderRadius: 8, padding: '7px 8px', fontSize: 11 }}
-                />
-                <button
-                  onClick={applyBriefCode}
-                  style={{ border: '1px solid rgba(17,17,17,.22)', background: '#ffffff', color: '#333333', borderRadius: 8, padding: '6px 8px', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
-                >
-                  입력
-                </button>
-                {briefCodeError && (
-                  <div style={{ fontSize: 10, color: '#4b5563' }}>{briefCodeError}</div>
-                )}
-              </div>
               <div style={{ fontSize: 13, color: '#4d4d4d', lineHeight: 1.72, display: 'grid', gap: 9 }}>
                 <div><strong>브랜드명:</strong> {displayedBrief?.name}</div>
                 <div><strong>업종:</strong> {displayedBrief?.category}</div>
