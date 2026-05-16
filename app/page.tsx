@@ -48,8 +48,19 @@ type ScreeningQuestion = {
   helper?: string
 }
 
-type PostSurveyKey = 'q1' | 'q2' | 'q3' | 'q4' | 'q5' | 'q6' | 'q7' | 'q8' | 'q9' | 'q10'
-type PostSurveyAnswers = Record<PostSurveyKey, number | null> & { freeText: string }
+type PostSurveyYesNoKey = 'q1' | 'q2'
+type PostSurveyLikertKey = 'q3' | 'q4' | 'q5' | 'q6' | 'q7' | 'q8'
+type PostSurveyAnswers = {
+  q1: 'yes' | 'no' | null
+  q2: 'yes' | 'no' | null
+  q3: number | null
+  q4: number | null
+  q5: number | null
+  q6: number | null
+  q7: number | null
+  q8: number | null
+  freeText: string
+}
 type CompSurveyAnswers = {
   easiest: string | null; strongestAgency: string | null; highestConfidence: string | null
   mostPractical: string | null; preferred: string | null; mostUsefulAi: string | null
@@ -60,8 +71,8 @@ type DebriefCheckAnswers = {
   suspected: 'yes' | 'no' | null; suspectedTiming: string | null; suspectedReason: string
 }
 const INITIAL_POST_SURVEY: PostSurveyAnswers = {
-  q1: null, q2: null, q3: null, q4: null, q5: null,
-  q6: null, q7: null, q8: null, q9: null, q10: null, freeText: '',
+  q1: null, q2: null, q3: null, q4: null,
+  q5: null, q6: null, q7: null, q8: null, freeText: '',
 }
 const INITIAL_COMP_SURVEY: CompSurveyAnswers = {
   easiest: null, strongestAgency: null, highestConfidence: null,
@@ -72,21 +83,21 @@ const INITIAL_COMP_SURVEY: CompSurveyAnswers = {
 const INITIAL_DEBRIEF_CHECK: DebriefCheckAnswers = {
   suspected: null, suspectedTiming: null, suspectedReason: '',
 }
-const POST_SURVEY_COMMON: Array<{ key: PostSurveyKey; text: string }> = [
-  { key: 'q1', text: 'Q1. 이번 조건에서 로고 시안 판단 과정은 내가 주도했다고 느꼈다.' },
-  { key: 'q2', text: 'Q2. 최종 선택한 로고 시안이 브랜드 브리프에 적합하다고 확신한다.' },
-  { key: 'q3', text: 'Q3. 이번 조건의 정보 제시 방식은 로고 시안을 비교하는 데 도움이 되었다.' },
-  { key: 'q4', text: 'Q4. 이번 조건에서 판단 과정이 과도하게 복잡하다고 느꼈다.' },
-  { key: 'q5', text: 'Q5. 이번 조건에서 AI가 판단 과정에 개입하고 있다고 느꼈다.' },
+const POST_SURVEY_MANIPULATION: Array<{ key: PostSurveyYesNoKey; text: string }> = [
+  { key: 'q1', text: '이 조건에서 AI가 시안에 대한 추천을 제공했다고 인식했습니까?' },
+  { key: 'q2', text: '이 조건에서 AI가 시안에 대한 점수 또는 순위를 제공했다고 인식했습니까?' },
 ]
-const POST_SURVEY_COLLAB: Array<{ key: PostSurveyKey; text: string }> = [
-  { key: 'q6', text: 'Q6. AI 추천 정보는 신뢰할 만하다고 느꼈다.' },
-  { key: 'q7', text: 'Q7. AI 추천 정보는 후보유지/제외 판단에 영향을 주었다.' },
-  { key: 'q8', text: 'Q8. AI 추천 정보는 최종 선택에 영향을 주었다.' },
+const POST_SURVEY_COMMON: Array<{ key: PostSurveyLikertKey; text: string }> = [
+  { key: 'q3', text: '이번 조건에서 최종 선택한 시안이 적절하다고 느끼는 정도는 어느 정도입니까?' },
+  { key: 'q4', text: '이번 조건에서 판단 과정이 자신에 의해 주도되었다고 느끼는 정도는 어느 정도입니까?' },
+  { key: 'q5', text: '이번 조건에서 AI가 판단 과정에 개입했다고 느끼는 정도는 어느 정도입니까?' },
 ]
-const POST_SURVEY_AI_ONLY: Array<{ key: PostSurveyKey; text: string }> = [
-  { key: 'q9', text: 'Q9. AI 평가 점수 또는 순위는 시안 비교에 도움이 되었다.' },
-  { key: 'q10', text: 'Q10. AI 평가 점수 또는 순위 때문에 내 판단 기준이 흔들렸다고 느꼈다.' },
+const POST_SURVEY_COLLAB: Array<{ key: PostSurveyLikertKey; text: string }> = [
+  { key: 'q6', text: '이번 조건에서 AI 추천 또는 평가 정보가 신뢰할 만하다고 느끼는 정도는 어느 정도입니까?' },
+  { key: 'q7', text: '이번 조건에서 AI 추천 또는 평가 정보가 판단에 유용했다고 느끼는 정도는 어느 정도입니까?' },
+]
+const POST_SURVEY_AI_ONLY: Array<{ key: PostSurveyLikertKey; text: string }> = [
+  { key: 'q8', text: 'AI 점수 또는 순위 때문에 자신의 판단 기준이 흔들렸다고 느끼는 정도는 어느 정도입니까?' },
 ]
 const COND_LABELS_ALL: string[] = ['시안 제시형', '추천 제시형', '평가 제시형']
 const AI_USEFUL_OPTIONS: string[] = ['추천 제시형', '평가 제시형', '해당 없음']
@@ -1791,14 +1802,12 @@ export default function Home() {
     const cond = activeAssignment.condition
     const needsCollab = cond === 'collab' || cond === 'ai'
     const needsAiOnly = cond === 'ai'
-    const required: Array<number | null> = [
-      postSurveyAnswers.q1, postSurveyAnswers.q2, postSurveyAnswers.q3,
-      postSurveyAnswers.q4, postSurveyAnswers.q5,
-    ]
-    if (needsCollab) required.push(postSurveyAnswers.q6, postSurveyAnswers.q7, postSurveyAnswers.q8)
-    if (needsAiOnly) required.push(postSurveyAnswers.q9, postSurveyAnswers.q10)
-    if (required.some((v) => v === null)) {
-      setPostSurveyError('모든 척도 문항을 응답해 주세요.')
+    const missingYesNo = postSurveyAnswers.q1 === null || postSurveyAnswers.q2 === null
+    const missingLikert = [postSurveyAnswers.q3, postSurveyAnswers.q4, postSurveyAnswers.q5].some((v) => v === null)
+      || (needsCollab && [postSurveyAnswers.q6, postSurveyAnswers.q7].some((v) => v === null))
+      || (needsAiOnly && postSurveyAnswers.q8 === null)
+    if (missingYesNo || missingLikert) {
+      setPostSurveyError('모든 문항을 응답해 주세요.')
       return
     }
     setPostSurveyError('')
@@ -1813,17 +1822,15 @@ export default function Home() {
         conditionType: activeAssignment.conditionLabel,
         setId: activeAssignment.setId,
         selectedFinalLogoId: finalSelectedStimulusId,
-        agencyScore: postSurveyAnswers.q1,
-        confidenceScore: postSurveyAnswers.q2,
-        usefulnessScore: postSurveyAnswers.q3,
-        complexityScore: postSurveyAnswers.q4,
+        manipulationCheckRecommendation: postSurveyAnswers.q1,
+        manipulationCheckScoreRank: postSurveyAnswers.q2,
+        confidenceScore: postSurveyAnswers.q3,
+        agencyScore: postSurveyAnswers.q4,
         perceivedAiInterventionScore: postSurveyAnswers.q5,
-        aiTrustScore: postSurveyAnswers.q6,
-        aiInfluenceHoldExcludeScore: postSurveyAnswers.q7,
-        aiInfluenceFinalScore: postSurveyAnswers.q8,
-        aiScoreUsefulnessScore: postSurveyAnswers.q9,
-        aiScoreBiasScore: postSurveyAnswers.q10,
-        difficultyFreeText: postSurveyAnswers.freeText || null,
+        aiTrustScore: postSurveyAnswers.q6 ?? null,
+        aiUsefulnessScore: postSurveyAnswers.q7 ?? null,
+        aiScoreBiasScore: postSurveyAnswers.q8 ?? null,
+        freeText: postSurveyAnswers.freeText || null,
       },
     })
     const nextIndex = currentConditionIndex + 1
@@ -1841,7 +1848,7 @@ export default function Home() {
       setFinalSelectedStimulusId(null)
       setFinalSelectionTs(null)
       setShowFinalModal(false)
-      setStep('brief')
+      setStep('instruction')
     } else {
       setCompSurveyAnswers(INITIAL_COMP_SURVEY)
       setCompSurveyError('')
@@ -2951,7 +2958,7 @@ export default function Home() {
           const cond = activeAssignment.condition
           const needsCollab = cond === 'collab' || cond === 'ai'
           const needsAiOnly = cond === 'ai'
-          const allQuestions = [
+          const likertQuestions = [
             ...POST_SURVEY_COMMON,
             ...(needsCollab ? POST_SURVEY_COLLAB : []),
             ...(needsAiOnly ? POST_SURVEY_AI_ONLY : []),
@@ -2966,8 +2973,34 @@ export default function Home() {
               </div>
 
               <div style={{ display: 'grid', gap: 10 }}>
-                {allQuestions.map(({ key, text }) => {
+
+                {/* Q1·Q2: 조작 점검 — 예/아니오 */}
+                {POST_SURVEY_MANIPULATION.map(({ key, text }) => {
                   const val = postSurveyAnswers[key]
+                  return (
+                    <div key={key} style={{ border: '1px solid rgba(17,17,17,.12)', borderRadius: 12, padding: 14, background: '#ffffff' }}>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: '#111111', marginBottom: 12, lineHeight: 1.55 }}>{text}</div>
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        {(['yes', 'no'] as const).map((v) => (
+                          <button
+                            key={v}
+                            onClick={() => setPostSurveyAnswers((prev) => ({ ...prev, [key]: v }))}
+                            style={{
+                              border: `1px solid ${val === v ? '#111111' : 'rgba(17,17,17,.18)'}`,
+                              background: val === v ? '#111111' : '#ffffff',
+                              color: val === v ? '#ffffff' : '#333333',
+                              borderRadius: 8, padding: '8px 28px', fontSize: 13, fontWeight: val === v ? 700 : 400, cursor: 'pointer',
+                            }}
+                          >{v === 'yes' ? '예' : '아니오'}</button>
+                        ))}
+                      </div>
+                    </div>
+                  )
+                })}
+
+                {/* Q3–Q8: 리커트 5점 척도 */}
+                {likertQuestions.map(({ key, text }) => {
+                  const val = postSurveyAnswers[key] as number | null
                   return (
                     <div key={key} style={{ border: '1px solid rgba(17,17,17,.12)', borderRadius: 12, padding: 14, background: '#ffffff' }}>
                       <div style={{ fontSize: 13, fontWeight: 700, color: '#111111', marginBottom: 12, lineHeight: 1.55 }}>{text}</div>
@@ -2986,8 +3019,8 @@ export default function Home() {
                         ))}
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 5 }}>
-                        <span style={{ fontSize: 10, color: '#6b7280' }}>전혀 그렇지 않다</span>
-                        <span style={{ fontSize: 10, color: '#6b7280' }}>매우 그렇다</span>
+                        <span style={{ fontSize: 10, color: '#6b7280' }}>1 전혀 그렇지 않다</span>
+                        <span style={{ fontSize: 10, color: '#6b7280' }}>5 매우 그렇다</span>
                       </div>
                     </div>
                   )
