@@ -2910,9 +2910,11 @@ export default function Home() {
 
                           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6 }}>
                             <button
-                              onClick={() => setEditingCardId(editing ? null : card.stimulus.id)}
+                              onClick={() => { if (allInitialCompleted) setEditingCardId(editing ? null : card.stimulus.id) }}
+                              disabled={!allInitialCompleted && !editing}
+                              title={!allInitialCompleted ? '9개 시안 모두 후보유지/제외 분류 후 활성화됩니다.' : undefined}
                               className={`btn-interact ${editing ? 'btn-final btn-selected' : ''}`}
-                              style={{ border: '1px solid rgba(17,17,17,.2)', background: editing ? '#111827' : '#ffffff', color: editing ? '#ffffff' : '#333333', borderRadius: 7, padding: '7px 0', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
+                              style={{ border: `1px solid ${!allInitialCompleted && !editing ? 'rgba(220,38,38,.5)' : 'rgba(17,17,17,.2)'}`, background: editing ? '#111827' : !allInitialCompleted ? '#fff5f5' : '#ffffff', color: editing ? '#ffffff' : !allInitialCompleted ? '#b91c1c' : '#333333', borderRadius: 7, padding: '7px 0', fontSize: 11, fontWeight: 700, cursor: allInitialCompleted || editing ? 'pointer' : 'not-allowed', opacity: !allInitialCompleted && !editing ? 0.75 : 1 }}
                             >
                               {editing ? '상세 평가 닫기' : '상세 평가'}
                             </button>
