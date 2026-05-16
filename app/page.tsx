@@ -2116,24 +2116,32 @@ export default function Home() {
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 8 }}>
                 {assignments.map((assignment, idx) => {
                   const isActive = idx === currentConditionIndex
+                  const isCompleted = idx < currentConditionIndex
+                  const isFuture = idx > currentConditionIndex
                   const tabColor = CONDITION_COLOR[assignment.conditionLabel]
                   return (
                     <button
                       key={`eval-tab-${assignment.conditionLabel}-${assignment.setId}-${idx}`}
-                      onClick={() => switchConditionTab(idx)}
+                      onClick={() => { if (isActive) switchConditionTab(idx) }}
+                      disabled={isCompleted || isFuture}
                       style={{
-                        border: `1px solid ${isActive ? tabColor : 'rgba(17,17,17,.14)'}`,
-                        background: isActive ? tabColor : '#ffffff',
-                        color: isActive ? '#ffffff' : '#333333',
+                        border: isActive
+                          ? `1px solid ${tabColor}`
+                          : isCompleted
+                            ? '1px solid rgba(17,17,17,.1)'
+                            : '1px solid rgba(17,17,17,.1)',
+                        background: isActive ? tabColor : isCompleted ? '#e8e8e8' : '#f4f4f4',
+                        color: isActive ? '#ffffff' : isCompleted ? '#999999' : '#bbbbbb',
                         borderRadius: 10,
                         padding: '9px 8px',
                         fontSize: 12,
                         fontWeight: 700,
-                        cursor: 'pointer',
+                        cursor: isActive ? 'pointer' : 'not-allowed',
                         textAlign: 'center',
+                        opacity: isCompleted ? 0.6 : isFuture ? 0.45 : 1,
                       }}
                     >
-                      {assignment.conditionLabel}
+                      {isCompleted ? `${assignment.conditionLabel} ✓` : assignment.conditionLabel}
                     </button>
                   )
                 })}
