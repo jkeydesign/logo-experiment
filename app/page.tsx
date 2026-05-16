@@ -2640,7 +2640,15 @@ export default function Home() {
                               <div style={{ fontSize: 12, color: '#666666', marginBottom: 8 }}>{card.stimulus.meta}</div>
                             )}
 
-                            <div style={{ borderTop: '1px solid rgba(17,17,17,.08)', paddingTop: 8, display: 'grid', gap: 8 }}>
+                            <div style={{ borderTop: '1px solid rgba(17,17,17,.08)', paddingTop: 8, position: 'relative' }}>
+                              {!allInitialCompleted && (
+                                <div style={{ position: 'absolute', inset: 0, zIndex: 10, background: 'rgba(255,255,255,.88)', borderRadius: 6, display: 'grid', placeItems: 'center', padding: 8 }}>
+                                  <div style={{ fontSize: 11, color: '#6b7280', textAlign: 'center', lineHeight: 1.6 }}>
+                                    9개 시안을 모두<br />후보유지 또는 제외로<br />분류한 후 평가할 수 있습니다.
+                                  </div>
+                                </div>
+                              )}
+                              <div style={{ display: 'grid', gap: 8, pointerEvents: allInitialCompleted ? 'auto' : 'none' }}>
                               <div>
                                 <div style={{ fontSize: 12, fontWeight: 700, color: '#333333', marginBottom: 4 }}>
                                   1. 브랜드 종합 적합도
@@ -2701,6 +2709,7 @@ export default function Home() {
                                     {cardDetailNotice}
                                   </div>
                                 )}
+                              </div>
                               </div>
                             </div>
 
