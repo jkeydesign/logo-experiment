@@ -76,22 +76,17 @@ const csvCell = (value: unknown) => {
   return /[",\n]/.test(str) ? `"${str}"` : str
 }
 
-function persistEntry(payload: unknown) {
-  if (process.env.NEXT_PUBLIC_STATIC_EXPORT === 'true') {
-    return
-  }
+const GAS_URL = process.env.NEXT_PUBLIC_GAS_URL ?? ''
 
-  try {
-    fetch('/api/log', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    }).catch((error) => {
-      console.error('persistEntry error:', error)
-    })
-  } catch (error) {
-    console.error('persistEntry failed:', error)
-  }
+function persistEntry(payload: unknown) {
+  if (!GAS_URL) return
+  // text/plain 으로 보내면 CORS preflight(OPTIONS) 없이 GAS에 전달됨
+  fetch(GAS_URL, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  }).catch(() => {
+    // 네트워크 오류 시 실험 진행에 영향 없도록 무시
+  })
 }
 
 function getRowKey(row: StimulusLogRow) {
