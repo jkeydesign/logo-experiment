@@ -42,11 +42,9 @@ type PostExperimentAnswers = {
   portfolioUrl: string
 }
 
-type PostSurveyYesNoKey = 'q1' | 'q2'
 type PostSurveyLikertKey = 'q3' | 'q4' | 'q5' | 'q6' | 'q7' | 'q8'
 type PostSurveyAnswers = {
-  q1: 'yes' | 'no' | null
-  q2: 'yes' | 'no' | null
+  infoType: string | null
   q3: number | null
   q4: number | null
   q5: number | null
@@ -65,7 +63,7 @@ type DebriefCheckAnswers = {
   suspected: 'yes' | 'no' | null; suspectedTiming: string | null; suspectedReason: string
 }
 const INITIAL_POST_SURVEY: PostSurveyAnswers = {
-  q1: null, q2: null, q3: null, q4: null,
+  infoType: null, q3: null, q4: null,
   q5: null, q6: null, q7: null, q8: null, freeText: '',
 }
 const INITIAL_COMP_SURVEY: CompSurveyAnswers = {
@@ -77,9 +75,11 @@ const INITIAL_COMP_SURVEY: CompSurveyAnswers = {
 const INITIAL_DEBRIEF_CHECK: DebriefCheckAnswers = {
   suspected: null, suspectedTiming: null, suspectedReason: '',
 }
-const POST_SURVEY_MANIPULATION: Array<{ key: PostSurveyYesNoKey; text: string }> = [
-  { key: 'q1', text: '이 조건에서 AI가 시안에 대한 추천을 제공했다고 인식했습니까?' },
-  { key: 'q2', text: '이 조건에서 AI가 시안에 대한 점수 또는 순위를 제공했다고 인식했습니까?' },
+const POST_SURVEY_INFO_TYPE_OPTIONS = [
+  '추가 정보 없이 로고 시안만 제시되었다',
+  'AI 추천 시안이 함께 제시되었다',
+  'AI 평가 점수 또는 순위가 함께 제시되었다',
+  '잘 모르겠다 / 기억나지 않는다',
 ]
 const POST_SURVEY_COMMON: Array<{ key: PostSurveyLikertKey; text: string }> = [
   { key: 'q3', text: '이번 조건에서 최종 선택한 시안이 적절하다고 느끼는 정도는 어느 정도입니까?' },
@@ -1559,12 +1559,12 @@ export default function Home() {
     const cond = activeAssignment.condition
     const needsCollab = cond === 'collab'
     const needsAiOnly = cond === 'ai'
-    const missingYesNo = postSurveyAnswers.q1 === null || postSurveyAnswers.q2 === null
+    const missingInfoType = postSurveyAnswers.infoType === null
     const missingLikert = [postSurveyAnswers.q3, postSurveyAnswers.q4, postSurveyAnswers.q5].some((v) => v === null)
       || (needsCollab && [postSurveyAnswers.q6, postSurveyAnswers.q7].some((v) => v === null))
       || (needsAiOnly && postSurveyAnswers.q8 === null)
     const missingFreeText = !postSurveyAnswers.freeText?.trim()
-    if (missingYesNo || missingLikert) {
+    if (missingInfoType || missingLikert) {
       setPostSurveyError('모든 문항을 응답해 주세요.')
       return
     }
@@ -1584,8 +1584,7 @@ export default function Home() {
         conditionType: activeAssignment.conditionLabel,
         setId: activeAssignment.setId,
         selectedFinalLogoId: finalSelectedStimulusId,
-        manipulationCheckRecommendation: postSurveyAnswers.q1,
-        manipulationCheckScoreRank: postSurveyAnswers.q2,
+        manipulationCheckInfoType: postSurveyAnswers.infoType,
         confidenceScore: postSurveyAnswers.q3,
         agencyScore: postSurveyAnswers.q4,
         perceivedAiInterventionScore: postSurveyAnswers.q5,
@@ -2696,29 +2695,28 @@ export default function Home() {
 
               <div style={{ display: 'grid', gap: 10 }}>
 
-                {/* Q1·Q2: 조작 점검 — 예/아니오 */}
-                {POST_SURVEY_MANIPULATION.map(({ key, text }) => {
-                  const val = postSurveyAnswers[key]
-                  return (
-                    <div key={key} style={{ border: '1px solid rgba(17,17,17,.12)', borderRadius: 12, padding: 14, background: '#ffffff' }}>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: '#111111', marginBottom: 12, lineHeight: 1.55 }}>{text}</div>
-                      <div style={{ display: 'flex', gap: 8 }}>
-                        {(['yes', 'no'] as const).map((v) => (
-                          <button
-                            key={v}
-                            onClick={() => setPostSurveyAnswers((prev) => ({ ...prev, [key]: v }))}
-                            style={{
-                              border: `1px solid ${val === v ? '#111111' : 'rgba(17,17,17,.18)'}`,
-                              background: val === v ? '#111111' : '#ffffff',
-                              color: val === v ? '#ffffff' : '#333333',
-                              borderRadius: 8, padding: '8px 28px', fontSize: 13, fontWeight: val === v ? 700 : 400, cursor: 'pointer',
-                            }}
-                          >{v === 'yes' ? '예' : '아니오'}</button>
-                        ))}
-                      </div>
-                    </div>
-                  )
-                })}
+                {/* 조작 점검 — 단일선택 */}
+                <div style={{ border: '1px solid rgba(17,17,17,.12)', borderRadius: 12, padding: 14, background: '#ffffff' }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#111111', marginBottom: 12, lineHeight: 1.55 }}>
+                    이번 조건에서 화면에 추가로 제공된 정보는 무엇이었습니까?
+                  </div>
+                  <div style={{ display: 'grid', gap: 8 }}>
+                    {POST_SURVEY_INFO_TYPE_OPTIONS.map((opt) => (
+                      <button
+                        key={opt}
+                        onClick={() => setPostSurveyAnswers((prev) => ({ ...prev, infoType: opt }))}
+                        style={{
+                          border: `1px solid ${postSurveyAnswers.infoType === opt ? '#111111' : 'rgba(17,17,17,.18)'}`,
+                          background: postSurveyAnswers.infoType === opt ? '#111111' : '#ffffff',
+                          color: postSurveyAnswers.infoType === opt ? '#ffffff' : '#333333',
+                          borderRadius: 8, padding: '9px 14px', fontSize: 13,
+                          fontWeight: postSurveyAnswers.infoType === opt ? 700 : 400,
+                          cursor: 'pointer', textAlign: 'left',
+                        }}
+                      >{opt}</button>
+                    ))}
+                  </div>
+                </div>
 
                 {/* Q3–Q8: 리커트 5점 척도 */}
                 {likertQuestions.map(({ key, text }) => {
