@@ -41,11 +41,11 @@ export const CONDITION_GUIDES: Record<Condition, string[]> = {
 }
 
 export const AXIS_LABELS = [
-  { id: 'brand_fit', name: '브랜드 적합성', desc: '포지셔닝과 가치 키워드를 담아내는가?', group: 'brand' },
-  { id: 'target_fit', name: '타깃 적합성', desc: '타깃에게 의도한 의미가 전달되는가?', group: 'brand' },
+  { id: 'brand_fit', name: '의미 적합성', desc: '포지셔닝과 가치 키워드를 담아내는가?', group: 'brand' },
+  { id: 'target_fit', name: '타깃 전달성', desc: '타깃에게 의도한 의미가 전달되는가?', group: 'brand' },
   { id: 'comp_diff', name: '경쟁 차별성', desc: '경쟁사의 시각 특성과 충분히 구분되는가?', group: 'brand' },
-  { id: 'scalable', name: '확장 가능성', desc: '다양한 매체와 응용 환경에서 일관되게 작동하는가?', group: 'brand' },
-  { id: 'timeless', name: '시간 지속성', desc: '5~10년 후에도 유효한 형태인가?', group: 'brand' },
+  { id: 'scalable', name: '적용 확장성', desc: '다양한 매체와 응용 환경에서 일관되게 작동하는가?', group: 'brand' },
+  { id: 'timeless', name: '정체성 일관성', desc: '5~10년 후에도 유효한 형태인가?', group: 'brand' },
   { id: 'natural', name: '자연성', desc: '이 형태는 직관적으로 읽히고 친숙하게 느껴지는가?', group: 'visual' },
   { id: 'harmony', name: '조화성', desc: '시각 요소들이 균형 있고 안정적으로 배치되어 있는가?', group: 'visual' },
   { id: 'refinement', name: '정교성', desc: '단순하거나 복잡한 정도, 즉 디자인의 풍부함이 이 브랜드에 적절한 수준인가?', group: 'visual' },
@@ -65,11 +65,11 @@ export const BRAND_AXIS_IDS = ['brand_fit', 'target_fit', 'comp_diff', 'scalable
 export const VISUAL_AXIS_IDS = ['natural', 'harmony', 'refinement'] as const
 
 const BRAND_JUDGE_AXES = [
-  '① 브랜드 적합성 ? 포지셔닝과 가치 키워드를 담아내는가?',
-  '② 타깃 적합성 ? 타깃에게 의도한 의미가 전달되는가?',
+  '① 의미 적합성 ? 포지셔닝과 가치 키워드를 담아내는가?',
+  '② 타깃 전달성 ? 타깃에게 의도한 의미가 전달되는가?',
   '③ 경쟁 차별성 ? 경쟁사의 시각 특성과 충분히 구분되는가?',
-  '④ 확장 가능성 ? 다양한 매체와 응용 환경에서 일관되게 작동하는가?',
-  '⑤ 시간 지속성 ? 5~10년 후에도 유효한 형태인가?',
+  '④ 적용 확장성 ? 다양한 매체와 응용 환경에서 일관되게 작동하는가?',
+  '⑤ 정체성 일관성 ? 5~10년 후에도 유효한 형태인가?',
   '⑥ 자연성 ? 이 형태는 직관적으로 읽히고 친숙하게 느껴지는가?',
   '⑦ 조화성 ? 시각 요소들이 균형 있고 안정적으로 배치되어 있는가?',
   '⑧ 정교성 ? 단순하거나 복잡한 정도, 즉 디자인의 풍부함이 이 브랜드에 적절한 수준인가?',
