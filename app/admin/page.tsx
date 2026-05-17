@@ -42,6 +42,35 @@ type DashboardData = {
   fetched_at: string
 }
 
+const DEMO_DASHBOARD_DATA: DashboardData = {
+  total_participants: 6,
+  total_rows: 162,
+  ls_distribution: { LS01: 27, LS02: 27, LS03: 27, LS04: 27, LS05: 27, LS06: 27 },
+  condition_counts: { '시안 제시형': 54, '추천 제시형': 54, '평가 제시형': 54 },
+  avg_ai_acceptance_rate: 0.71,
+  decision_changed_count: 31,
+  decision_total: 162,
+  decision_changed_rate: 19.1,
+  change_directions: { '유지': 131, '보류→제외': 17, '제외→보류': 14 },
+  final_selected_ai_count: 7,
+  final_selected_total: 18,
+  final_selected_ai_rate: 38.9,
+  avg_score_initial: 3.18,
+  avg_score_final: 3.42,
+  avg_score_diff: 0.24,
+  axis_modification_counts: {
+    brand_fit: 18,
+    target_fit: 14,
+    competitive_diff: 21,
+    expandability: 16,
+    durability: 12,
+    naturalness: 19,
+    harmony: 15,
+    elaboration: 23,
+  },
+  fetched_at: new Date().toISOString(),
+}
+
 function pct(v: number | null) {
   return v === null ? '-' : `${v}%`
 }
@@ -304,8 +333,10 @@ function ParticipantExport() {
 function DashboardTab() {
   const [status, setStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle')
   const [data, setData] = useState<DashboardData | null>(null)
+  const [showDemoData, setShowDemoData] = useState(false)
 
   const fetchDashboard = useCallback(async () => {
+    setShowDemoData(false)
     if (!GAS_URL) { setStatus('error'); return }
     setStatus('loading')
     try {
@@ -317,20 +348,33 @@ function DashboardTab() {
 
   useEffect(() => { fetchDashboard() }, [fetchDashboard])
 
+  const useDemoDashboard = () => {
+    setData({ ...DEMO_DASHBOARD_DATA, fetched_at: new Date().toISOString() })
+    setShowDemoData(true)
+    setStatus('done')
+  }
+
   if (status === 'loading') return <div style={{ textAlign: 'center', padding: 80, color: '#9ca3af', fontSize: 14 }}>데이터 불러오는 중...</div>
   if (status === 'error') return (
     <div style={{ textAlign: 'center', padding: 60 }}>
       <div style={{ fontSize: 14, color: '#dc2626', marginBottom: 12 }}>데이터를 불러오지 못했습니다. GAS URL을 확인하세요.</div>
-      <button onClick={fetchDashboard} style={{ border: '1px solid rgba(17,17,17,.18)', background: '#fff', borderRadius: 8, padding: '9px 18px', fontSize: 13, cursor: 'pointer' }}>다시 시도</button>
+      <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
+        <button onClick={fetchDashboard} style={{ border: '1px solid rgba(17,17,17,.18)', background: '#fff', borderRadius: 8, padding: '9px 18px', fontSize: 13, cursor: 'pointer' }}>다시 시도</button>
+        <button onClick={useDemoDashboard} style={{ border: 'none', background: '#111111', color: '#ffffff', borderRadius: 8, padding: '9px 18px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>파일럿 데모 데이터 보기</button>
+      </div>
     </div>
   )
   if (!data || data.empty) return (
     <div style={{ textAlign: 'center', padding: 80, color: '#9ca3af', fontSize: 14 }}>
       아직 수집된 데이터가 없습니다.
-      <div style={{ marginTop: 12 }}><button onClick={fetchDashboard} style={{ border: '1px solid rgba(17,17,17,.18)', background: '#fff', borderRadius: 8, padding: '9px 18px', fontSize: 13, cursor: 'pointer' }}>새로고침</button></div>
+      <div style={{ marginTop: 12, display: 'flex', gap: 8, justifyContent: 'center' }}>
+        <button onClick={fetchDashboard} style={{ border: '1px solid rgba(17,17,17,.18)', background: '#fff', borderRadius: 8, padding: '9px 18px', fontSize: 13, cursor: 'pointer' }}>새로고침</button>
+        <button onClick={useDemoDashboard} style={{ border: 'none', background: '#111111', color: '#ffffff', borderRadius: 8, padding: '9px 18px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>파일럿 데모 데이터 보기</button>
+      </div>
     </div>
   )
 
+  const isUnusableGasData = !showDemoData && data.total_participants === 0
   const condOrder = ['시안 제시형', '추천 제시형', '평가 제시형']
   const condMax = Math.max(...condOrder.map((c) => data.condition_counts[c] ?? 0), 1)
   const lsKeys = ['LS01', 'LS02', 'LS03', 'LS04', 'LS05', 'LS06']
@@ -343,12 +387,32 @@ function DashboardTab() {
   return (
     <div style={{ display: 'grid', gap: 16 }}>
       {/* 새로고침 */}
-      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+        {showDemoData ? (
+          <div style={{ border: '1px solid rgba(17,17,17,.12)', background: '#ffffff', color: '#4b5563', borderRadius: 999, padding: '7px 12px', fontSize: 12, fontWeight: 700 }}>
+            파일럿 데모 데이터 표시 중
+          </div>
+        ) : (
+          <div style={{ fontSize: 12, color: '#9ca3af' }}>실제 GAS 데이터 기준</div>
+        )}
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button onClick={useDemoDashboard}
+            style={{ border: '1px solid rgba(17,17,17,.18)', background: showDemoData ? '#111111' : '#ffffff', color: showDemoData ? '#ffffff' : '#111111', borderRadius: 8, padding: '7px 16px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+            파일럿 데모
+          </button>
         <button onClick={fetchDashboard}
           style={{ border: '1px solid rgba(17,17,17,.18)', background: '#fff', color: '#111', borderRadius: 8, padding: '7px 16px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
-          새로고침
+          실제 데이터 새로고침
         </button>
+        </div>
       </div>
+
+      {isUnusableGasData && (
+        <div style={{ border: '1px solid #f59e0b', background: '#fffbeb', color: '#92400e', borderRadius: 12, padding: '12px 14px', fontSize: 13, lineHeight: 1.6 }}>
+          GAS에는 행이 있지만 참가자 ID와 조건 정보가 비어 있어 대시보드 집계가 정상 표시되지 않습니다.
+          GAS 배포 코드를 최신 구조로 다시 배포하면 실제 데이터가 집계됩니다. 지금은 [파일럿 데모]로 화면 구성을 확인할 수 있습니다.
+        </div>
+      )}
 
       {/* 요약 카드 */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12 }}>
