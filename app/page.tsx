@@ -25,7 +25,7 @@ import type {
   StimulusLogRow,
 } from '@/types'
 
-type ScreenStep = 'consent' | 'screening' | 'brief' | 'instruction' | 'evaluation' | 'result' | 'post_survey' | 'comparison_survey' | 'debriefing_check' | 'debriefing' | 'eligibility_collection' | 'completed'
+type ScreenStep = 'consent' | 'participation_consent' | 'screening' | 'brief' | 'instruction' | 'evaluation' | 'result' | 'post_survey' | 'comparison_survey' | 'debriefing_check' | 'debriefing' | 'eligibility_collection' | 'completed'
 type RightTab = 'hold' | 'exclude'
 type EligibilityCheck = {
   q1: 'yes' | 'no' | null
@@ -139,6 +139,9 @@ interface AppHistoryState {
   currentConditionIndex: number
   participantInput: string
   participantError: string
+  hasCheckedExperimentConsent: boolean
+  consentAgreed: boolean
+  consentTimestamp: string | null
   eligibilityCheck: EligibilityCheck
   eligibilityError: string
   cards: StimulusCardState[]
@@ -572,6 +575,9 @@ export default function Home() {
   const [step, setStep] = useState<ScreenStep>('consent')
   const [participantInput, setParticipantInput] = useState(participantId)
   const [participantError, setParticipantError] = useState('')
+  const [hasCheckedExperimentConsent, setHasCheckedExperimentConsent] = useState(false)
+  const [consentAgreed, setConsentAgreed] = useState(false)
+  const [consentTimestamp, setConsentTimestamp] = useState<string | null>(null)
   const [eligibilityCheck, setEligibilityCheck] = useState<EligibilityCheck>(INITIAL_ELIGIBILITY_CHECK)
   const [eligibilityError, setEligibilityError] = useState('')
   const [postExperimentAnswers, setPostExperimentAnswers] = useState<PostExperimentAnswers>(INITIAL_POST_EXPERIMENT)
@@ -614,6 +620,9 @@ export default function Home() {
     currentConditionIndex,
     participantInput,
     participantError,
+    hasCheckedExperimentConsent,
+    consentAgreed,
+    consentTimestamp,
     eligibilityCheck,
     eligibilityError,
     cards,
@@ -639,6 +648,9 @@ export default function Home() {
     currentConditionIndex,
     participantInput,
     participantError,
+    hasCheckedExperimentConsent,
+    consentAgreed,
+    consentTimestamp,
     eligibilityCheck,
     eligibilityError,
     cards,
@@ -672,6 +684,9 @@ export default function Home() {
       setCurrentConditionIndex(snapshot.currentConditionIndex)
       setParticipantInput(snapshot.participantInput ?? '')
       setParticipantError(snapshot.participantError ?? '')
+      setHasCheckedExperimentConsent(snapshot.hasCheckedExperimentConsent ?? false)
+      setConsentAgreed(snapshot.consentAgreed ?? false)
+      setConsentTimestamp(snapshot.consentTimestamp ?? null)
       setEligibilityCheck(snapshot.eligibilityCheck ?? INITIAL_ELIGIBILITY_CHECK)
       setEligibilityError(snapshot.eligibilityError ?? '')
       setCards(snapshot.cards ?? [])
@@ -908,13 +923,19 @@ export default function Home() {
         latin_square_group: assigned[0]?.latinSquareGroup ?? '',
         condition_order: assigned.map((a) => a.conditionLabel).join(' > '),
         set_order: assigned.map((a) => a.setId).join(' > '),
+        consentAgreed,
+        consentTimestamp,
+        consentVersion: 'v1.0',
       },
     })
-  }, [setParticipant, setAssignments, startExperiment, logEvent])
+  }, [setParticipant, setAssignments, startExperiment, logEvent, consentAgreed, consentTimestamp])
 
   const resetToConsent = useCallback(() => {
     setEligibilityCheck(INITIAL_ELIGIBILITY_CHECK)
     setEligibilityError('')
+    setHasCheckedExperimentConsent(false)
+    setConsentAgreed(false)
+    setConsentTimestamp(null)
     setParticipantInput('')
     setParticipantError('')
     setStep('consent')
@@ -1751,6 +1772,7 @@ export default function Home() {
   }, [cards])
 
   const showConsentScreen = step === 'consent'
+  const showParticipationConsent = step === 'participation_consent'
   const showScreeningScreen = step === 'screening'
   const showBrief = step === 'brief' && activeAssignment && activeBrief
   const showInstruction = step === 'instruction' && activeAssignment && activeBrief
@@ -1761,7 +1783,7 @@ export default function Home() {
   const showDebriefCheck = step === 'debriefing_check'
   const showDebriefing = step === 'debriefing'
   const showEligibilityCollection = step === 'eligibility_collection'
-  const showAppHeader = !showConsentScreen && !showScreeningScreen
+  const showAppHeader = !showConsentScreen && !showParticipationConsent && !showScreeningScreen
 
   const finalSelectedLogos = useMemo(() => {
     return rows
@@ -1892,11 +1914,11 @@ export default function Home() {
                   <button
                     onClick={() => {
                       setEligibilityError('')
-                      setStep('screening')
+                      setStep('participation_consent')
                     }}
                     style={{ border: 'none', background: '#000000', color: '#ffffff', borderRadius: 8, padding: '16px 12px', fontSize: 16, fontWeight: 800, cursor: 'pointer' }}
                   >
-                    동의 참여합니다.
+                    참여합니다.
                   </button>
                   <button
                     onClick={() => {
@@ -1905,6 +1927,110 @@ export default function Home() {
                     style={{ border: '1px solid rgba(17,17,17,.18)', background: '#ffffff', color: '#1f2937', borderRadius: 8, padding: '16px 12px', fontSize: 16, fontWeight: 700, cursor: 'pointer' }}
                   >
                     참여하지 않습니다.
+                  </button>
+                </div>
+              </div>
+            </section>
+          </div>
+        )}
+
+        {showParticipationConsent && (
+          <div style={{ minHeight: '100%', display: 'grid', placeItems: 'start center', padding: '42px 0 36px' }}>
+            <section style={{ width: 'min(920px, 92vw)', background: '#ffffff', color: '#111111' }}>
+              <div style={{ textAlign: 'center', marginBottom: 34 }}>
+                <h1 style={{ fontSize: 28, fontWeight: 900, letterSpacing: '-.02em', marginBottom: 12 }}>
+                  실험 참여 동의
+                </h1>
+              </div>
+
+              <div style={{ maxWidth: 820, margin: '0 auto', display: 'grid', gap: 18, fontSize: 15, lineHeight: 1.75, color: '#1f2937' }}>
+                {[
+                  '나는 본 연구가 생성형 AI 기반 브랜드 로고 디자인 환경에서 전문 디자이너의 로고 시안 판단 과정을 분석하기 위한 온라인 실험임을 이해했습니다.',
+                  '나는 연구 참여가 자발적이며, 참여하지 않거나 중도에 중단하더라도 어떠한 불이익이 없음을 이해했습니다.',
+                  '나는 실험 중 성명, 이메일, 포트폴리오 등 직접 식별정보가 수집되지 않으며, 실험 자료는 참가자 코드 기반으로 처리됨을 이해했습니다.',
+                  '나는 실험에서 로고 시안에 대한 후보 유지, 제외, 변경, 최종 선택 기록과 평가 응답, 설문 응답이 연구 자료로 수집됨을 이해했습니다.',
+                  '나는 실험 조건에 따라 AI 관련 정보가 제공되지 않거나, AI 추천 정보 또는 AI 평가 순위와 설명이 제시될 수 있음을 이해했습니다.',
+                  '나는 실험에서 제시되는 AI 판단 정보가 조건 간 비교와 자극 통제를 위해 사전에 구성된 정보일 수 있음을 이해했습니다.',
+                  '나는 실험 종료 후 연구대상자 자격 확인과 사례비 지급을 위해 성명, 이메일, 포트폴리오 자료를 별도로 제출해야 할 수 있음을 이해했습니다.',
+                  '나는 포트폴리오 자료가 연구대상자 자격 확인 목적으로만 사용되며, 실험 자료로 분석되지 않고 확인 후 폐기됨을 이해했습니다.',
+                  '나는 연구 참여 과정에서 일시적인 피로감이나 판단 부담이 있을 수 있으며, 불편할 경우 언제든지 참여를 중단할 수 있음을 이해했습니다.',
+                ].map((text, index) => (
+                  <div
+                    key={text}
+                    style={{ display: 'grid', gridTemplateColumns: '32px 1fr', gap: 12, borderBottom: index === 8 ? 'none' : '1px solid rgba(17,17,17,.08)', paddingBottom: index === 8 ? 0 : 14 }}
+                  >
+                    <strong style={{ color: '#111111', fontSize: 15 }}>{index + 1}.</strong>
+                    <p style={{ margin: 0 }}>{text}</p>
+                  </div>
+                ))}
+
+                <label
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 12,
+                    marginTop: 10,
+                    border: `1px solid ${hasCheckedExperimentConsent ? '#111111' : 'rgba(17,17,17,.16)'}`,
+                    background: hasCheckedExperimentConsent ? '#f5f5f5' : '#ffffff',
+                    borderRadius: 12,
+                    padding: '15px 16px',
+                    fontSize: 15,
+                    fontWeight: 800,
+                    color: '#111111',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={hasCheckedExperimentConsent}
+                    onChange={(event) => setHasCheckedExperimentConsent(event.target.checked)}
+                    style={{ width: 18, height: 18, accentColor: '#111111', cursor: 'pointer' }}
+                  />
+                  위 내용을 모두 확인했으며, 본 연구 참여에 자발적으로 동의합니다.
+                </label>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, paddingTop: 10 }}>
+                  <button
+                    disabled={!hasCheckedExperimentConsent}
+                    onClick={() => {
+                      if (!hasCheckedExperimentConsent) return
+                      const agreedAt = new Date().toISOString()
+                      setConsentAgreed(true)
+                      setConsentTimestamp(agreedAt)
+                      setEligibilityError('')
+                      logEvent('consent_agreed', {
+                        detail: '실험 참여 동의',
+                        payload: {
+                          consentAgreed: true,
+                          consentTimestamp: agreedAt,
+                          consentVersion: 'v1.0',
+                        },
+                      })
+                      setStep('screening')
+                    }}
+                    style={{
+                      border: 'none',
+                      background: hasCheckedExperimentConsent ? '#000000' : '#d4d4d4',
+                      color: '#ffffff',
+                      borderRadius: 8,
+                      padding: '16px 12px',
+                      fontSize: 16,
+                      fontWeight: 800,
+                      cursor: hasCheckedExperimentConsent ? 'pointer' : 'not-allowed',
+                      opacity: hasCheckedExperimentConsent ? 1 : 0.72,
+                    }}
+                  >
+                    동의하고 실험을 시작합니다.
+                  </button>
+                  <button
+                    onClick={() => {
+                      setConsentAgreed(false)
+                      setConsentTimestamp(null)
+                      setEligibilityError('consent_declined')
+                    }}
+                    style={{ border: '1px solid rgba(17,17,17,.18)', background: '#ffffff', color: '#1f2937', borderRadius: 8, padding: '16px 12px', fontSize: 16, fontWeight: 700, cursor: 'pointer' }}
+                  >
+                    동의하지 않고 종료합니다.
                   </button>
                 </div>
               </div>
@@ -3403,7 +3529,7 @@ export default function Home() {
         )}
       </main>
 
-      {(eligibilityError === 'rejection' || eligibilityError === 'declined') && (
+      {(eligibilityError === 'rejection' || eligibilityError === 'declined' || eligibilityError === 'consent_declined') && (
         <div
           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.52)', display: 'grid', placeItems: 'center', zIndex: 9999, padding: 20 }}
           onClick={() => setEligibilityError('')}
@@ -3413,10 +3539,12 @@ export default function Home() {
             onClick={(e) => e.stopPropagation()}
           >
             <div style={{ fontSize: 22, fontWeight: 900, color: '#111111', marginBottom: 12 }}>
-              {eligibilityError === 'declined' ? '실험 참여 종료' : '실험 참여 안내'}
+              {eligibilityError === 'declined' || eligibilityError === 'consent_declined' ? '실험 참여 종료' : '실험 참여 안내'}
             </div>
             <div style={{ fontSize: 14, color: '#333333', lineHeight: 1.75, marginBottom: 14 }}>
-              {eligibilityError === 'declined'
+              {eligibilityError === 'consent_declined'
+                ? '연구 참여에 동의하지 않아 실험이 종료되었습니다. 귀하의 결정에 따른 불이익은 없습니다.'
+                : eligibilityError === 'declined'
                 ? '실험 참여를 선택하지 않으셨습니다. 참여해 주셔서 감사합니다.'
                 : '참여 자격 조건에 해당하지 않아 실험에 참여하실 수 없습니다. 관심을 가져 주셔서 감사합니다.'}
             </div>
