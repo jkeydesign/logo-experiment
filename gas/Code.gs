@@ -146,15 +146,15 @@ function doPost(e) {
   }
 }
 
-// GET 요청으로 시트 요약 또는 참가자별 데이터 반환 (관리자용)
+// GET 요청으로 시트 요약 / 참가자별 / 대시보드 반환 (관리자용)
 function doGet(e) {
   try {
     const ss = SpreadsheetApp.openById(SHEET_ID)
     const pid = (e && e.parameter && e.parameter.pid) ? e.parameter.pid : ''
+    const action = (e && e.parameter && e.parameter.action) ? e.parameter.action : ''
 
-    if (pid) {
-      return jsonResponse(getParticipantData(ss, pid))
-    }
+    if (pid) return jsonResponse(getParticipantData(ss, pid))
+    if (action === 'dashboard') return jsonResponse(getDashboardData(ss))
 
     const eventSheet = ss.getSheetByName('events')
     const rowSheet = ss.getSheetByName('stimulus_rows')
@@ -166,6 +166,92 @@ function doGet(e) {
     return jsonResponse(summary)
   } catch (err) {
     return jsonResponse({ ok: false, error: String(err) })
+  }
+}
+
+function getDashboardData(ss) {
+  const rowSheet = ss.getSheetByName('stimulus_rows')
+  if (!rowSheet || rowSheet.getLastRow() <= 1) return { empty: true, fetched_at: new Date().toISOString() }
+
+  const data = rowSheet.getDataRange().getValues()
+  const headers = data[0]
+  const col = {}
+  headers.forEach(function(h, i) { col[h] = i })
+  const rows = data.slice(1)
+
+  const participants = {}
+  const lsDist = {}
+  const condCounts = {}
+  const changeDirections = {}
+  const axisMods = { brand_fit: 0, target_fit: 0, competitive_diff: 0, expandability: 0, durability: 0, naturalness: 0, harmony: 0, elaboration: 0 }
+
+  let acceptanceSum = 0, acceptanceCount = 0
+  let changedCount = 0, totalWithDecision = 0
+  let finalAiCount = 0, finalTotal = 0
+  let scoreDiffSum = 0, scoreDiffCount = 0
+  let avgInitialSum = 0, avgFinalSum = 0, avgCount = 0
+
+  rows.forEach(function(row) {
+    var pid = row[col['participant_id']]
+    var ls = row[col['latin_square_group']]
+    var cond = row[col['condition_type']]
+
+    if (pid) participants[pid] = true
+    if (ls) lsDist[ls] = (lsDist[ls] || 0) + 1
+    if (cond) condCounts[cond] = (condCounts[cond] || 0) + 1
+
+    var acc = row[col['ai_score_acceptance_rate']]
+    if (acc !== '' && acc !== null && !isNaN(parseFloat(acc))) { acceptanceSum += parseFloat(acc); acceptanceCount++ }
+
+    var changed = row[col['decision_changed']]
+    if (changed !== '' && changed !== null) {
+      totalWithDecision++
+      if (changed === true || changed === 'true' || changed === 'TRUE') changedCount++
+    }
+
+    var dir = row[col['change_direction']]
+    if (dir && dir !== '') changeDirections[dir] = (changeDirections[dir] || 0) + 1
+
+    var finalSel = row[col['final_selected']]
+    var finalAi = row[col['final_selected_is_ai_recommended']]
+    if (finalSel === true || finalSel === 'true' || finalSel === 'TRUE') {
+      finalTotal++
+      if (finalAi === true || finalAi === 'true' || finalAi === 'TRUE') finalAiCount++
+    }
+
+    var si = row[col['total_score_initial']]
+    var sf = row[col['total_score_final']]
+    if (si !== '' && sf !== '' && !isNaN(parseFloat(si)) && !isNaN(parseFloat(sf))) {
+      scoreDiffSum += parseFloat(sf) - parseFloat(si)
+      scoreDiffCount++
+      avgInitialSum += parseFloat(si); avgFinalSum += parseFloat(sf); avgCount++
+    }
+
+    Object.keys(axisMods).forEach(function(axis) {
+      var init = row[col['user_score_' + axis + '_initial']]
+      var fin = row[col['user_score_' + axis + '_final']]
+      if (init !== '' && fin !== '' && init !== null && fin !== null && String(init) !== String(fin)) axisMods[axis]++
+    })
+  })
+
+  return {
+    total_participants: Object.keys(participants).length,
+    total_rows: rows.length,
+    ls_distribution: lsDist,
+    condition_counts: condCounts,
+    avg_ai_acceptance_rate: acceptanceCount > 0 ? Math.round(acceptanceSum / acceptanceCount * 100) / 100 : null,
+    decision_changed_count: changedCount,
+    decision_total: totalWithDecision,
+    decision_changed_rate: totalWithDecision > 0 ? Math.round(changedCount / totalWithDecision * 1000) / 10 : null,
+    change_directions: changeDirections,
+    final_selected_ai_count: finalAiCount,
+    final_selected_total: finalTotal,
+    final_selected_ai_rate: finalTotal > 0 ? Math.round(finalAiCount / finalTotal * 1000) / 10 : null,
+    avg_score_initial: avgCount > 0 ? Math.round(avgInitialSum / avgCount * 100) / 100 : null,
+    avg_score_final: avgCount > 0 ? Math.round(avgFinalSum / avgCount * 100) / 100 : null,
+    avg_score_diff: scoreDiffCount > 0 ? Math.round(scoreDiffSum / scoreDiffCount * 100) / 100 : null,
+    axis_modification_counts: axisMods,
+    fetched_at: new Date().toISOString(),
   }
 }
 
