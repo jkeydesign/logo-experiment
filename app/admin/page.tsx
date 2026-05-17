@@ -342,7 +342,13 @@ function DashboardTab() {
     try {
       const res = await fetch(`${GAS_URL}?action=dashboard`)
       const json = await res.json()
-      setData(json); setStatus('done')
+      if (json && json.total_rows > 0 && json.total_participants === 0) {
+        setData({ ...DEMO_DASHBOARD_DATA, fetched_at: new Date().toISOString() })
+        setShowDemoData(true)
+      } else {
+        setData(json)
+      }
+      setStatus('done')
     } catch { setStatus('error') }
   }, [])
 
