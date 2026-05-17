@@ -146,10 +146,16 @@ function doPost(e) {
   }
 }
 
-// GET 요청으로 시트 요약 확인 (관리자용)
+// GET 요청으로 시트 요약 또는 참가자별 데이터 반환 (관리자용)
 function doGet(e) {
   try {
     const ss = SpreadsheetApp.openById(SHEET_ID)
+    const pid = (e && e.parameter && e.parameter.pid) ? e.parameter.pid : ''
+
+    if (pid) {
+      return jsonResponse(getParticipantData(ss, pid))
+    }
+
     const eventSheet = ss.getSheetByName('events')
     const rowSheet = ss.getSheetByName('stimulus_rows')
     const summary = {
@@ -161,6 +167,41 @@ function doGet(e) {
   } catch (err) {
     return jsonResponse({ ok: false, error: String(err) })
   }
+}
+
+function getParticipantData(ss, pid) {
+  const rowSheet = ss.getSheetByName('stimulus_rows')
+  const eventSheet = ss.getSheetByName('events')
+  const rows = []
+  const events = []
+
+  if (rowSheet && rowSheet.getLastRow() > 1) {
+    const data = rowSheet.getDataRange().getValues()
+    const headers = data[0]
+    const pidIdx = headers.indexOf('participant_id')
+    for (let i = 1; i < data.length; i++) {
+      if (String(data[i][pidIdx]) === pid) {
+        const obj = {}
+        headers.forEach(function(h, j) { obj[h] = data[i][j] })
+        rows.push(obj)
+      }
+    }
+  }
+
+  if (eventSheet && eventSheet.getLastRow() > 1) {
+    const data = eventSheet.getDataRange().getValues()
+    const headers = data[0]
+    const pidIdx = headers.indexOf('participantId')
+    for (let i = 1; i < data.length; i++) {
+      if (String(data[i][pidIdx]) === pid) {
+        const obj = {}
+        headers.forEach(function(h, j) { obj[h] = data[i][j] })
+        events.push(obj)
+      }
+    }
+  }
+
+  return { pid: pid, rows: rows, events: events, fetched_at: new Date().toISOString() }
 }
 
 // ── 시트별 처리 함수 ──────────────────────────────────────

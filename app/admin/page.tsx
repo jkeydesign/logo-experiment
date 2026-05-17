@@ -190,40 +190,48 @@ export default function AdminPage() {
           </a>
         </div>
 
-        {/* 로그 내보내기 */}
-        <div style={{ background: '#ffffff', borderRadius: 14, padding: 24, border: '1px solid rgba(17,17,17,.1)' }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: '#6b7280', marginBottom: 4 }}>로그 내보내기</div>
-          <div style={{ fontSize: 13, color: '#9ca3af', marginBottom: 14 }}>현재 브라우저 세션에 저장된 데이터를 추출합니다. 실험 완료 직후 같은 브라우저에서 사용하세요.</div>
-          <ExportButtons />
-        </div>
+        {/* 참가자별 로그 */}
+        <ParticipantExport gasUrl={GAS_URL} />
 
       </div>
     </div>
   )
 }
 
-function ExportButtons() {
-  const [rows, setRows] = useState<unknown[]>([])
-  const [events, setEvents] = useState<unknown[]>([])
+function ParticipantExport({ gasUrl }: { gasUrl: string }) {
+  const [pidInput, setPidInput] = useState('')
+  const [status, setStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle')
+  const [result, setResult] = useState<{ pid: string; rows: Record<string, unknown>[]; events: Record<string, unknown>[] } | null>(null)
+  const [errorMsg, setErrorMsg] = useState('')
 
-  useEffect(() => {
+  const fetchData = async () => {
+    const pid = pidInput.trim().toUpperCase()
+    if (!pid) return
+    if (!gasUrl) { setErrorMsg('GAS URL이 설정되지 않았습니다.'); setStatus('error'); return }
+    setStatus('loading')
+    setResult(null)
+    setErrorMsg('')
     try {
-      const storeRaw = localStorage.getItem('logoexp-store')
-      if (storeRaw) {
-        const store = JSON.parse(storeRaw)
-        setRows(store?.state?.rows ?? [])
-        setEvents(store?.state?.events ?? [])
+      const res = await fetch(`${gasUrl}?pid=${encodeURIComponent(pid)}`)
+      const json = await res.json()
+      if (json.pid) {
+        setResult(json)
+        setStatus('done')
+      } else {
+        setErrorMsg('데이터를 불러오지 못했습니다.')
+        setStatus('error')
       }
-    } catch {}
-  }, [])
+    } catch {
+      setErrorMsg('네트워크 오류가 발생했습니다.')
+      setStatus('error')
+    }
+  }
 
   const downloadJson = (data: unknown, filename: string) => {
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
-    a.href = url
-    a.download = filename
-    a.click()
+    a.href = url; a.download = filename; a.click()
     URL.revokeObjectURL(url)
   }
 
@@ -239,32 +247,52 @@ function ExportButtons() {
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
-    a.href = url
-    a.download = filename
-    a.click()
+    a.href = url; a.download = filename; a.click()
     URL.revokeObjectURL(url)
   }
 
   return (
-    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-      <button
-        onClick={() => downloadJson({ rows }, `stimulus_rows_${Date.now()}.json`)}
-        style={{ border: '1px solid rgba(17,17,17,.18)', background: '#ffffff', color: '#111111', borderRadius: 8, padding: '9px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
-      >
-        자극물 로그 JSON ({rows.length}행)
-      </button>
-      <button
-        onClick={() => downloadCsv(rows as Record<string, unknown>[], `stimulus_rows_${Date.now()}.csv`)}
-        style={{ border: '1px solid rgba(17,17,17,.18)', background: '#ffffff', color: '#111111', borderRadius: 8, padding: '9px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
-      >
-        자극물 로그 CSV ({rows.length}행)
-      </button>
-      <button
-        onClick={() => downloadJson({ events }, `events_${Date.now()}.json`)}
-        style={{ border: '1px solid rgba(17,17,17,.18)', background: '#ffffff', color: '#111111', borderRadius: 8, padding: '9px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
-      >
-        이벤트 로그 JSON ({events.length}건)
-      </button>
+    <div style={{ background: '#ffffff', borderRadius: 14, padding: 24, border: '1px solid rgba(17,17,17,.1)' }}>
+      <div style={{ fontSize: 12, fontWeight: 700, color: '#6b7280', marginBottom: 4 }}>참가자별 로그 조회</div>
+      <div style={{ fontSize: 13, color: '#9ca3af', marginBottom: 14 }}>참가자 코드를 입력하면 해당 참가자의 데이터를 스프레드시트에서 조회합니다.</div>
+      <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
+        <input
+          value={pidInput}
+          onChange={(e) => setPidInput(e.target.value)}
+          placeholder='예: P001'
+          onKeyDown={(e) => e.key === 'Enter' && fetchData()}
+          style={{ width: 120, border: '1px solid rgba(17,17,17,.18)', borderRadius: 8, padding: '9px 12px', fontSize: 14, outline: 'none', background: '#fafafa', fontWeight: 700 }}
+        />
+        <button
+          onClick={fetchData}
+          disabled={status === 'loading'}
+          style={{ border: 'none', background: '#111111', color: '#ffffff', borderRadius: 8, padding: '9px 20px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
+        >
+          {status === 'loading' ? '조회 중...' : '조회'}
+        </button>
+      </div>
+      {status === 'error' && <div style={{ fontSize: 13, color: '#dc2626', marginBottom: 12 }}>{errorMsg}</div>}
+      {status === 'done' && result && (
+        <div>
+          <div style={{ fontSize: 13, color: '#16a34a', fontWeight: 700, marginBottom: 12 }}>
+            ✓ {result.pid} — 자극물 {result.rows.length}행 / 이벤트 {result.events.length}건
+          </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+            <button onClick={() => downloadJson(result.rows, `${result.pid}_stimulus_rows.json`)}
+              style={{ border: '1px solid rgba(17,17,17,.18)', background: '#ffffff', color: '#111111', borderRadius: 8, padding: '9px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+              자극물 JSON
+            </button>
+            <button onClick={() => downloadCsv(result.rows, `${result.pid}_stimulus_rows.csv`)}
+              style={{ border: '1px solid rgba(17,17,17,.18)', background: '#ffffff', color: '#111111', borderRadius: 8, padding: '9px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+              자극물 CSV
+            </button>
+            <button onClick={() => downloadJson(result.events, `${result.pid}_events.json`)}
+              style={{ border: '1px solid rgba(17,17,17,.18)', background: '#ffffff', color: '#111111', borderRadius: 8, padding: '9px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+              이벤트 JSON
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
