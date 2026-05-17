@@ -1126,7 +1126,7 @@ export default function Home() {
     if (!card || card.initialDecision) return
 
     setActiveStimulusId(stimulusId)
-    setRightTab(decision === '보류' ? 'hold' : 'exclude')
+    if (decision === '보류') setRightTab('hold')
 
     setPendingDecision(null)
     setDecisionNotice('')
