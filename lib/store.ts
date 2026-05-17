@@ -77,7 +77,8 @@ const csvCell = (value: unknown) => {
   return /[",\n]/.test(str) ? `"${str}"` : str
 }
 
-const GAS_URL = process.env.NEXT_PUBLIC_GAS_URL ?? ''
+const DEFAULT_GAS_URL = 'https://script.google.com/macros/s/AKfycbzUddGpzIdpEcUvv85HwoKyOdxtLajnFuHEkcYGyMDqx-6BaBjPjPInK5nkj0twsymA/exec'
+const GAS_URL = process.env.NEXT_PUBLIC_GAS_URL || DEFAULT_GAS_URL
 
 function persistEntry(payload: unknown) {
   if (!GAS_URL) return

@@ -21,6 +21,7 @@ import type {
   ConditionLabel,
   DecisionType,
   Logo,
+  SetId,
   StimulusLogRow,
 } from '@/types'
 
@@ -206,6 +207,7 @@ const MAIN_JUDGMENT_CRITERIA = [
 
 const LOGO_ASSET_VERSION = '20260515-ovbne-g-crop'
 const RESEARCHER_EMAIL = 'kjully1492@gmail.com'
+const DEFAULT_GAS_URL = 'https://script.google.com/macros/s/AKfycbzUddGpzIdpEcUvv85HwoKyOdxtLajnFuHEkcYGyMDqx-6BaBjPjPInK5nkj0twsymA/exec'
 
 const INITIAL_ELIGIBILITY_CHECK: EligibilityCheck = { q1: null, q2: null, q3: null }
 const INITIAL_POST_EXPERIMENT: PostExperimentAnswers = {
@@ -220,6 +222,17 @@ const ELIGIBILITY_QUESTIONS: Array<{ key: keyof EligibilityCheck; text: string }
 
 function isValidEmailAddress(value: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim())
+}
+
+function isValidPortfolioUrl(value: string): boolean {
+  const trimmed = value.trim()
+  if (!trimmed) return false
+  try {
+    const url = new URL(trimmed)
+    return url.protocol === 'http:' || url.protocol === 'https:'
+  } catch {
+    return false
+  }
 }
 
 const LS_COUNTER_KEY = 'logoexp_participant_counter'
@@ -932,13 +945,26 @@ export default function Home() {
   }, [eligibilityCheck, logEvent, startExperimentSession])
 
   const submitPostExperiment = useCallback(() => {
-    if (!isValidEmailAddress(postExperimentAnswers.email) && postExperimentAnswers.email.trim()) {
+    const trimmedEmail = postExperimentAnswers.email.trim()
+    const trimmedPortfolioUrl = postExperimentAnswers.portfolioUrl.trim()
+    const hasPortfolioUrl = !!trimmedPortfolioUrl
+    const hasPortfolioFile = !!portfolioFile
+
+    if (!isValidEmailAddress(trimmedEmail) && trimmedEmail) {
       setPostExperimentError('이메일 주소 형식이 올바르지 않습니다. 예: name@example.com')
+      return
+    }
+    if (!hasPortfolioUrl && !hasPortfolioFile) {
+      setPostExperimentError('포트폴리오 URL 또는 포트폴리오 파일 중 하나는 반드시 입력해 주세요.')
+      return
+    }
+    if (hasPortfolioUrl && !isValidPortfolioUrl(trimmedPortfolioUrl)) {
+      setPostExperimentError('포트폴리오 URL 형식이 올바르지 않습니다. https://로 시작하는 주소를 입력해 주세요.')
       return
     }
     setPostExperimentError('')
     setIsSubmittingPostExperiment(true)
-    const gasUrl = process.env.NEXT_PUBLIC_GAS_URL ?? ''
+    const gasUrl = process.env.NEXT_PUBLIC_GAS_URL || DEFAULT_GAS_URL
     if (gasUrl) {
       fetch(gasUrl, {
         method: 'POST',
@@ -953,7 +979,7 @@ export default function Home() {
           logoProjects: postExperimentAnswers.logoProjects,
           field: postExperimentAnswers.field,
           aiUse: postExperimentAnswers.aiUse,
-          portfolioUrl: postExperimentAnswers.portfolioUrl,
+          portfolioUrl: trimmedPortfolioUrl,
           portfolioFileName: portfolioFile?.name ?? '',
           portfolioFileSize: portfolioFile ? portfolioFile.size : '',
         }),
@@ -961,11 +987,11 @@ export default function Home() {
     }
     logEvent('post_experiment_info_submitted', {
       detail: '실험 후 개인정보 제출',
-      payload: { hasName: !!postExperimentAnswers.fullName, hasEmail: !!postExperimentAnswers.email },
+      payload: { hasName: !!postExperimentAnswers.fullName, hasEmail: !!trimmedEmail, hasPortfolioUrl, hasPortfolioFile },
     })
     setIsSubmittingPostExperiment(false)
     setStep('completed')
-  }, [postExperimentAnswers, participantId, logEvent])
+  }, [postExperimentAnswers, portfolioFile, participantId, logEvent])
 
   const startCondition = useCallback(() => {
     if (!activeAssignment) return
@@ -1737,6 +1763,16 @@ export default function Home() {
   const showEligibilityCollection = step === 'eligibility_collection'
   const showAppHeader = !showConsentScreen && !showScreeningScreen
 
+  const finalSelectedLogos = useMemo(() => {
+    return rows
+      .filter((row) => row.final_selected)
+      .map((row) => {
+        const stimulus = getStimulusSet(row.set_id as SetId).find((logo) => logo.id === row.stimulus_id)
+        return stimulus ? { row, stimulus } : null
+      })
+      .filter((item): item is { row: StimulusLogRow; stimulus: Logo } => item !== null)
+  }, [rows])
+
   const handleUiClickCapture = useCallback((event: React.MouseEvent<HTMLElement>) => {
     const origin = event.target as HTMLElement | null
     if (!origin) return
@@ -2331,33 +2367,33 @@ export default function Home() {
                             style={{ border: `1px solid ${finalSelectedStimulusId === card.stimulus.id ? currentConditionColor : 'rgba(17,17,17,.14)'}`, background: '#ffffff', borderRadius: 8, padding: '8px 9px', opacity: finalSelectedStimulusId && finalSelectedStimulusId !== card.stimulus.id ? 0.4 : 1, pointerEvents: (finalSelectedStimulusId && finalSelectedStimulusId !== card.stimulus.id ? 'none' : 'auto') as React.CSSProperties['pointerEvents'], transition: 'opacity 0.2s' }}
                           >
                             <div style={{ width: '100%', aspectRatio: '1 / 1', borderRadius: 8, background: '#f7f7f7', border: '1px solid rgba(17,17,17,.07)', display: 'grid', placeItems: 'center', marginBottom: 7, overflow: 'hidden' }} dangerouslySetInnerHTML={{ __html: renderLogoSvg(card.stimulus) }} />
-                            <div style={{ fontSize: 13, fontWeight: 700, color: '#111111', marginBottom: 1 }}>
+                            <div style={{ fontSize: 15, fontWeight: 700, color: '#111111', marginBottom: 1 }}>
                               {card.stimulus.id}{activeAssignment.condition === 'ai' ? ` · ${card.stimulus.name}` : ''}
                             </div>
                             {activeAssignment.condition === 'ai' && (
-                              <div style={{ fontSize: 12, color: '#666666', marginBottom: 8 }}>{card.stimulus.meta}</div>
+                              <div style={{ fontSize: 14, color: '#666666', marginBottom: 8 }}>{card.stimulus.meta}</div>
                             )}
 
                             <div style={{ borderTop: '1px solid rgba(17,17,17,.08)', paddingTop: 8, position: 'relative' }}>
                               {!allInitialCompleted && (
                                 <div style={{ position: 'absolute', inset: 0, zIndex: 10, background: 'rgba(255,255,255,.88)', borderRadius: 6, display: 'grid', placeItems: 'center', padding: 8 }}>
-                                  <div style={{ fontSize: 11, color: '#6b7280', textAlign: 'center', lineHeight: 1.6 }}>
+                                  <div style={{ fontSize: 13, color: '#6b7280', textAlign: 'center', lineHeight: 1.6 }}>
                                     9개 시안을 모두<br />후보유지 또는 제외로<br />분류한 후 평가할 수 있습니다.
                                   </div>
                                 </div>
                               )}
                               <div style={{ display: 'grid', gap: 8, pointerEvents: allInitialCompleted ? 'auto' : 'none' }}>
                               <div>
-                                <div style={{ fontSize: 12, fontWeight: 700, color: '#333333', marginBottom: 4 }}>
+                                <div style={{ fontSize: 14, fontWeight: 700, color: '#333333', marginBottom: 4 }}>
                                   1. 브랜드 종합 적합도
                                 </div>
-                                <div style={{ fontSize: 11, color: '#666666', marginBottom: 5 }}>이 로고 시안이 브랜드 브리프에 얼마나 적합한가?</div>
+                                <div style={{ fontSize: 13, color: '#666666', marginBottom: 5 }}>이 로고 시안이 브랜드 브리프에 얼마나 적합한가?</div>
                                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: 3 }}>
                                   {[1, 2, 3, 4, 5].map((v) => (
                                     <button
                                       key={`${card.stimulus.id}-hold-brand-${v}`}
                                       onClick={() => updateDetailOverallScore(card.stimulus.id, 'brand', v)}
-                                      style={{ border: `1px solid ${card.brandOverallScore === v ? currentConditionColor : 'rgba(17,17,17,.18)'}`, background: card.brandOverallScore === v ? currentConditionColor : '#ffffff', color: card.brandOverallScore === v ? '#ffffff' : '#333333', borderRadius: 5, padding: '4px 0', fontSize: 13, fontWeight: card.brandOverallScore === v ? 800 : 500, cursor: 'pointer' }}
+                                      style={{ border: `1px solid ${card.brandOverallScore === v ? currentConditionColor : 'rgba(17,17,17,.18)'}`, background: card.brandOverallScore === v ? currentConditionColor : '#ffffff', color: card.brandOverallScore === v ? '#ffffff' : '#333333', borderRadius: 5, padding: '4px 0', fontSize: 15, fontWeight: card.brandOverallScore === v ? 800 : 500, cursor: 'pointer' }}
                                     >
                                       {v}
                                     </button>
@@ -2366,16 +2402,16 @@ export default function Home() {
                               </div>
 
                               <div>
-                                <div style={{ fontSize: 12, fontWeight: 700, color: '#333333', marginBottom: 4 }}>
+                                <div style={{ fontSize: 14, fontWeight: 700, color: '#333333', marginBottom: 4 }}>
                                   2. 시각 종합 완성도
                                 </div>
-                                <div style={{ fontSize: 11, color: '#666666', marginBottom: 5 }}>이 로고 시안이 시각적으로 얼마나 완성도 있는가?</div>
+                                <div style={{ fontSize: 13, color: '#666666', marginBottom: 5 }}>이 로고 시안이 시각적으로 얼마나 완성도 있는가?</div>
                                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: 3 }}>
                                   {[1, 2, 3, 4, 5].map((v) => (
                                     <button
                                       key={`${card.stimulus.id}-hold-visual-${v}`}
                                       onClick={() => updateDetailOverallScore(card.stimulus.id, 'visual', v)}
-                                      style={{ border: `1px solid ${card.visualOverallScore === v ? currentConditionColor : 'rgba(17,17,17,.18)'}`, background: card.visualOverallScore === v ? currentConditionColor : '#ffffff', color: card.visualOverallScore === v ? '#ffffff' : '#333333', borderRadius: 5, padding: '4px 0', fontSize: 13, fontWeight: card.visualOverallScore === v ? 800 : 500, cursor: 'pointer' }}
+                                      style={{ border: `1px solid ${card.visualOverallScore === v ? currentConditionColor : 'rgba(17,17,17,.18)'}`, background: card.visualOverallScore === v ? currentConditionColor : '#ffffff', color: card.visualOverallScore === v ? '#ffffff' : '#333333', borderRadius: 5, padding: '4px 0', fontSize: 15, fontWeight: card.visualOverallScore === v ? 800 : 500, cursor: 'pointer' }}
                                     >
                                       {v}
                                     </button>
@@ -2384,7 +2420,7 @@ export default function Home() {
                               </div>
 
                               <div>
-                                <div style={{ fontSize: 12, fontWeight: 700, color: '#333333', marginBottom: 3 }}>
+                                <div style={{ fontSize: 14, fontWeight: 700, color: '#333333', marginBottom: 3 }}>
                                   3. 주된 판단 기준 <span style={{ fontWeight: 400, color: '#888888' }}>(2개 선택)</span>
                                 </div>
                                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 3, marginBottom: cardDetailNotice ? 5 : 0 }}>
@@ -2395,7 +2431,7 @@ export default function Home() {
                                       <button
                                         key={`${card.stimulus.id}-hold-criterion-${criterion}`}
                                         onClick={() => toggleMainJudgmentCriterion(card.stimulus.id, criterion)}
-                                        style={{ border: `1px solid ${selected ? currentConditionColor : 'rgba(17,17,17,.15)'}`, background: selected ? currentConditionColor : atMax ? '#f5f5f5' : '#ffffff', color: selected ? '#ffffff' : atMax ? '#aaaaaa' : '#333333', borderRadius: 999, padding: '5px 4px', fontSize: 11, fontWeight: selected ? 800 : 500, cursor: 'pointer' }}
+                                        style={{ border: `1px solid ${selected ? currentConditionColor : 'rgba(17,17,17,.15)'}`, background: selected ? currentConditionColor : atMax ? '#f5f5f5' : '#ffffff', color: selected ? '#ffffff' : atMax ? '#aaaaaa' : '#333333', borderRadius: 999, padding: '5px 4px', fontSize: 13, fontWeight: selected ? 800 : 500, cursor: 'pointer' }}
                                       >
                                         {criterion}
                                       </button>
@@ -2403,7 +2439,7 @@ export default function Home() {
                                   })}
                                 </div>
                                 {cardDetailNotice && (
-                                  <div style={{ fontSize: 12, color: '#b45309', background: '#fffbeb', border: '1px solid #fcd34d', borderRadius: 6, padding: '5px 7px', lineHeight: 1.5 }}>
+                                  <div style={{ fontSize: 14, color: '#b45309', background: '#fffbeb', border: '1px solid #fcd34d', borderRadius: 6, padding: '5px 7px', lineHeight: 1.5 }}>
                                     {cardDetailNotice}
                                   </div>
                                 )}
@@ -2415,7 +2451,7 @@ export default function Home() {
                               <button
                                 onClick={() => cancelInitialDecision(card.stimulus.id)}
                                 className='btn-interact btn-hold'
-                                style={{ border: '1px solid rgba(75,85,99,.3)', background: '#ffffff', color: '#333333', borderRadius: 7, padding: '6px 0', fontSize: 13, fontWeight: 800, cursor: 'pointer' }}
+                                style={{ border: '1px solid rgba(75,85,99,.3)', background: '#ffffff', color: '#333333', borderRadius: 7, padding: '6px 0', fontSize: 15, fontWeight: 800, cursor: 'pointer' }}
                               >
                                 후보유지 취소
                               </button>
@@ -2436,7 +2472,7 @@ export default function Home() {
                                   }
                                 }}
                                 className='btn-interact btn-final'
-                                style={{ border: `1px solid ${finalSelectedStimulusId === card.stimulus.id ? currentConditionColor : 'rgba(17,17,17,.3)'}`, background: finalSelectedStimulusId === card.stimulus.id ? currentConditionColor : '#f3f4f6', color: finalSelectedStimulusId === card.stimulus.id ? '#ffffff' : '#111827', borderRadius: 7, padding: '6px 0', fontSize: 13, fontWeight: 800, cursor: 'pointer' }}
+                                style={{ border: `1px solid ${finalSelectedStimulusId === card.stimulus.id ? currentConditionColor : 'rgba(17,17,17,.3)'}`, background: finalSelectedStimulusId === card.stimulus.id ? currentConditionColor : '#f3f4f6', color: finalSelectedStimulusId === card.stimulus.id ? '#ffffff' : '#111827', borderRadius: 7, padding: '6px 0', fontSize: 15, fontWeight: 800, cursor: 'pointer' }}
                               >
                                 {finalSelectedStimulusId === card.stimulus.id ? '최종선택 ✓' : '최종선택'}
                               </button>
@@ -2467,19 +2503,19 @@ export default function Home() {
                             }}
                             style={{ width: '100%', textAlign: 'left', border: 'none', background: 'transparent', padding: 0, cursor: 'pointer' }}
                           >
-                            <div style={{ fontSize: 12, fontWeight: 700, color: '#111111' }}>
+                            <div style={{ fontSize: 14, fontWeight: 700, color: '#111111' }}>
                               {card.stimulus.id}
                               {activeAssignment.condition === 'ai' ? ` · ${card.stimulus.name}` : ''}
                             </div>
                             {activeAssignment.condition === 'ai' && (
-                              <div style={{ fontSize: 11, color: '#666666', marginTop: 2 }}>{card.stimulus.meta}</div>
+                              <div style={{ fontSize: 13, color: '#666666', marginTop: 2 }}>{card.stimulus.meta}</div>
                             )}
                           </button>
                           <div style={{ marginTop: 7 }}>
                             <button
                               onClick={() => cancelInitialDecision(card.stimulus.id)}
                               className='btn-interact btn-exclude'
-                              style={{ width: '100%', border: '1px solid rgba(107,114,128,.3)', background: '#ffffff', color: '#333333', borderRadius: 7, padding: '6px 0', fontSize: 11, fontWeight: 800, cursor: 'pointer' }}
+                              style={{ width: '100%', border: '1px solid rgba(107,114,128,.3)', background: '#ffffff', color: '#333333', borderRadius: 7, padding: '6px 0', fontSize: 13, fontWeight: 800, cursor: 'pointer' }}
                             >
                               제외취소
                             </button>
@@ -3002,7 +3038,7 @@ export default function Home() {
               <div style={{ textAlign: 'center', marginBottom: 32 }}>
                 <h1 style={{ fontSize: 22, fontWeight: 900, letterSpacing: '-.02em', marginBottom: 10 }}>참가자 정보 입력</h1>
                 <p style={{ fontSize: 14, color: '#6b7280', lineHeight: 1.65 }}>
-                  실험이 모두 완료되었습니다. 사례비 지급 및 연구 분석을 위해 아래 정보를 입력해 주세요.<br />
+                  실험이 모두 완료되었습니다. 연구 대상자로 선정되신 분에게는 사례비 지급 및 분석을 위해 아래 정보를 입력해 주세요.<br />
                   입력하신 정보는 실험 데이터와 분리하여 보관되며, 연구 목적 외에는 사용되지 않습니다.
                 </p>
               </div>
@@ -3031,7 +3067,7 @@ export default function Home() {
                 </div>
 
                 <div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: '#111111', marginBottom: 6 }}>이메일 <span style={{ color: '#6b7280', fontWeight: 400 }}>(사례비 지급용, 필수)</span></div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#111111', marginBottom: 6 }}>이메일 <span style={{ color: '#6b7280', fontWeight: 400 }}>(필수)</span></div>
                   <input
                     value={postExperimentAnswers.email}
                     onChange={(e) => setPostExperimentAnswers((prev) => ({ ...prev, email: e.target.value }))}
@@ -3044,7 +3080,7 @@ export default function Home() {
                 <div>
                   <div style={{ fontSize: 13, fontWeight: 700, color: '#111111', marginBottom: 8 }}>디자인 실무 경력</div>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                    {['3~5년', '5~10년', '10년 이상'].map((opt) => (
+                    {['1~2년', '3~5년', '5~10년', '10년 이상'].map((opt) => (
                       <button key={opt}
                         onClick={() => setPostExperimentAnswers((prev) => ({ ...prev, career: opt }))}
                         style={{ border: `1px solid ${postExperimentAnswers.career === opt ? '#111111' : 'rgba(17,17,17,.18)'}`, background: postExperimentAnswers.career === opt ? '#111111' : '#ffffff', color: postExperimentAnswers.career === opt ? '#ffffff' : '#333333', borderRadius: 8, padding: '8px 14px', fontSize: 13, fontWeight: postExperimentAnswers.career === opt ? 700 : 400, cursor: 'pointer' }}
@@ -3056,7 +3092,7 @@ export default function Home() {
                 <div>
                   <div style={{ fontSize: 13, fontWeight: 700, color: '#111111', marginBottom: 8 }}>브랜드 로고 / CI 프로젝트 경험</div>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                    {['3~5건', '6~10건', '11건 이상'].map((opt) => (
+                    {['1~2건', '3~5건', '6~10건', '11건 이상'].map((opt) => (
                       <button key={opt}
                         onClick={() => setPostExperimentAnswers((prev) => ({ ...prev, logoProjects: opt }))}
                         style={{ border: `1px solid ${postExperimentAnswers.logoProjects === opt ? '#111111' : 'rgba(17,17,17,.18)'}`, background: postExperimentAnswers.logoProjects === opt ? '#111111' : '#ffffff', color: postExperimentAnswers.logoProjects === opt ? '#ffffff' : '#333333', borderRadius: 8, padding: '8px 14px', fontSize: 13, fontWeight: postExperimentAnswers.logoProjects === opt ? 700 : 400, cursor: 'pointer' }}
@@ -3090,19 +3126,22 @@ export default function Home() {
                 </div>
 
                 <div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: '#111111', marginBottom: 6 }}>포트폴리오 URL <span style={{ color: '#6b7280', fontWeight: 400 }}>(선택 — Behance, Notion 등)</span></div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#111111', marginBottom: 6 }}>포트폴리오 URL <span style={{ color: '#6b7280', fontWeight: 400 }}>(필수 — URL 또는 파일 중 하나)</span></div>
                   <input
                     value={postExperimentAnswers.portfolioUrl}
-                    onChange={(e) => setPostExperimentAnswers((prev) => ({ ...prev, portfolioUrl: e.target.value }))}
+                    onChange={(e) => {
+                      setPostExperimentAnswers((prev) => ({ ...prev, portfolioUrl: e.target.value }))
+                      if (postExperimentError.includes('포트폴리오')) setPostExperimentError('')
+                    }}
                     placeholder='https://'
                     type='url'
-                    style={{ width: '100%', border: '1px solid rgba(17,17,17,.18)', borderRadius: 8, padding: '11px 12px', fontSize: 14, outline: 'none', background: '#ffffff', boxSizing: 'border-box' }}
+                    style={{ width: '100%', border: `1px solid ${postExperimentError.includes('포트폴리오') ? '#dc2626' : 'rgba(17,17,17,.18)'}`, borderRadius: 8, padding: '11px 12px', fontSize: 14, outline: 'none', background: '#ffffff', boxSizing: 'border-box' }}
                   />
                 </div>
 
                 <div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: '#111111', marginBottom: 6 }}>포트폴리오 파일 <span style={{ color: '#6b7280', fontWeight: 400 }}>(선택 — JPEG 또는 PDF, 10MB 이내)</span></div>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: 10, border: `1px solid ${portfolioFileError ? '#dc2626' : 'rgba(17,17,17,.18)'}`, borderRadius: 8, padding: '10px 12px', cursor: 'pointer', background: '#fafafa' }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#111111', marginBottom: 6 }}>포트폴리오 파일 <span style={{ color: '#6b7280', fontWeight: 400 }}>(필수 — URL 또는 파일 중 하나, JPEG 또는 PDF, 10MB 이내)</span></div>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 10, border: `1px solid ${portfolioFileError || postExperimentError.includes('포트폴리오') ? '#dc2626' : 'rgba(17,17,17,.18)'}`, borderRadius: 8, padding: '10px 12px', cursor: 'pointer', background: '#fafafa' }}>
                     <span style={{ flexShrink: 0, border: '1px solid rgba(17,17,17,.22)', background: '#ffffff', borderRadius: 6, padding: '4px 10px', fontSize: 12, fontWeight: 700, color: '#111111' }}>파일 선택</span>
                     <span style={{ fontSize: 13, color: portfolioFile ? '#111111' : '#9ca3af', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {portfolioFile ? `${portfolioFile.name} (${(portfolioFile.size / 1024 / 1024).toFixed(1)} MB)` : '선택된 파일 없음'}
@@ -3114,6 +3153,7 @@ export default function Home() {
                       onChange={(e) => {
                         const file = e.target.files?.[0] ?? null
                         setPortfolioFileError('')
+                        if (postExperimentError.includes('포트폴리오')) setPostExperimentError('')
                         if (file) {
                           if (file.size > 10 * 1024 * 1024) {
                             setPortfolioFileError('파일 크기가 10MB를 초과합니다.')
@@ -3144,8 +3184,8 @@ export default function Home() {
 
                 <button
                   onClick={submitPostExperiment}
-                  disabled={isSubmittingPostExperiment || !postExperimentAnswers.fullName.trim() || !postExperimentAnswers.gender || !postExperimentAnswers.email.trim()}
-                  style={{ marginTop: 4, border: 'none', background: (!postExperimentAnswers.fullName.trim() || !postExperimentAnswers.gender || !postExperimentAnswers.email.trim()) ? '#9ca3af' : '#111111', color: '#ffffff', borderRadius: 8, padding: '14px 0', fontSize: 15, fontWeight: 800, cursor: 'pointer', width: '100%' }}
+                  disabled={isSubmittingPostExperiment || !postExperimentAnswers.fullName.trim() || !postExperimentAnswers.gender || !postExperimentAnswers.email.trim() || (!postExperimentAnswers.portfolioUrl.trim() && !portfolioFile)}
+                  style={{ marginTop: 4, border: 'none', background: (!postExperimentAnswers.fullName.trim() || !postExperimentAnswers.gender || !postExperimentAnswers.email.trim() || (!postExperimentAnswers.portfolioUrl.trim() && !portfolioFile)) ? '#9ca3af' : '#111111', color: '#ffffff', borderRadius: 8, padding: '14px 0', fontSize: 15, fontWeight: 800, cursor: 'pointer', width: '100%' }}
                 >
                   {isSubmittingPostExperiment ? '저장 중...' : '제출 후 실험 종료'}
                 </button>
@@ -3155,65 +3195,41 @@ export default function Home() {
         )}
 
         {step === 'completed' && (
-          <div style={{ maxWidth: 920, margin: '0 auto', display: 'grid', gap: 12 }}>
-            <div style={{ border: '1px solid rgba(17,17,17,.14)', borderRadius: 14, padding: 16, background: '#ffffff' }}>
-              <div style={{ fontSize: 22, fontWeight: 800, marginBottom: 6, color: '#111111' }}>3개 조건 실험 완료</div>
-              <div style={{ fontSize: 13, color: '#4d4d4d', lineHeight: 1.7 }}>
-                전체 로그가 자동 저장되었고, 아래 버튼으로 연구 분석용 데이터를 추출할 수 있습니다.
+          <div style={{ minHeight: '70vh', display: 'grid', placeItems: 'center', padding: '32px 0 56px' }}>
+            <section style={{ width: 'min(1040px, 94vw)', border: '1px solid rgba(17,17,17,.14)', borderRadius: 18, background: '#ffffff', padding: '34px 36px', textAlign: 'center' }}>
+              <div style={{ fontSize: 30, fontWeight: 900, letterSpacing: '-.03em', color: '#111111', marginBottom: 10 }}>
+                실험이 모두 종료되었습니다.
               </div>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
-                <button
-                  onClick={exportRowsJson}
-                  style={{ border: '1px solid rgba(17,17,17,.22)', background: '#ffffff', color: '#111111', borderRadius: 9, padding: '9px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
-                >
-                  자극물 로그 JSON 추출
-                </button>
-                <button
-                  onClick={exportRowsCsv}
-                  style={{ border: '1px solid rgba(17,17,17,.22)', background: '#ffffff', color: '#111111', borderRadius: 9, padding: '9px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
-                >
-                  자극물 로그 CSV 추출
-                </button>
-                <button
-                  onClick={exportEventsJson}
-                  style={{ border: '1px solid rgba(17,17,17,.22)', background: '#ffffff', color: '#111111', borderRadius: 9, padding: '9px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
-                >
-                  행동 이벤트 로그 JSON 추출
-                </button>
+              <div style={{ fontSize: 18, fontWeight: 700, color: '#333333', marginBottom: 8 }}>
+                참여해 주셔서 감사합니다.
               </div>
-            </div>
+              <p style={{ fontSize: 14, color: '#6b7280', lineHeight: 1.7, marginBottom: 28 }}>
+                아래는 각 조건에서 최종 선택한 로고 시안입니다.
+              </p>
 
-            <div style={{ border: '1px solid rgba(17,17,17,.14)', borderRadius: 14, background: '#ffffff', overflow: 'hidden' }}>
-              <div style={{ padding: '10px 12px', borderBottom: '1px solid rgba(17,17,17,.12)', fontSize: 13, fontWeight: 800, color: '#111111' }}>저장된 자극물 로그 미리보기</div>
-              <div style={{ maxHeight: 360, overflow: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
-                  <thead style={{ background: '#f7f7f7', position: 'sticky', top: 0 }}>
-                    <tr>
-                      <th style={{ textAlign: 'left', padding: 8, borderBottom: '1px solid rgba(17,17,17,.1)' }}>조건</th>
-                      <th style={{ textAlign: 'left', padding: 8, borderBottom: '1px solid rgba(17,17,17,.1)' }}>세트</th>
-                      <th style={{ textAlign: 'left', padding: 8, borderBottom: '1px solid rgba(17,17,17,.1)' }}>시안ID</th>
-                      <th style={{ textAlign: 'left', padding: 8, borderBottom: '1px solid rgba(17,17,17,.1)' }}>초기결정</th>
-                      <th style={{ textAlign: 'left', padding: 8, borderBottom: '1px solid rgba(17,17,17,.1)' }}>최종결정</th>
-                      <th style={{ textAlign: 'right', padding: 8, borderBottom: '1px solid rgba(17,17,17,.1)' }}>최종점수</th>
-                      <th style={{ textAlign: 'center', padding: 8, borderBottom: '1px solid rgba(17,17,17,.1)' }}>최종선택</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {rows.map((row) => (
-                      <tr key={`${row.condition_type}-${row.stimulus_id}-${row.set_id}`}>
-                        <td style={{ padding: 8, borderTop: '1px solid rgba(17,17,17,.06)' }}>{row.condition_type}</td>
-                        <td style={{ padding: 8, borderTop: '1px solid rgba(17,17,17,.06)' }}>{row.set_id}</td>
-                        <td style={{ padding: 8, borderTop: '1px solid rgba(17,17,17,.06)' }}>{row.stimulus_id}</td>
-                        <td style={{ padding: 8, borderTop: '1px solid rgba(17,17,17,.06)' }}>{row.initial_decision_hold_or_exclude ?? '-'}</td>
-                        <td style={{ padding: 8, borderTop: '1px solid rgba(17,17,17,.06)' }}>{row.final_decision_hold_or_exclude ?? '-'}</td>
-                        <td style={{ padding: 8, borderTop: '1px solid rgba(17,17,17,.06)', textAlign: 'right' }}>{row.total_score_final?.toFixed(2) ?? '-'}</td>
-                        <td style={{ padding: 8, borderTop: '1px solid rgba(17,17,17,.06)', textAlign: 'center' }}>{row.final_selected ? 'Y' : '-'}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 18 }}>
+                {finalSelectedLogos.map(({ row, stimulus }) => (
+                  <div
+                    key={`${row.condition_type}-${row.set_id}-${row.stimulus_id}`}
+                    style={{ border: '1px solid rgba(17,17,17,.14)', borderRadius: 14, background: '#fafafa', padding: 14, textAlign: 'left' }}
+                  >
+                    <div style={{ width: '100%', aspectRatio: '1 / 1', borderRadius: 12, background: '#ffffff', border: '1px solid rgba(17,17,17,.08)', display: 'grid', placeItems: 'center', overflow: 'hidden', marginBottom: 12 }} dangerouslySetInnerHTML={{ __html: renderLogoSvg(stimulus) }} />
+                    <div style={{ fontSize: 12, fontWeight: 800, color: '#6b7280', marginBottom: 4 }}>
+                      {row.condition_order} · {row.condition_type}
+                    </div>
+                    <div style={{ fontSize: 18, fontWeight: 900, color: '#111111' }}>
+                      최종 선택 시안 {row.stimulus_id}
+                    </div>
+                  </div>
+                ))}
               </div>
-            </div>
+
+              {finalSelectedLogos.length === 0 && (
+                <div style={{ border: '1px solid rgba(17,17,17,.12)', borderRadius: 12, padding: 18, background: '#f7f7f7', color: '#4b5563', fontSize: 14 }}>
+                  최종 선택 로고 정보가 아직 저장되지 않았습니다.
+                </div>
+              )}
+            </section>
           </div>
         )}
 
@@ -3498,4 +3514,3 @@ export default function Home() {
     </div>
   )
 }
-

@@ -7,7 +7,8 @@ const ADMIN_PW = 'logo2026'
 const LS_COUNTER_KEY = 'logoexp_participant_counter'
 const SHEET_ID = '1gJpxKOhFZDRQVoCcxP3W4BZz6CHWpXTgE4mS-3VHZDo'
 const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit`
-const GAS_URL = process.env.NEXT_PUBLIC_GAS_URL ?? ''
+const DEFAULT_GAS_URL = 'https://script.google.com/macros/s/AKfycbzUddGpzIdpEcUvv85HwoKyOdxtLajnFuHEkcYGyMDqx-6BaBjPjPInK5nkj0twsymA/exec'
+const GAS_URL = process.env.NEXT_PUBLIC_GAS_URL || DEFAULT_GAS_URL
 
 const AXIS_LABELS: Record<string, string> = {
   brand_fit: '의미 적합성',
