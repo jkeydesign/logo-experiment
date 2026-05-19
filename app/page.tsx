@@ -987,6 +987,10 @@ export default function Home() {
       setPostExperimentError('포트폴리오 URL 또는 포트폴리오 파일 중 하나는 반드시 입력해 주세요.')
       return
     }
+    if (hasPortfolioUrl && hasPortfolioFile) {
+      setPostExperimentError('포트폴리오 URL 또는 파일 중 하나만 제출해 주세요.')
+      return
+    }
     if (hasPortfolioUrl && !isValidPortfolioUrl(trimmedPortfolioUrl)) {
       setPostExperimentError('포트폴리오 URL 형식이 올바르지 않습니다. https://로 시작하는 주소를 입력해 주세요.')
       return
@@ -3261,63 +3265,75 @@ export default function Home() {
                 </div>
 
                 <div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: '#111111', marginBottom: 6 }}>포트폴리오 URL <span style={{ color: '#6b7280', fontWeight: 400 }}>(필수 — URL 또는 파일 중 하나)</span></div>
-                  <input
-                    value={postExperimentAnswers.portfolioUrl}
-                    onChange={(e) => {
-                      setPostExperimentAnswers((prev) => ({ ...prev, portfolioUrl: e.target.value }))
-                      if (postExperimentError.includes('포트폴리오')) setPostExperimentError('')
-                    }}
-                    placeholder='https://'
-                    type='url'
-                    style={{ width: '100%', border: `1px solid ${postExperimentError.includes('포트폴리오') ? '#dc2626' : 'rgba(17,17,17,.18)'}`, borderRadius: 8, padding: '11px 12px', fontSize: 14, outline: 'none', background: '#ffffff', boxSizing: 'border-box' }}
-                  />
-                </div>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: '#111111', marginBottom: 8 }}>
+                    포트폴리오 URL 또는 파일 중 하나만 제출해 주세요. <span style={{ color: '#6b7280', fontWeight: 400 }}>(JPEG 또는 PDF, 10MB 이내)</span>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 12 }}>
+                    <div style={{ border: `1px solid ${postExperimentError.includes('포트폴리오') ? '#dc2626' : 'rgba(17,17,17,.16)'}`, borderRadius: 10, padding: 12, background: '#ffffff' }}>
+                      <div style={{ fontSize: 12, fontWeight: 800, color: '#111111', marginBottom: 8 }}>포트폴리오 URL</div>
+                      <input
+                        value={postExperimentAnswers.portfolioUrl}
+                        onChange={(e) => {
+                          setPostExperimentAnswers((prev) => ({ ...prev, portfolioUrl: e.target.value }))
+                          if (postExperimentError.includes('포트폴리오')) setPostExperimentError('')
+                        }}
+                        placeholder='https://'
+                        type='url'
+                        style={{ width: '100%', border: '1px solid rgba(17,17,17,.18)', borderRadius: 8, padding: '11px 12px', fontSize: 14, outline: 'none', background: '#ffffff', boxSizing: 'border-box' }}
+                      />
+                    </div>
 
-                <div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: '#111111', marginBottom: 6 }}>포트폴리오 파일 <span style={{ color: '#6b7280', fontWeight: 400 }}>(필수 — URL 또는 파일 중 하나, JPEG 또는 PDF, 10MB 이내)</span></div>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: 10, border: `1px solid ${portfolioFileError || postExperimentError.includes('포트폴리오') ? '#dc2626' : 'rgba(17,17,17,.18)'}`, borderRadius: 8, padding: '10px 12px', cursor: 'pointer', background: '#fafafa' }}>
-                    <span style={{ flexShrink: 0, border: '1px solid rgba(17,17,17,.22)', background: '#ffffff', borderRadius: 6, padding: '4px 10px', fontSize: 12, fontWeight: 700, color: '#111111' }}>파일 선택</span>
-                    <span style={{ flex: 1, minWidth: 0, fontSize: 13, color: portfolioFile ? '#111111' : '#9ca3af', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {portfolioFile ? `${portfolioFile.name} (${(portfolioFile.size / 1024 / 1024).toFixed(1)} MB)` : '선택된 파일 없음'}
-                    </span>
-                    <input
-                      ref={portfolioFileInputRef}
-                      type='file'
-                      accept='.jpg,.jpeg,.pdf'
-                      style={{ display: 'none' }}
-                      onChange={(e) => {
-                        const file = e.target.files?.[0] ?? null
-                        setPortfolioFileError('')
-                        if (postExperimentError.includes('포트폴리오')) setPostExperimentError('')
-                        if (file) {
-                          if (file.size > 10 * 1024 * 1024) {
-                            setPortfolioFileError('파일 크기가 10MB를 초과합니다.')
-                            e.target.value = ''
-                            return
-                          }
-                          const ext = file.name.split('.').pop()?.toLowerCase() ?? ''
-                          if (!['jpg', 'jpeg', 'pdf'].includes(ext)) {
-                            setPortfolioFileError('JPEG 또는 PDF 파일만 업로드할 수 있습니다.')
-                            e.target.value = ''
-                            return
-                          }
-                        }
-                        setPortfolioFile(file)
-                      }}
-                    />
-                  </label>
-                  {portfolioFile && (
-                    <button
-                      type='button'
-                      onClick={clearPortfolioFile}
-                      style={{ marginTop: 8, border: '1px solid rgba(17,17,17,.18)', background: '#ffffff', color: '#4b5563', borderRadius: 7, padding: '6px 10px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
-                    >
-                      선택한 파일 삭제
-                    </button>
-                  )}
+                    <div style={{ border: `1px solid ${portfolioFileError || postExperimentError.includes('포트폴리오') ? '#dc2626' : 'rgba(17,17,17,.16)'}`, borderRadius: 10, padding: 12, background: '#ffffff' }}>
+                      <div style={{ fontSize: 12, fontWeight: 800, color: '#111111', marginBottom: 8 }}>포트폴리오 파일</div>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: 10, border: '1px solid rgba(17,17,17,.18)', borderRadius: 8, padding: '10px 12px', cursor: 'pointer', background: '#fafafa' }}>
+                        <span style={{ flexShrink: 0, border: '1px solid rgba(17,17,17,.22)', background: '#ffffff', borderRadius: 6, padding: '4px 10px', fontSize: 12, fontWeight: 700, color: '#111111' }}>파일 선택</span>
+                        <span style={{ flex: 1, minWidth: 0, fontSize: 13, color: portfolioFile ? '#111111' : '#9ca3af', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {portfolioFile ? `${portfolioFile.name} (${(portfolioFile.size / 1024 / 1024).toFixed(1)} MB)` : '선택된 파일 없음'}
+                        </span>
+                        <input
+                          ref={portfolioFileInputRef}
+                          type='file'
+                          accept='.jpg,.jpeg,.pdf'
+                          style={{ display: 'none' }}
+                          onChange={(e) => {
+                            const file = e.target.files?.[0] ?? null
+                            setPortfolioFileError('')
+                            if (postExperimentError.includes('포트폴리오')) setPostExperimentError('')
+                            if (file) {
+                              if (file.size > 10 * 1024 * 1024) {
+                                setPortfolioFileError('파일 크기가 10MB를 초과합니다.')
+                                e.target.value = ''
+                                return
+                              }
+                              const ext = file.name.split('.').pop()?.toLowerCase() ?? ''
+                              if (!['jpg', 'jpeg', 'pdf'].includes(ext)) {
+                                setPortfolioFileError('JPEG 또는 PDF 파일만 업로드할 수 있습니다.')
+                                e.target.value = ''
+                                return
+                              }
+                            }
+                            setPortfolioFile(file)
+                          }}
+                        />
+                      </label>
+                      {portfolioFile && (
+                        <button
+                          type='button'
+                          onClick={clearPortfolioFile}
+                          style={{ marginTop: 8, border: '1px solid rgba(17,17,17,.18)', background: '#ffffff', color: '#4b5563', borderRadius: 7, padding: '6px 10px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
+                        >
+                          선택한 파일 삭제
+                        </button>
+                      )}
+                    </div>
+                  </div>
                   {portfolioFileError && (
                     <div style={{ marginTop: 4, fontSize: 12, color: '#dc2626' }}>{portfolioFileError}</div>
+                  )}
+                  {!!postExperimentAnswers.portfolioUrl.trim() && !!portfolioFile && (
+                    <div style={{ marginTop: 4, fontSize: 12, color: '#dc2626', fontWeight: 700 }}>
+                      포트폴리오 URL 또는 파일 중 하나만 제출해 주세요.
+                    </div>
                   )}
                 </div>
 
@@ -3329,8 +3345,8 @@ export default function Home() {
 
                 <button
                   onClick={submitPostExperiment}
-                  disabled={isSubmittingPostExperiment || !postExperimentAnswers.fullName.trim() || !postExperimentAnswers.ageGroup || !postExperimentAnswers.email.trim() || (!postExperimentAnswers.portfolioUrl.trim() && !portfolioFile)}
-                  style={{ marginTop: 4, border: 'none', background: (!postExperimentAnswers.fullName.trim() || !postExperimentAnswers.ageGroup || !postExperimentAnswers.email.trim() || (!postExperimentAnswers.portfolioUrl.trim() && !portfolioFile)) ? '#9ca3af' : '#111111', color: '#ffffff', borderRadius: 8, padding: '14px 0', fontSize: 15, fontWeight: 800, cursor: 'pointer', width: '100%' }}
+                  disabled={isSubmittingPostExperiment || !postExperimentAnswers.fullName.trim() || !postExperimentAnswers.ageGroup || !postExperimentAnswers.email.trim() || (!postExperimentAnswers.portfolioUrl.trim() && !portfolioFile) || (!!postExperimentAnswers.portfolioUrl.trim() && !!portfolioFile)}
+                  style={{ marginTop: 4, border: 'none', background: (!postExperimentAnswers.fullName.trim() || !postExperimentAnswers.ageGroup || !postExperimentAnswers.email.trim() || (!postExperimentAnswers.portfolioUrl.trim() && !portfolioFile) || (!!postExperimentAnswers.portfolioUrl.trim() && !!portfolioFile)) ? '#9ca3af' : '#111111', color: '#ffffff', borderRadius: 8, padding: '14px 0', fontSize: 15, fontWeight: 800, cursor: 'pointer', width: '100%' }}
                 >
                   {isSubmittingPostExperiment ? '저장 중...' : '제출 후 실험 종료'}
                 </button>
