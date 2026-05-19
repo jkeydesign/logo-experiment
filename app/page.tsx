@@ -31,6 +31,7 @@ type EligibilityCheck = {
   q1: 'yes' | 'no' | null
   q2: 'yes' | 'no' | null
   q3: 'yes' | 'no' | null
+  q4: 'yes' | 'no' | null
 }
 type PostExperimentAnswers = {
   fullName: string
@@ -212,15 +213,16 @@ const LOGO_ASSET_VERSION = '20260515-ovbne-g-crop'
 const RESEARCHER_EMAIL = 'kjully1492@gmail.com'
 const DEFAULT_GAS_URL = 'https://script.google.com/macros/s/AKfycbzUddGpzIdpEcUvv85HwoKyOdxtLajnFuHEkcYGyMDqx-6BaBjPjPInK5nkj0twsymA/exec'
 
-const INITIAL_ELIGIBILITY_CHECK: EligibilityCheck = { q1: null, q2: null, q3: null }
+const INITIAL_ELIGIBILITY_CHECK: EligibilityCheck = { q1: null, q2: null, q3: null, q4: null }
 const INITIAL_POST_EXPERIMENT: PostExperimentAnswers = {
   fullName: '', ageGroup: '', email: '', career: '', logoProjects: '', field: '', aiUse: '', portfolioUrl: '',
 }
 
 const ELIGIBILITY_QUESTIONS: Array<{ key: keyof EligibilityCheck; text: string }> = [
-  { key: 'q1', text: '현재 디자인 분야에서 실무에 종사하고 있습니까?' },
-  { key: 'q2', text: '디자인 실무 경력이 5년 이상입니까?' },
-  { key: 'q3', text: '브랜드 로고 또는 CI 관련 프로젝트 경험이 3건 이상 있습니까?' },
+  { key: 'q1', text: '만 19세 이상입니까?' },
+  { key: 'q2', text: '현재 디자인 분야에서 실무에 종사하고 있습니까?' },
+  { key: 'q3', text: '디자인 실무 경력이 5년 이상입니까?' },
+  { key: 'q4', text: '브랜드 로고 또는 CI 관련 프로젝트 경험이 3건 이상 있습니까?' },
 ]
 
 function isValidEmailAddress(value: string): boolean {
@@ -943,11 +945,11 @@ export default function Home() {
   }, [])
 
   const confirmEligibility = useCallback(() => {
-    if (eligibilityCheck.q1 === null || eligibilityCheck.q2 === null || eligibilityCheck.q3 === null) {
+    if (eligibilityCheck.q1 === null || eligibilityCheck.q2 === null || eligibilityCheck.q3 === null || eligibilityCheck.q4 === null) {
       setEligibilityError('모든 문항에 응답해 주세요.')
       return
     }
-    if (eligibilityCheck.q1 === 'no' || eligibilityCheck.q2 === 'no' || eligibilityCheck.q3 === 'no') {
+    if (eligibilityCheck.q1 === 'no' || eligibilityCheck.q2 === 'no' || eligibilityCheck.q3 === 'no' || eligibilityCheck.q4 === 'no') {
       setEligibilityError('rejection')
       return
     }
@@ -2059,7 +2061,7 @@ export default function Home() {
                   실험 참여 자격 확인
                 </h1>
                 <p style={{ fontSize: 14, color: '#6b7280', lineHeight: 1.65 }}>
-                  아래 3가지 항목 모두 해당되는 경우에만 실험에 참여할 수 있습니다.
+                  아래 4가지 항목 모두 해당되는 경우에만 실험에 참여할 수 있습니다.
                 </p>
               </div>
 
