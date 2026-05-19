@@ -34,7 +34,7 @@ type EligibilityCheck = {
 }
 type PostExperimentAnswers = {
   fullName: string
-  gender: string
+  ageGroup: string
   email: string
   career: string
   logoProjects: string
@@ -214,7 +214,7 @@ const DEFAULT_GAS_URL = 'https://script.google.com/macros/s/AKfycbzUddGpzIdpEcUv
 
 const INITIAL_ELIGIBILITY_CHECK: EligibilityCheck = { q1: null, q2: null, q3: null }
 const INITIAL_POST_EXPERIMENT: PostExperimentAnswers = {
-  fullName: '', gender: '', email: '', career: '', logoProjects: '', field: '', aiUse: '', portfolioUrl: '',
+  fullName: '', ageGroup: '', email: '', career: '', logoProjects: '', field: '', aiUse: '', portfolioUrl: '',
 }
 
 const ELIGIBILITY_QUESTIONS: Array<{ key: keyof EligibilityCheck; text: string }> = [
@@ -994,7 +994,8 @@ export default function Home() {
           participantId,
           submittedAt: new Date().toISOString(),
           fullName: postExperimentAnswers.fullName,
-          gender: postExperimentAnswers.gender,
+          ageGroup: postExperimentAnswers.ageGroup,
+          gender: postExperimentAnswers.ageGroup,
           email: postExperimentAnswers.email,
           career: postExperimentAnswers.career,
           logoProjects: postExperimentAnswers.logoProjects,
@@ -3181,12 +3182,12 @@ export default function Home() {
                 </div>
 
                 <div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: '#111111', marginBottom: 8 }}>성별 <span style={{ color: '#6b7280', fontWeight: 400 }}>(필수)</span></div>
-                  <div style={{ display: 'flex', gap: 8 }}>
-                    {['남성', '여성', '기타'].map((opt) => (
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#111111', marginBottom: 8 }}>연령대 <span style={{ color: '#6b7280', fontWeight: 400 }}>(필수)</span></div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                    {['만 19~29세', '30~39세', '40~49세', '50~59세', '60세 이상'].map((opt) => (
                       <button key={opt}
-                        onClick={() => setPostExperimentAnswers((prev) => ({ ...prev, gender: opt }))}
-                        style={{ border: `1px solid ${postExperimentAnswers.gender === opt ? '#111111' : 'rgba(17,17,17,.18)'}`, background: postExperimentAnswers.gender === opt ? '#111111' : '#ffffff', color: postExperimentAnswers.gender === opt ? '#ffffff' : '#333333', borderRadius: 8, padding: '8px 18px', fontSize: 13, fontWeight: postExperimentAnswers.gender === opt ? 700 : 400, cursor: 'pointer' }}
+                        onClick={() => setPostExperimentAnswers((prev) => ({ ...prev, ageGroup: opt }))}
+                        style={{ border: `1px solid ${postExperimentAnswers.ageGroup === opt ? '#111111' : 'rgba(17,17,17,.18)'}`, background: postExperimentAnswers.ageGroup === opt ? '#111111' : '#ffffff', color: postExperimentAnswers.ageGroup === opt ? '#ffffff' : '#333333', borderRadius: 8, padding: '8px 18px', fontSize: 13, fontWeight: postExperimentAnswers.ageGroup === opt ? 700 : 400, cursor: 'pointer' }}
                       >{opt}</button>
                     ))}
                   </div>
@@ -3310,8 +3311,8 @@ export default function Home() {
 
                 <button
                   onClick={submitPostExperiment}
-                  disabled={isSubmittingPostExperiment || !postExperimentAnswers.fullName.trim() || !postExperimentAnswers.gender || !postExperimentAnswers.email.trim() || (!postExperimentAnswers.portfolioUrl.trim() && !portfolioFile)}
-                  style={{ marginTop: 4, border: 'none', background: (!postExperimentAnswers.fullName.trim() || !postExperimentAnswers.gender || !postExperimentAnswers.email.trim() || (!postExperimentAnswers.portfolioUrl.trim() && !portfolioFile)) ? '#9ca3af' : '#111111', color: '#ffffff', borderRadius: 8, padding: '14px 0', fontSize: 15, fontWeight: 800, cursor: 'pointer', width: '100%' }}
+                  disabled={isSubmittingPostExperiment || !postExperimentAnswers.fullName.trim() || !postExperimentAnswers.ageGroup || !postExperimentAnswers.email.trim() || (!postExperimentAnswers.portfolioUrl.trim() && !portfolioFile)}
+                  style={{ marginTop: 4, border: 'none', background: (!postExperimentAnswers.fullName.trim() || !postExperimentAnswers.ageGroup || !postExperimentAnswers.email.trim() || (!postExperimentAnswers.portfolioUrl.trim() && !portfolioFile)) ? '#9ca3af' : '#111111', color: '#ffffff', borderRadius: 8, padding: '14px 0', fontSize: 15, fontWeight: 800, cursor: 'pointer', width: '100%' }}
                 >
                   {isSubmittingPostExperiment ? '저장 중...' : '제출 후 실험 종료'}
                 </button>
