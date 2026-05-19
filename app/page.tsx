@@ -3219,7 +3219,7 @@ export default function Home() {
                 <div>
                   <div style={{ fontSize: 13, fontWeight: 700, color: '#111111', marginBottom: 8 }}>디자인 실무 경력</div>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                    {['1~2년', '3~5년', '5~10년', '10년 이상'].map((opt) => (
+                    {['5년 미만', '5년 이상 ~ 10년 미만', '10년 이상 ~ 15년 미만', '15년 이상'].map((opt) => (
                       <button key={opt}
                         onClick={() => setPostExperimentAnswers((prev) => ({ ...prev, career: opt }))}
                         style={{ border: `1px solid ${postExperimentAnswers.career === opt ? '#111111' : 'rgba(17,17,17,.18)'}`, background: postExperimentAnswers.career === opt ? '#111111' : '#ffffff', color: postExperimentAnswers.career === opt ? '#ffffff' : '#333333', borderRadius: 8, padding: '8px 14px', fontSize: 13, fontWeight: postExperimentAnswers.career === opt ? 700 : 400, cursor: 'pointer' }}
