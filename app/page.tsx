@@ -584,6 +584,7 @@ export default function Home() {
   const [postExperimentError, setPostExperimentError] = useState('')
   const [isSubmittingPostExperiment, setIsSubmittingPostExperiment] = useState(false)
   const [portfolioFile, setPortfolioFile] = useState<File | null>(null)
+  const portfolioFileInputRef = useRef<HTMLInputElement | null>(null)
   const [portfolioFileError, setPortfolioFileError] = useState('')
   const [currentConditionIndex, setCurrentConditionIndex] = useState(0)
   const [cards, setCards] = useState<StimulusCardState[]>([])
@@ -964,6 +965,13 @@ export default function Home() {
     })
     startExperimentSession(code, assigned)
   }, [eligibilityCheck, logEvent, startExperimentSession])
+
+  const clearPortfolioFile = useCallback(() => {
+    setPortfolioFile(null)
+    setPortfolioFileError('')
+    if (postExperimentError.includes('포트폴리오')) setPostExperimentError('')
+    if (portfolioFileInputRef.current) portfolioFileInputRef.current.value = ''
+  }, [postExperimentError])
 
   const submitPostExperiment = useCallback(() => {
     const trimmedEmail = postExperimentAnswers.email.trim()
@@ -3270,10 +3278,11 @@ export default function Home() {
                   <div style={{ fontSize: 13, fontWeight: 700, color: '#111111', marginBottom: 6 }}>포트폴리오 파일 <span style={{ color: '#6b7280', fontWeight: 400 }}>(필수 — URL 또는 파일 중 하나, JPEG 또는 PDF, 10MB 이내)</span></div>
                   <label style={{ display: 'flex', alignItems: 'center', gap: 10, border: `1px solid ${portfolioFileError || postExperimentError.includes('포트폴리오') ? '#dc2626' : 'rgba(17,17,17,.18)'}`, borderRadius: 8, padding: '10px 12px', cursor: 'pointer', background: '#fafafa' }}>
                     <span style={{ flexShrink: 0, border: '1px solid rgba(17,17,17,.22)', background: '#ffffff', borderRadius: 6, padding: '4px 10px', fontSize: 12, fontWeight: 700, color: '#111111' }}>파일 선택</span>
-                    <span style={{ fontSize: 13, color: portfolioFile ? '#111111' : '#9ca3af', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <span style={{ flex: 1, minWidth: 0, fontSize: 13, color: portfolioFile ? '#111111' : '#9ca3af', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {portfolioFile ? `${portfolioFile.name} (${(portfolioFile.size / 1024 / 1024).toFixed(1)} MB)` : '선택된 파일 없음'}
                     </span>
                     <input
+                      ref={portfolioFileInputRef}
                       type='file'
                       accept='.jpg,.jpeg,.pdf'
                       style={{ display: 'none' }}
@@ -3298,6 +3307,15 @@ export default function Home() {
                       }}
                     />
                   </label>
+                  {portfolioFile && (
+                    <button
+                      type='button'
+                      onClick={clearPortfolioFile}
+                      style={{ marginTop: 8, border: '1px solid rgba(17,17,17,.18)', background: '#ffffff', color: '#4b5563', borderRadius: 7, padding: '6px 10px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
+                    >
+                      선택한 파일 삭제
+                    </button>
+                  )}
                   {portfolioFileError && (
                     <div style={{ marginTop: 4, fontSize: 12, color: '#dc2626' }}>{portfolioFileError}</div>
                   )}
