@@ -153,6 +153,7 @@ function doPost(e) {
 function doGet(e) {
   try {
     const ss = SpreadsheetApp.openById(SHEET_ID)
+    syncAllSheets(ss)
     const pid = (e && e.parameter && e.parameter.pid) ? e.parameter.pid : ''
     const action = (e && e.parameter && e.parameter.action) ? e.parameter.action : ''
 
@@ -170,6 +171,13 @@ function doGet(e) {
   } catch (err) {
     return jsonResponse({ ok: false, error: String(err) })
   }
+}
+
+function syncAllSheets(ss) {
+  getOrCreateSheet(ss, 'events', EVENT_HEADERS)
+  getOrCreateSheet(ss, 'stimulus_rows', ROW_HEADERS)
+  getOrCreateSheet(ss, 'assignments', ASSIGNMENT_HEADERS)
+  getOrCreateSheet(ss, 'screening', SCREENING_HEADERS)
 }
 
 function getDashboardData(ss) {
