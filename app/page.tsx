@@ -2406,11 +2406,11 @@ export default function Home() {
                       >
                         {/* 평가 제시형: 상단에 AI 순위와 짧은 시각 평가 설명 */}
                         {isAiCond && (
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 7, background: '#111111', borderRadius: 8, padding: '7px 8px', minHeight: 34 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 7, background: '#6b7280', borderRadius: 8, padding: '7px 8px', minHeight: 34 }}>
                             <div style={{ flexShrink: 0, fontSize: 16, fontWeight: 900, color: '#ffffff', letterSpacing: '-.03em' }}>
                               {displayRank}위
                             </div>
-                            <div style={{ minWidth: 0, flex: 1, fontSize: 10.5, fontWeight: 700, color: '#ffffff', lineHeight: 1.35, wordBreak: 'keep-all' }}>
+                            <div style={{ minWidth: 0, flex: 1, fontSize: 10.5, fontWeight: 700, color: '#f9fafb', lineHeight: 1.35, wordBreak: 'keep-all' }}>
                               {aiVisualText}
                             </div>
                           </div>
