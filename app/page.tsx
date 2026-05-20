@@ -272,6 +272,18 @@ const INSTRUCTION_CONDITION_STYLE: Record<ConditionLabel, { button: string; surf
   '평가 제시형': { button: '#8a8f98', surface: '#e8eaed', border: '#8a8f98', text: '#4b5563' },
 }
 
+const AI_VISUAL_EVALUATION_TEXT: Record<number, string> = {
+  1: '곡선의 흐름이 자연스럽고 형태 대비가 안정적으로 보입니다.',
+  2: '기하 형태 간 균형이 좋고 조형적 완성도가 비교적 높습니다.',
+  3: '대칭 구조가 명확하며 중심축의 조화가 안정적으로 보입니다.',
+  4: '형태 대비는 강하지만 일부 요소의 연결성이 다소 분절적으로 보입니다.',
+  5: '부드러운 곡선 구조가 있으나 전체 형태의 긴장감은 비교적 약합니다.',
+  6: '형태의 리듬감은 있으나 요소 간 조화와 정교성은 다소 낮게 보입니다.',
+  7: '기본 형태는 명확하지만 세부 조형의 완성도와 균형감이 제한적입니다.',
+  8: '시각적 인상은 형성되지만 형태 간 비례와 정돈감이 다소 부족합니다.',
+  9: '조형 요소의 관계가 불안정하며 전체적인 시각 완성도가 낮게 보입니다.',
+}
+
 const SYMBOL_SVG: Record<string, (color: string) => string> = {
   serif: c => `<circle cx="14" cy="22" r="10" fill="none" stroke="${c}" stroke-width="1.8"/><circle cx="14" cy="22" r="4" fill="${c}" opacity=".22"/>`,
   sans: c => `<rect x="5" y="13" width="18" height="18" rx="5" fill="none" stroke="${c}" stroke-width="1.8"/><rect x="9" y="17" width="10" height="10" rx="3" fill="${c}" opacity=".18"/>`,
@@ -2373,7 +2385,8 @@ export default function Home() {
                     const isRecommended = toRecommended(card.stimulus)
                     const showBadge = (isCollab || isAiCond) && isRecommended
                     const aiRank = card.stimulus.aiRank ?? null
-                    const aiScore = aiRank != null ? 100 - Math.floor((aiRank - 1) * 3.75) : null
+                    const displayRank = aiRank ?? card.displayOrder
+                    const aiVisualText = AI_VISUAL_EVALUATION_TEXT[displayRank] ?? ''
 
                     const cardBorder = isActive
                       ? `2px solid ${currentConditionColor}`
@@ -2391,14 +2404,14 @@ export default function Home() {
                         data-stimulus-id={card.stimulus.id}
                         style={{ border: cardBorder, borderRadius: 12, background: '#ffffff', padding: 8, cursor: 'pointer' }}
                       >
-                        {/* 평가 제시형: 상단에 AI 순위/점수 헤더 */}
-                        {isAiCond && aiRank != null && (
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 7, background: aiRank <= 3 ? '#111111' : '#f0f0f0', borderRadius: 8, padding: '6px 8px' }}>
-                            <div style={{ fontSize: 15, fontWeight: 900, color: aiRank <= 3 ? '#ffffff' : '#374151' }}>
-                              {aiRank}위
+                        {/* 평가 제시형: 상단에 AI 순위와 짧은 시각 평가 설명 */}
+                        {isAiCond && (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 7, background: '#111111', borderRadius: 8, padding: '7px 8px', minHeight: 34 }}>
+                            <div style={{ flexShrink: 0, fontSize: 16, fontWeight: 900, color: '#ffffff', letterSpacing: '-.03em' }}>
+                              {displayRank}위
                             </div>
-                            <div style={{ fontSize: 11, fontWeight: 700, color: aiRank <= 3 ? '#ffffff' : '#6b7280' }}>
-                              AI 시각 평가 {aiScore}점
+                            <div style={{ minWidth: 0, flex: 1, fontSize: 10.5, fontWeight: 700, color: '#ffffff', lineHeight: 1.35, wordBreak: 'keep-all' }}>
+                              {aiVisualText}
                             </div>
                           </div>
                         )}
