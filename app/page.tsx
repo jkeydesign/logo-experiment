@@ -2459,25 +2459,6 @@ export default function Home() {
                 </div>
               )}
 
-              <div style={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center', gap: 8 }}>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <button
-                    onClick={() => window.open('/log-viewer', '_blank', 'width=1200,height=800')}
-                    style={{ border: '1px solid rgba(17,17,17,.2)', background: '#ffffff', color: '#111111', borderRadius: 10, padding: '9px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
-                  >
-                    로그 열람
-                  </button>
-                  <button
-                    onClick={() => {
-                      setLogCenterTab('export')
-                      setShowLogCenter(true)
-                    }}
-                    style={{ border: '1px solid rgba(17,17,17,.2)', background: '#ffffff', color: '#111111', borderRadius: 10, padding: '9px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
-                  >
-                    로그 추출
-                  </button>
-                </div>
-              </div>
             </section>
 
             <aside style={{ border: '1px solid rgba(17,17,17,.12)', borderRadius: 12, background: '#ffffff', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
