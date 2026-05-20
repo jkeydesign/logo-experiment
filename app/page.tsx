@@ -1021,7 +1021,6 @@ export default function Home() {
           submittedAt: new Date().toISOString(),
           fullName: postExperimentAnswers.fullName,
           ageGroup: postExperimentAnswers.ageGroup,
-          gender: postExperimentAnswers.ageGroup,
           email: postExperimentAnswers.email,
           career: postExperimentAnswers.career,
           logoProjects: postExperimentAnswers.logoProjects,

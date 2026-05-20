@@ -69,6 +69,9 @@ const CSV_COLUMNS: Array<keyof StimulusLogRow> = [
   'timestamp_initial_decision',
   'timestamp_score_revision',
   'timestamp_final_selection',
+  'score_100_initial',
+  'score_100_final',
+  'set_brief_code',
 ]
 
 const csvCell = (value: unknown) => {

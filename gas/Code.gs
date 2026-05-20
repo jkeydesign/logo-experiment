@@ -96,6 +96,9 @@ const ROW_HEADERS = [
   'timestamp_initial_decision',
   'timestamp_score_revision',
   'timestamp_final_selection',
+  'score_100_initial',
+  'score_100_final',
+  'set_brief_code',
 ]
 
 const ASSIGNMENT_HEADERS = [
@@ -113,11 +116,11 @@ const SCREENING_HEADERS = [
   'fullName',
   'ageGroup',
   'email',
-  'currentPractice',
   'career',
   'logoProjects',
   'field',
   'aiUse',
+  'portfolioUrl',
   'portfolioFileName',
   'portfolioFileSize',
 ]
@@ -355,11 +358,11 @@ function appendScreening(ss, data, now) {
     data.fullName ?? '',
     data.ageGroup ?? data.gender ?? '',
     data.email ?? '',
-    data.currentPractice ?? '',
     data.career ?? '',
     data.logoProjects ?? '',
     data.field ?? '',
     data.aiUse ?? '',
+    data.portfolioUrl ?? '',
     data.portfolioFileName ?? '',
     data.portfolioFileSize ?? '',
   ])
@@ -431,6 +434,9 @@ function buildRowData(row, now, key) {
     row.timestamp_initial_decision ?? '',
     row.timestamp_score_revision ?? '',
     row.timestamp_final_selection ?? '',
+    row.score_100_initial ?? '',
+    row.score_100_final ?? '',
+    row.set_brief_code ?? '',
   ]
 }
 
@@ -441,8 +447,59 @@ function getOrCreateSheet(ss, name, headers) {
     sheet.appendRow(headers)
     sheet.setFrozenRows(1)
     sheet.getRange(1, 1, 1, headers.length).setFontWeight('bold').setBackground('#e8eaf6')
+  } else {
+    syncSheetHeaders(sheet, name, headers)
   }
   return sheet
+}
+
+function syncSheetHeaders(sheet, name, headers) {
+  if (sheet.getLastColumn() === 0) {
+    sheet.appendRow(headers)
+    sheet.setFrozenRows(1)
+    sheet.getRange(1, 1, 1, headers.length).setFontWeight('bold').setBackground('#e8eaf6')
+    return
+  }
+
+  if (name === 'screening') {
+    let current = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0]
+    const genderIdx = current.indexOf('gender')
+    const ageGroupIdx = current.indexOf('ageGroup')
+    if (genderIdx >= 0 && ageGroupIdx < 0) {
+      sheet.getRange(1, genderIdx + 1).setValue('ageGroup')
+    }
+
+    current = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0]
+    const currentPracticeIdx = current.indexOf('currentPractice')
+    if (currentPracticeIdx >= 0) {
+      sheet.deleteColumn(currentPracticeIdx + 1)
+    }
+
+    current = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0]
+    if (current.indexOf('portfolioUrl') < 0) {
+      const portfolioFileNameIdx = current.indexOf('portfolioFileName')
+      if (portfolioFileNameIdx >= 0) {
+        sheet.insertColumnBefore(portfolioFileNameIdx + 1)
+        sheet.getRange(1, portfolioFileNameIdx + 1).setValue('portfolioUrl')
+      } else {
+        sheet.insertColumnAfter(sheet.getLastColumn())
+        sheet.getRange(1, sheet.getLastColumn()).setValue('portfolioUrl')
+      }
+    }
+  }
+
+  const lastColumn = sheet.getLastColumn()
+  const existingHeaders = sheet.getRange(1, 1, 1, lastColumn).getValues()[0]
+  headers.forEach(function(header) {
+    if (existingHeaders.indexOf(header) < 0) {
+      sheet.insertColumnAfter(sheet.getLastColumn())
+      sheet.getRange(1, sheet.getLastColumn()).setValue(header)
+    }
+  })
+
+  sheet.getRange(1, 1, 1, headers.length).setValues([headers])
+  sheet.setFrozenRows(1)
+  sheet.getRange(1, 1, 1, headers.length).setFontWeight('bold').setBackground('#e8eaf6')
 }
 
 function jsonResponse(data) {
