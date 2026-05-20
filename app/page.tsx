@@ -88,7 +88,7 @@ const DEBRIEF_SOURCE_UNDERSTANDING_OPTIONS: Array<{ label: string; value: string
 const POST_SURVEY_INFO_TYPE_OPTIONS: Array<{ label: string; value: string }> = [
   { label: 'AI 관련 정보 없이 로고 시안만 제시되었다', value: 'visual_only' },
   { label: 'AI 추천 시안이 표시되었다', value: 'recommendation' },
-  { label: 'AI 평가 점수 또는 순위가 표시되었다', value: 'score_rank' },
+  { label: 'AI 평가 순위와 시각 평가 설명이 표시되었다.', value: 'score_rank' },
   { label: '잘 모르겠다', value: 'unknown' },
 ]
 const POST_SURVEY_COMMON: Array<{ key: PostSurveyLikertKey; text: string }> = [
