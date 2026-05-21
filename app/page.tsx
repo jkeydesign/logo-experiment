@@ -157,6 +157,7 @@ interface AppHistoryState {
   briefOverride: BrandBrief | null
   hasGenerated: boolean
   isGenerating: boolean
+  visibleGeneratedCount: number
   finalSelectedStimulusId: string | null
   finalSelectionTs: string | null
   showLogCenter: boolean
@@ -613,6 +614,7 @@ export default function Home() {
   const [briefOverride, setBriefOverride] = useState<BrandBrief | null>(null)
   const [hasGenerated, setHasGenerated] = useState(false)
   const [isGenerating, setIsGenerating] = useState(false)
+  const [visibleGeneratedCount, setVisibleGeneratedCount] = useState(0)
   const [finalSelectedStimulusId, setFinalSelectedStimulusId] = useState<string | null>(null)
   const [finalSelectionTs, setFinalSelectionTs] = useState<string | null>(null)
   const [showLogCenter, setShowLogCenter] = useState(false)
@@ -652,6 +654,7 @@ export default function Home() {
     briefOverride,
     hasGenerated,
     isGenerating,
+    visibleGeneratedCount,
     finalSelectedStimulusId,
     finalSelectionTs,
     showLogCenter,
@@ -680,6 +683,7 @@ export default function Home() {
     briefOverride,
     hasGenerated,
     isGenerating,
+    visibleGeneratedCount,
     finalSelectedStimulusId,
     finalSelectionTs,
     showLogCenter,
@@ -716,6 +720,7 @@ export default function Home() {
       setBriefOverride(snapshot.briefOverride ?? null)
       setHasGenerated(snapshot.hasGenerated ?? false)
       setIsGenerating(snapshot.isGenerating ?? false)
+      setVisibleGeneratedCount(snapshot.visibleGeneratedCount ?? (snapshot.hasGenerated ? (snapshot.cards?.length ?? 0) : 0))
       setFinalSelectedStimulusId(snapshot.finalSelectedStimulusId ?? null)
       setFinalSelectionTs(snapshot.finalSelectionTs ?? null)
       setShowLogCenter(snapshot.showLogCenter ?? false)
@@ -770,6 +775,10 @@ export default function Home() {
     () => cards.length > 0 && cards.every((card) => !!card.initialDecision),
     [cards]
   )
+  const visibleCards = useMemo(
+    () => (hasGenerated ? cards.slice(0, Math.min(cards.length, visibleGeneratedCount)) : []),
+    [cards, hasGenerated, visibleGeneratedCount]
+  )
 
   const currentConditionColor = activeAssignment ? CONDITION_COLOR[activeAssignment.conditionLabel] : '#4d4d4d'
   const currentConditionSurface = activeAssignment ? CONDITION_SURFACE[activeAssignment.conditionLabel] : '#f7f7f7'
@@ -813,6 +822,7 @@ export default function Home() {
     setBriefCodeError('')
     setHasGenerated(false)
     setIsGenerating(false)
+    setVisibleGeneratedCount(0)
     setFinalSelectedStimulusId(null)
     setFinalSelectionTs(null)
   }, [])
@@ -1130,7 +1140,10 @@ export default function Home() {
   const generateLogos = useCallback(async () => {
     if (hasGenerated || isGenerating) return
 
+    const totalCards = cards.length
     setIsGenerating(true)
+    setHasGenerated(true)
+    setVisibleGeneratedCount(0)
     logEvent('ai_logo_generate_click', {
       condition: activeAssignment?.condition,
       conditionLabel: activeAssignment?.conditionLabel,
@@ -1138,18 +1151,31 @@ export default function Home() {
       detail: 'AI 로고 시안 생성 클릭',
     })
 
-    const waitMs = 2000 + Math.floor(Math.random() * 1000)
-    await new Promise((resolve) => setTimeout(resolve, waitMs))
-    setHasGenerated(true)
+    const startedAt = Date.now()
+    let revealed = 0
+    while (revealed < totalCards) {
+      const waitMs = revealed === 0
+        ? 800 + Math.floor(Math.random() * 500)
+        : 450 + Math.floor(Math.random() * 550)
+      await new Promise((resolve) => setTimeout(resolve, waitMs))
+
+      const increment = Math.random() > 0.45 ? 2 : 1
+      revealed = Math.min(totalCards, revealed + increment)
+      setVisibleGeneratedCount(revealed)
+      if (revealed > 0) {
+        setActiveStimulusId((prev) => prev ?? cards[0]?.stimulus.id ?? null)
+      }
+    }
+
     setIsGenerating(false)
-    setActiveStimulusId((prev) => prev ?? cards[0]?.stimulus.id ?? null)
+    const totalWaitMs = Date.now() - startedAt
 
     logEvent('ai_logo_generate_complete', {
       condition: activeAssignment?.condition,
       conditionLabel: activeAssignment?.conditionLabel,
       setId: activeAssignment?.setId,
       detail: 'AI 로고 시안 생성 완료',
-      payload: { waitMs },
+      payload: { waitMs: totalWaitMs, revealedCount: totalCards },
     })
   }, [hasGenerated, isGenerating, activeAssignment, cards, logEvent])
 
@@ -1697,6 +1723,7 @@ export default function Home() {
       setDetailNotice(null)
       setHasGenerated(false)
       setIsGenerating(false)
+      setVisibleGeneratedCount(0)
       setFinalSelectedStimulusId(null)
       setFinalSelectionTs(null)
       setShowFinalModal(false)
@@ -2369,14 +2396,14 @@ export default function Home() {
                         <span className='ai-thinking-orbit' style={{ width: 18, height: 18, borderWidth: 2 }}>
                           <span className='ai-thinking-core' style={{ fontSize: 6 }}>AI</span>
                         </span>
-                        AI Logotics 생성 중...
+                        AI 로고 시안 생성중...
                       </span>
-                    ) : 'AI 로고 시안 생성'}
+                    ) : 'AI 로고 시안 생성하기'}
                   </button>
                 </div>
               ) : (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 10, overflow: 'auto', paddingRight: 2, flex: 1, minHeight: 0, alignContent: 'start', alignItems: 'start' }}>
-                  {cards.map((card) => {
+                  {visibleCards.map((card) => {
                     const isActive = activeStimulusId === card.stimulus.id
                     const isDecided = !!card.initialDecision
                     const isCollab = activeAssignment.condition === 'collab'
@@ -2455,6 +2482,20 @@ export default function Home() {
                       </div>
                     )
                   })}
+                  {isGenerating && visibleGeneratedCount < cards.length && (
+                    <div
+                      aria-live='polite'
+                      style={{ border: '1px dashed rgba(17,17,17,.24)', borderRadius: 12, background: '#fafafa', padding: 8, minHeight: 220, display: 'grid', placeItems: 'center' }}
+                    >
+                      <div style={{ display: 'grid', placeItems: 'center', gap: 10, color: '#4b5563', textAlign: 'center' }}>
+                        <span className='ai-thinking-orbit' style={{ width: 38, height: 38, borderWidth: 2 }}>
+                          <span className='ai-thinking-core' style={{ fontSize: 9 }}>AI</span>
+                        </span>
+                        <div style={{ fontSize: 12, fontWeight: 800, color: '#111111' }}>AI 로고 시안 생성중...</div>
+                        <div style={{ fontSize: 11, color: '#6b7280' }}>시안 {Math.min(visibleGeneratedCount + 1, cards.length)} / {cards.length} 준비 중</div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
