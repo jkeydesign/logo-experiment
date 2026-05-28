@@ -2533,14 +2533,18 @@ export default function Home() {
                       후보유지 시안이 없습니다.
                     </div>
                   ) : (
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 10, alignItems: 'start' }}>
-                      {initialHoldCards.map((card) => {
-                        const cardDetailNotice = detailNotice?.stimulusId === card.stimulus.id ? detailNotice.message : ''
-                        return (
-                          <div
-                            key={`hold-${card.stimulus.id}`}
-                            style={{ border: `1px solid ${finalSelectedStimulusId === card.stimulus.id ? currentConditionColor : 'rgba(17,17,17,.14)'}`, background: '#ffffff', borderRadius: 8, padding: '8px 9px', opacity: finalSelectedStimulusId && finalSelectedStimulusId !== card.stimulus.id ? 0.4 : 1, pointerEvents: (finalSelectedStimulusId && finalSelectedStimulusId !== card.stimulus.id ? 'none' : 'auto') as React.CSSProperties['pointerEvents'], transition: 'opacity 0.2s' }}
-                          >
+                    <div style={{ display: 'grid', gap: 10 }}>
+                      <div style={{ border: '1px solid rgba(17,17,17,.14)', background: '#f9fafb', color: '#111827', borderRadius: 8, padding: '9px 10px', fontSize: 12, fontWeight: 700, lineHeight: 1.55 }}>
+                        최종 시안은 1개만 선택할 수 있습니다. 후보유지 시안을 비교한 뒤 가장 적합한 1개를 최종선택해 주세요.
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 10, alignItems: 'start' }}>
+                        {initialHoldCards.map((card) => {
+                          const cardDetailNotice = detailNotice?.stimulusId === card.stimulus.id ? detailNotice.message : ''
+                          return (
+                            <div
+                              key={`hold-${card.stimulus.id}`}
+                              style={{ border: `1px solid ${finalSelectedStimulusId === card.stimulus.id ? currentConditionColor : 'rgba(17,17,17,.14)'}`, background: '#ffffff', borderRadius: 8, padding: '8px 9px', opacity: finalSelectedStimulusId && finalSelectedStimulusId !== card.stimulus.id ? 0.4 : 1, pointerEvents: (finalSelectedStimulusId && finalSelectedStimulusId !== card.stimulus.id ? 'none' : 'auto') as React.CSSProperties['pointerEvents'], transition: 'opacity 0.2s' }}
+                            >
                             <div style={{ width: '100%', aspectRatio: '1 / 1', borderRadius: 8, background: '#f7f7f7', border: '1px solid rgba(17,17,17,.07)', display: 'grid', placeItems: 'center', marginBottom: 7, overflow: 'hidden' }} dangerouslySetInnerHTML={{ __html: renderLogoSvg(card.stimulus) }} />
                             <div style={{ fontSize: 15, fontWeight: 700, color: '#111111', marginBottom: 1 }}>
                               {card.stimulus.id}{activeAssignment.condition === 'ai' ? ` · ${card.stimulus.name}` : ''}
@@ -2652,9 +2656,10 @@ export default function Home() {
                                 {finalSelectedStimulusId === card.stimulus.id ? '최종선택 ✓' : '최종선택'}
                               </button>
                             </div>
-                          </div>
-                        )
-                      })}
+                            </div>
+                          )
+                        })}
+                      </div>
                     </div>
                   )
                 )}
@@ -3693,6 +3698,9 @@ export default function Home() {
             <div style={{ fontSize: 22, fontWeight: 800, color: '#111111', marginBottom: 10 }}>최종 시안 선택을 완료하시겠습니까?</div>
             <div style={{ fontSize: 13, color: '#555555', lineHeight: 1.7, marginBottom: 8 }}>
               <strong style={{ color: '#111111' }}>{finalSelectedStimulusId}</strong> 시안을 최종 시안으로 확정합니다.
+            </div>
+            <div style={{ border: '1px solid rgba(17,17,17,.12)', background: '#f7f7f7', borderRadius: 10, padding: '9px 10px', fontSize: 13, fontWeight: 700, color: '#111111', lineHeight: 1.55, marginBottom: 10 }}>
+              최종 시안은 1개만 선택할 수 있습니다.
             </div>
             <div style={{ fontSize: 12, color: '#888888', marginBottom: 28 }}>
               {currentConditionIndex < assignments.length - 1
