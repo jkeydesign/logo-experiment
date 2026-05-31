@@ -1529,7 +1529,7 @@ export default function Home() {
       })
       setDetailNotice({
         stimulusId: firstIncomplete.stimulus.id,
-        message: '최종 후보 시안의 미션 체크를 완료해야 최종선택을 할 수 있습니다.',
+        message: '후보 유지 시안의 미션 체크를 완료해야 최종선택을 할 수 있습니다.',
       })
       logEvent('final_selection_blocked_hold_mission_incomplete', {
         condition: activeAssignment?.condition,
@@ -1629,7 +1629,7 @@ export default function Home() {
       })
       setDetailNotice({
         stimulusId: firstIncomplete.stimulus.id,
-        message: '최종 후보 시안의 미션 체크를 완료해야 조건을 완료할 수 있습니다.',
+        message: '후보 유지 시안의 미션 체크를 완료해야 조건을 완료할 수 있습니다.',
       })
       logEvent('condition_complete_blocked_hold_mission_incomplete', {
         condition: activeAssignment.condition,
@@ -2467,7 +2467,7 @@ export default function Home() {
                             className={`btn-interact btn-hold btn-choice ${card.initialDecision === '보류' ? 'btn-selected' : ''}`}
                             style={{ border: '1px solid rgba(75,85,99,.45)', background: card.initialDecision === '보류' ? '#4b5563' : '#f3f4f6', color: card.initialDecision === '보류' ? '#ffffff' : '#111827', borderRadius: 7, padding: '7px 0', fontSize: 11, fontWeight: 700, cursor: isDecided ? 'not-allowed' : 'pointer', opacity: isDecided && card.initialDecision !== '보류' ? .45 : 1 }}
                           >
-                            후보유지
+                            후보 유지
                           </button>
                           <button
                             onClick={(e) => { e.stopPropagation(); requestInitialDecision(card.stimulus.id, '제외') }}
@@ -2530,12 +2530,12 @@ export default function Home() {
                 {rightTab === 'hold' && (
                   initialHoldCards.length === 0 ? (
                     <div style={{ minHeight: 220, display: 'grid', placeItems: 'center', color: '#666666', textAlign: 'center', fontSize: 12 }}>
-                      최종 후보 시안이 없습니다.
+                      후보 유지 시안이 없습니다.
                     </div>
                   ) : (
                     <div style={{ display: 'grid', gap: 10 }}>
                       <div style={{ border: '1px solid rgba(17,17,17,.14)', background: '#f9fafb', color: '#111827', borderRadius: 8, padding: '9px 10px', fontSize: 12, fontWeight: 700, lineHeight: 1.55 }}>
-                        최종 시안은 1개만 선택할 수 있습니다. 최종 후보 시안을 비교한 뒤 가장 적합한 1개를 최종선택해 주세요.
+                        최종 시안은 1개만 선택할 수 있습니다. 후보 유지 시안을 비교한 뒤 가장 적합한 1개를 최종선택해 주세요.
                       </div>
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 10, alignItems: 'start' }}>
                         {initialHoldCards.map((card) => {
@@ -2557,7 +2557,7 @@ export default function Home() {
                               {!allInitialCompleted && (
                                 <div style={{ position: 'absolute', inset: 0, zIndex: 10, background: 'rgba(255,255,255,.88)', borderRadius: 6, display: 'grid', placeItems: 'center', padding: 8 }}>
                                   <div style={{ fontSize: 13, color: '#6b7280', textAlign: 'center', lineHeight: 1.6 }}>
-                                    9개 시안을 모두<br />최종 후보 또는 제외로<br />분류한 후 평가할 수 있습니다.
+                                    9개 시안을 모두<br />후보 유지 또는 제외로<br />분류한 후 평가할 수 있습니다.
                                   </div>
                                 </div>
                               )}
@@ -2632,7 +2632,7 @@ export default function Home() {
                                 className='btn-interact btn-hold'
                                 style={{ border: '1px solid rgba(75,85,99,.3)', background: '#ffffff', color: '#333333', borderRadius: 7, padding: '6px 0', fontSize: 15, fontWeight: 800, cursor: 'pointer' }}
                               >
-                                최종 후보 취소
+                                후보 유지 취소
                               </button>
                               <button
                                 onClick={() => {
@@ -3653,7 +3653,7 @@ export default function Home() {
             onClick={(e) => e.stopPropagation()}
           >
             <div style={{ fontSize: 22, fontWeight: 900, color: '#111111', marginBottom: 10 }}>
-              최종 후보 시안 미션 체크가 필요합니다.
+              후보 유지 시안 미션 체크가 필요합니다.
             </div>
             <div style={{ fontSize: 13, color: '#555555', lineHeight: 1.75, marginBottom: 10 }}>
               최종선택 전에 <strong style={{ color: '#111111' }}>최종 후보 탭에 있는 모든 시안</strong>의
