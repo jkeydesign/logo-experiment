@@ -1529,7 +1529,7 @@ export default function Home() {
       })
       setDetailNotice({
         stimulusId: firstIncomplete.stimulus.id,
-        message: '후보유지된 모든 시안의 미션 체크를 완료해야 최종선택을 할 수 있습니다.',
+        message: '최종 후보 시안의 미션 체크를 완료해야 최종선택을 할 수 있습니다.',
       })
       logEvent('final_selection_blocked_hold_mission_incomplete', {
         condition: activeAssignment?.condition,
@@ -1629,7 +1629,7 @@ export default function Home() {
       })
       setDetailNotice({
         stimulusId: firstIncomplete.stimulus.id,
-        message: '후보유지된 모든 시안의 미션 체크를 완료해야 조건을 완료할 수 있습니다.',
+        message: '최종 후보 시안의 미션 체크를 완료해야 조건을 완료할 수 있습니다.',
       })
       logEvent('condition_complete_blocked_hold_mission_incomplete', {
         condition: activeAssignment.condition,
@@ -2504,7 +2504,7 @@ export default function Home() {
             <aside style={{ border: '1px solid rgba(17,17,17,.12)', borderRadius: 12, background: '#ffffff', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', borderBottom: '1px solid rgba(17,17,17,.1)' }}>
                 {[
-                  { id: 'hold' as RightTab, label: `후보유지 (${initialHoldCards.length})` },
+                  { id: 'hold' as RightTab, label: `최종 후보 (${initialHoldCards.length})` },
                   { id: 'exclude' as RightTab, label: `제외 (${initialExcludeCards.length})` },
                 ].map((tab) => (
                   <button
@@ -2530,12 +2530,12 @@ export default function Home() {
                 {rightTab === 'hold' && (
                   initialHoldCards.length === 0 ? (
                     <div style={{ minHeight: 220, display: 'grid', placeItems: 'center', color: '#666666', textAlign: 'center', fontSize: 12 }}>
-                      후보유지 시안이 없습니다.
+                      최종 후보 시안이 없습니다.
                     </div>
                   ) : (
                     <div style={{ display: 'grid', gap: 10 }}>
                       <div style={{ border: '1px solid rgba(17,17,17,.14)', background: '#f9fafb', color: '#111827', borderRadius: 8, padding: '9px 10px', fontSize: 12, fontWeight: 700, lineHeight: 1.55 }}>
-                        최종 시안은 1개만 선택할 수 있습니다. 후보유지 시안을 비교한 뒤 가장 적합한 1개를 최종선택해 주세요.
+                        최종 시안은 1개만 선택할 수 있습니다. 최종 후보 시안을 비교한 뒤 가장 적합한 1개를 최종선택해 주세요.
                       </div>
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 10, alignItems: 'start' }}>
                         {initialHoldCards.map((card) => {
@@ -2557,7 +2557,7 @@ export default function Home() {
                               {!allInitialCompleted && (
                                 <div style={{ position: 'absolute', inset: 0, zIndex: 10, background: 'rgba(255,255,255,.88)', borderRadius: 6, display: 'grid', placeItems: 'center', padding: 8 }}>
                                   <div style={{ fontSize: 13, color: '#6b7280', textAlign: 'center', lineHeight: 1.6 }}>
-                                    9개 시안을 모두<br />후보유지 또는 제외로<br />분류한 후 평가할 수 있습니다.
+                                    9개 시안을 모두<br />최종 후보 또는 제외로<br />분류한 후 평가할 수 있습니다.
                                   </div>
                                 </div>
                               )}
@@ -2632,7 +2632,7 @@ export default function Home() {
                                 className='btn-interact btn-hold'
                                 style={{ border: '1px solid rgba(75,85,99,.3)', background: '#ffffff', color: '#333333', borderRadius: 7, padding: '6px 0', fontSize: 15, fontWeight: 800, cursor: 'pointer' }}
                               >
-                                후보유지 취소
+                                최종 후보 취소
                               </button>
                               <button
                                 onClick={() => {
@@ -2717,14 +2717,14 @@ export default function Home() {
                 조건 {activeAssignment.order}/3 · {activeAssignment.conditionLabel}
               </div>
               <div style={{ fontSize: 12, color: '#333333' }}>
-                후보유지/제외 영역 내부 자동 순위는 브랜드 종합 적합도와 시각 종합 완성도 기준입니다. 상세 평가와 영역 이동 후 순위가 즉시 업데이트됩니다.
+                최종 후보/제외 영역 내부 자동 순위는 브랜드 종합 적합도와 시각 종합 완성도 기준입니다. 상세 평가와 영역 이동 후 순위가 즉시 업데이트됩니다.
               </div>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               {[
-                { key: 'hold', title: `후보유지 영역 (${holdCards.length})`, cards: holdCards, color: '#111827', bg: '#f7f7f7', move: '후보유지→제외' as const },
-                { key: 'exclude', title: `제외 영역 (${excludeCards.length})`, cards: excludeCards, color: '#1f2937', bg: '#f5f5f5', move: '제외→후보유지 복원' as const },
+                { key: 'hold', title: `최종 후보 영역 (${holdCards.length})`, cards: holdCards, color: '#111827', bg: '#f7f7f7', move: '최종 후보→제외' as const },
+                { key: 'exclude', title: `제외 영역 (${excludeCards.length})`, cards: excludeCards, color: '#1f2937', bg: '#f5f5f5', move: '제외→최종 후보 복원' as const },
               ].map((bucket) => (
                 <div key={bucket.key} style={{ border: '1px solid rgba(17,17,17,.18)', borderRadius: 12, background: bucket.bg }}>
                   <div style={{ padding: '10px 12px', borderBottom: '1px solid rgba(17,17,17,.12)', fontSize: 14, fontWeight: 800, color: bucket.color }}>
@@ -2860,7 +2860,7 @@ export default function Home() {
                             <button
                               onClick={() => { if (allInitialCompleted) setEditingCardId(editing ? null : card.stimulus.id) }}
                               disabled={!allInitialCompleted && !editing}
-                              title={!allInitialCompleted ? '9개 시안 모두 후보유지/제외 분류 후 활성화됩니다.' : undefined}
+                              title={!allInitialCompleted ? '9개 시안 모두 최종 후보/제외 분류 후 활성화됩니다.' : undefined}
                               className={`btn-interact ${editing ? 'btn-final btn-selected' : ''}`}
                               style={{ border: `1px solid ${!allInitialCompleted && !editing ? 'rgba(220,38,38,.5)' : 'rgba(17,17,17,.2)'}`, background: editing ? '#111827' : !allInitialCompleted ? '#fff5f5' : '#ffffff', color: editing ? '#ffffff' : !allInitialCompleted ? '#b91c1c' : '#333333', borderRadius: 7, padding: '7px 0', fontSize: 11, fontWeight: 700, cursor: allInitialCompleted || editing ? 'pointer' : 'not-allowed', opacity: !allInitialCompleted && !editing ? 0.75 : 1 }}
                             >
@@ -3653,10 +3653,10 @@ export default function Home() {
             onClick={(e) => e.stopPropagation()}
           >
             <div style={{ fontSize: 22, fontWeight: 900, color: '#111111', marginBottom: 10 }}>
-              후보유지 시안 미션 체크가 필요합니다.
+              최종 후보 시안 미션 체크가 필요합니다.
             </div>
             <div style={{ fontSize: 13, color: '#555555', lineHeight: 1.75, marginBottom: 10 }}>
-              최종선택 전에 <strong style={{ color: '#111111' }}>후보유지 탭에 있는 모든 시안</strong>의
+              최종선택 전에 <strong style={{ color: '#111111' }}>최종 후보 탭에 있는 모든 시안</strong>의
               브랜드 종합 적합도, 시각 종합 완성도, 주된 판단 기준을 모두 입력해야 합니다.
             </div>
             <div style={{ background: '#f7f7f7', border: '1px solid rgba(17,17,17,.1)', borderRadius: 10, padding: '10px 12px', fontSize: 12, color: '#333333', lineHeight: 1.6, marginBottom: 22 }}>
