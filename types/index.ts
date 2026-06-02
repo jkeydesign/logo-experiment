@@ -76,6 +76,7 @@ export interface StimulusLogRow {
   latin_square_group: string | null
   condition_order: string
   condition_type: ConditionLabel
+  condition_group: 'presentation_only' | 'recommendation' | 'evaluation' | null
   set_id: SetId
   stimulus_id: string
   display_order: number

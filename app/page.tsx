@@ -541,6 +541,7 @@ function createEmptyStimulusRow(
     latin_square_group: assignment.latinSquareGroup,
     condition_order: conditionOrderLabel,
     condition_type: assignment.conditionLabel,
+    condition_group: assignment.condition === 'human' ? 'presentation_only' : assignment.condition === 'collab' ? 'recommendation' : assignment.condition === 'ai' ? 'evaluation' : null,
     set_id: assignment.setId,
     stimulus_id: card.stimulus.id,
     display_order: card.displayOrder,

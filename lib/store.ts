@@ -13,6 +13,7 @@ const CSV_COLUMNS: Array<keyof StimulusLogRow> = [
   'latin_square_group',
   'condition_order',
   'condition_type',
+  'condition_group',
   'set_id',
   'stimulus_id',
   'display_order',
@@ -82,6 +83,12 @@ const csvCell = (value: unknown) => {
 
 const DEFAULT_GAS_URL = 'https://script.google.com/macros/s/AKfycbzUddGpzIdpEcUvv85HwoKyOdxtLajnFuHEkcYGyMDqx-6BaBjPjPInK5nkj0twsymA/exec'
 const GAS_URL = process.env.NEXT_PUBLIC_GAS_URL || DEFAULT_GAS_URL
+
+const CONDITION_LOG_MAP: Record<string, string> = {
+  human: 'presentation_only',
+  collab: 'recommendation',
+  ai: 'evaluation',
+}
 
 function persistEntry(payload: unknown) {
   if (!GAS_URL) return
@@ -173,7 +180,11 @@ export const useExperiment = create<ExperimentState>((set, get) => ({
       lastEventAt: nowMs,
     }))
 
-    persistEntry({ kind: 'event', ...event })
+    persistEntry({
+      kind: 'event',
+      ...event,
+      condition: event.condition ? (CONDITION_LOG_MAP[event.condition] ?? event.condition) : event.condition,
+    })
   },
 
   startTimer: () => {
