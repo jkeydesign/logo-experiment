@@ -105,7 +105,7 @@ const POST_SURVEY_AI_ONLY: Array<{ key: PostSurveyLikertKey; text: string }> = [
   { key: 'q7', text: 'AI 평가 점수 또는 순위는 시안 판단에 유용했다고 생각한다.' },
   { key: 'q8', text: 'AI 점수 또는 순위 때문에 나의 판단 기준이 흔들렸다고 생각한다.' },
 ]
-const COND_LABELS_ALL: string[] = ['시안 제시형', '추천 제시형', '평가 제시형']
+const COND_LABELS_ALL: string[] = ['시안 제시형', '추천 제시형', '평가 근거 제시형']
 const COMP_QUESTIONS: Array<{ key: keyof CompSurveyAnswers; text: string; options: string[] }> = [
   { key: 'easiest', text: '세 조건 중 로고 시안을 판단하기 가장 쉬웠던 조건은 무엇입니까?', options: COND_LABELS_ALL },
   { key: 'strongestAgency', text: '세 조건 중 자신의 전문적 판단을 유지하기 가장 쉬웠던 조건은 무엇입니까?', options: COND_LABELS_ALL },
@@ -242,6 +242,38 @@ function isValidPortfolioUrl(value: string): boolean {
 }
 
 const LS_COUNTER_KEY = 'logoexp_participant_counter'
+const TUTORIAL_SEEN_KEY = 'logoexp_tutorial_seen'
+
+const TUTORIAL_STEPS = [
+  {
+    step: 1,
+    title: '시안 검토 영역',
+    text: '각 시안을 검토하고 후보 유지 또는 제외를 선택하세요.',
+    arrow: '← 가운데 영역',
+    position: 'right' as const,
+  },
+  {
+    step: 2,
+    title: '후보 유지 / 제외 버튼',
+    text: "'후보 유지'는 최종 검토 대상, '제외'는 탈락입니다.",
+    arrow: '← 각 시안 하단 버튼',
+    position: 'right' as const,
+  },
+  {
+    step: 3,
+    title: '최종 후보 패널',
+    text: '후보 유지한 시안들이 모입니다. 여기서 최종 1개를 선택합니다.',
+    arrow: '→ 오른쪽 패널',
+    position: 'left' as const,
+  },
+  {
+    step: 4,
+    title: '최종 선택',
+    text: '최종 시안은 반드시 1개만 선택할 수 있습니다.',
+    arrow: '→ 오른쪽 패널 하단',
+    position: 'left' as const,
+  },
+]
 
 function assignNextParticipant(): { code: string; lsIndex: number; lsGroup: string } {
   const stored = typeof window !== 'undefined' ? localStorage.getItem(LS_COUNTER_KEY) : null
@@ -258,19 +290,19 @@ function assignNextParticipant(): { code: string; lsIndex: number; lsGroup: stri
 const CONDITION_SURFACE: Record<ConditionLabel, string> = {
   '시안 제시형': '#f8f8f8',
   '추천 제시형': '#f2f2f2',
-  '평가 제시형': '#ececec',
+  '평가 근거 제시형': '#ececec',
 }
 
 const CONDITION_COLOR: Record<ConditionLabel, string> = {
   '시안 제시형': '#111111',
   '추천 제시형': '#4b5563',
-  '평가 제시형': '#6b7280',
+  '평가 근거 제시형': '#6b7280',
 }
 
 const INSTRUCTION_CONDITION_STYLE: Record<ConditionLabel, { button: string; surface: string; border: string; text: string }> = {
   '시안 제시형': { button: '#525d6e', surface: '#f5f6f7', border: '#525d6e', text: '#2d3748' },
   '추천 제시형': { button: '#6b7280', surface: '#f1f2f4', border: '#6b7280', text: '#374151' },
-  '평가 제시형': { button: '#8a8f98', surface: '#e8eaed', border: '#8a8f98', text: '#4b5563' },
+  '평가 근거 제시형': { button: '#8a8f98', surface: '#e8eaed', border: '#8a8f98', text: '#4b5563' },
 }
 
 const AI_VISUAL_EVALUATION_TEXT: Record<number, string> = {
@@ -599,6 +631,7 @@ export default function Home() {
   const [postExperimentError, setPostExperimentError] = useState('')
   const [isSubmittingPostExperiment, setIsSubmittingPostExperiment] = useState(false)
   const [portfolioFile, setPortfolioFile] = useState<File | null>(null)
+  const [tutorialStep, setTutorialStep] = useState<number | null>(null)
   const portfolioFileInputRef = useRef<HTMLInputElement | null>(null)
   const [portfolioFileError, setPortfolioFileError] = useState('')
   const [currentConditionIndex, setCurrentConditionIndex] = useState(0)
@@ -1696,7 +1729,7 @@ export default function Home() {
         participant_code: participantId,
         latin_square_group: activeAssignment.latinSquareGroup,
         trial_order: activeAssignment.order,
-        condition_type: cond === 'human' ? 'visual_only' : cond === 'collab' ? 'recommendation' : 'score_rank',
+        condition_type: cond === 'human' ? 'presentation_only' : cond === 'collab' ? 'recommendation' : 'evaluation',
         stimulus_set_id: activeAssignment.setId,
         selected_final_logo_id: finalSelectedStimulusId,
         manipulation_check_ai_info_type: postSurveyAnswers.infoType,
@@ -1830,6 +1863,31 @@ export default function Home() {
   const showBrief = step === 'brief' && activeAssignment && activeBrief
   const showInstruction = step === 'instruction' && activeAssignment && activeBrief
   const showEvaluation = step === 'evaluation' && activeAssignment && activeBrief
+
+  // 튜토리얼: 평가 화면 첫 진입 시 자동 실행
+  useEffect(() => {
+    if (showEvaluation && tutorialStep === null) {
+      const seen = typeof window !== 'undefined' ? localStorage.getItem(TUTORIAL_SEEN_KEY) : null
+      if (!seen) setTutorialStep(0)
+    }
+  }, [showEvaluation, tutorialStep])
+
+  const completeTutorial = useCallback((skipped: boolean) => {
+    if (typeof window !== 'undefined') localStorage.setItem(TUTORIAL_SEEN_KEY, '1')
+    setTutorialStep(null)
+    logEvent(skipped ? 'tutorial_skipped' : 'tutorial_completed', {
+      detail: skipped ? `튜토리얼 건너뛰기 (step ${(tutorialStep ?? 0) + 1})` : '튜토리얼 완료',
+    })
+  }, [tutorialStep, logEvent])
+
+  const advanceTutorial = useCallback(() => {
+    if (tutorialStep === null) return
+    if (tutorialStep >= TUTORIAL_STEPS.length - 1) {
+      completeTutorial(false)
+    } else {
+      setTutorialStep(tutorialStep + 1)
+    }
+  }, [tutorialStep, completeTutorial])
   const showResult = step === 'result' && activeAssignment && activeBrief
   const showPostSurvey = step === 'post_survey' && activeAssignment
   const showCompSurvey = step === 'comparison_survey'
@@ -2430,7 +2488,7 @@ export default function Home() {
                         data-stimulus-id={card.stimulus.id}
                         style={{ border: cardBorder, borderRadius: 12, background: '#ffffff', padding: 8, cursor: 'pointer' }}
                       >
-                        {/* 평가 제시형: 상단에 AI 순위와 짧은 시각 평가 설명 */}
+                        {/* 평가 근거 제시형: 상단에 AI 순위와 짧은 시각 평가 설명 */}
                         {isAiCond && (
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 7, background: '#6b7280', borderRadius: 8, padding: '7px 8px', minHeight: 34 }}>
                             <div style={{ flexShrink: 0, fontSize: 16, fontWeight: 900, color: '#ffffff', letterSpacing: '-.03em' }}>
@@ -2709,6 +2767,64 @@ export default function Home() {
             </aside>
           </div>
         )}
+
+        {/* ── 튜토리얼 오버레이 ── */}
+        {showEvaluation && tutorialStep !== null && (() => {
+          const step = TUTORIAL_STEPS[tutorialStep]
+          const isRight = step.position === 'right'
+          return (
+            <div style={{ position: 'fixed', inset: 0, zIndex: 999, pointerEvents: 'none' }}>
+              {/* 반투명 배경 */}
+              <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.62)', pointerEvents: 'auto' }} />
+              {/* 튜토리얼 카드 */}
+              <div
+                style={{
+                  position: 'absolute',
+                  top: '50%',
+                  [isRight ? 'right' : 'left']: isRight ? '28px' : '28px',
+                  transform: 'translateY(-50%)',
+                  width: 320,
+                  background: '#ffffff',
+                  borderRadius: 16,
+                  padding: '24px 22px 20px',
+                  boxShadow: '0 8px 40px rgba(0,0,0,0.28)',
+                  pointerEvents: 'auto',
+                }}
+              >
+                {/* 건너뛰기 */}
+                <button
+                  onClick={() => completeTutorial(true)}
+                  style={{ position: 'absolute', top: 14, right: 14, border: 'none', background: 'none', fontSize: 12, color: '#9ca3af', cursor: 'pointer', fontWeight: 600 }}
+                >
+                  ✕ 건너뛰기
+                </button>
+                {/* 단계 표시 */}
+                <div style={{ fontSize: 11, fontWeight: 700, color: '#9ca3af', letterSpacing: '.06em', marginBottom: 8 }}>
+                  {tutorialStep + 1} / {TUTORIAL_STEPS.length}
+                </div>
+                {/* 단계별 점 */}
+                <div style={{ display: 'flex', gap: 4, marginBottom: 16 }}>
+                  {TUTORIAL_STEPS.map((_, i) => (
+                    <div key={i} style={{ width: i === tutorialStep ? 20 : 6, height: 6, borderRadius: 3, background: i === tutorialStep ? '#111111' : '#e5e7eb', transition: 'width .2s' }} />
+                  ))}
+                </div>
+                {/* 방향 힌트 */}
+                <div style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', marginBottom: 6 }}>{step.arrow}</div>
+                {/* 제목 */}
+                <div style={{ fontSize: 16, fontWeight: 900, color: '#111111', marginBottom: 8 }}>{step.title}</div>
+                {/* 내용 */}
+                <div style={{ fontSize: 13, color: '#374151', lineHeight: 1.75, marginBottom: 20 }}>{step.text}</div>
+                {/* 다음 버튼 */}
+                <button
+                  onClick={advanceTutorial}
+                  style={{ width: '100%', border: 'none', background: '#111111', color: '#ffffff', borderRadius: 9, padding: '11px 0', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}
+                >
+                  {tutorialStep < TUTORIAL_STEPS.length - 1 ? '다음 →' : '시작하기'}
+                </button>
+              </div>
+            </div>
+          )
+        })()}
 
         {showResult && (
           <div style={{ display: 'grid', gap: 12 }}>
