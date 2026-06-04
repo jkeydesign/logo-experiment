@@ -62,10 +62,10 @@ type CompSurveyAnswers = {
   preferredFinalSelection: string | null; freeText: string
 }
 type DebriefCheckAnswers = {
-  sourceUnderstanding: string | null
-  sourceInfluence: number | null
-  sourceComment: string
+  suspectedNonRealtime: 'yes' | 'no' | null
+  suspicionComment: string
 }
+type DataUseChoice = 'consent' | 'withdraw' | null
 const INITIAL_POST_SURVEY: PostSurveyAnswers = {
   infoType: null, q3: null, q4: null,
   q5: null, q6: null, q7: null, q8: null, freeText: '',
@@ -77,14 +77,8 @@ const INITIAL_COMP_SURVEY: CompSurveyAnswers = {
   preferredFinalSelection: null, freeText: '',
 }
 const INITIAL_DEBRIEF_CHECK: DebriefCheckAnswers = {
-  sourceUnderstanding: null, sourceInfluence: null, sourceComment: '',
+  suspectedNonRealtime: null, suspicionComment: '',
 }
-const DEBRIEF_SOURCE_UNDERSTANDING_OPTIONS: Array<{ label: string; value: string }> = [
-  { label: '실시간 AI가 산출한 정보라고 이해했다', value: 'realtime_ai' },
-  { label: '조건 간 비교를 위해 사전에 구성된 정보일 수 있다고 이해했다', value: 'preconfigured_possible' },
-  { label: '두 가능성이 모두 있다고 이해했다', value: 'both_possible' },
-  { label: '잘 모르겠다', value: 'unknown' },
-]
 const POST_SURVEY_INFO_TYPE_OPTIONS: Array<{ label: string; value: string }> = [
   { label: 'AI 관련 정보 없이 로고 시안만 제시되었다', value: 'visual_only' },
   { label: 'AI 추천 시안이 표시되었다', value: 'recommendation' },
@@ -164,6 +158,11 @@ interface AppHistoryState {
   logCenterTab: 'view' | 'export'
   showFinalModal: boolean
   finalGuardNotice: { attemptedStimulusId: string; incompleteIds: string[] } | null
+  debriefCheckAnswers: DebriefCheckAnswers
+  debriefCheckError: string
+  dataUseChoice: DataUseChoice
+  dataUseError: string
+  debriefingResultMessage: string
 }
 
 const AXIS_KEYS: AxisKey[] = [
@@ -250,28 +249,28 @@ const TUTORIAL_STEPS = [
     title: '시안 검토 영역',
     text: '각 시안을 검토하고 후보 유지 또는 제외를 선택하세요.',
     arrow: '← 가운데 영역',
-    position: 'right' as const,
+    position: 'centerRight' as const,
   },
   {
     step: 2,
     title: '후보 유지 / 제외 버튼',
     text: "'후보 유지'는 최종 검토 대상, '제외'는 탈락입니다.",
     arrow: '← 각 시안 하단 버튼',
-    position: 'right' as const,
+    position: 'centerRight' as const,
   },
   {
     step: 3,
     title: '최종 후보 패널',
     text: '후보 유지한 시안들이 모입니다. 여기서 최종 1개를 선택합니다.',
-    arrow: '→ 오른쪽 패널',
-    position: 'left' as const,
+    arrow: '오른쪽 패널',
+    position: 'rightTop' as const,
   },
   {
     step: 4,
     title: '최종 선택',
     text: '최종 시안은 반드시 1개만 선택할 수 있습니다.',
-    arrow: '→ 오른쪽 패널 하단',
-    position: 'left' as const,
+    arrow: '오른쪽 패널 하단',
+    position: 'rightLower' as const,
   },
 ]
 
@@ -661,6 +660,9 @@ export default function Home() {
   const [compSurveyError, setCompSurveyError] = useState('')
   const [debriefCheckAnswers, setDebriefCheckAnswers] = useState<DebriefCheckAnswers>(INITIAL_DEBRIEF_CHECK)
   const [debriefCheckError, setDebriefCheckError] = useState('')
+  const [dataUseChoice, setDataUseChoice] = useState<DataUseChoice>(null)
+  const [dataUseError, setDataUseError] = useState('')
+  const [debriefingResultMessage, setDebriefingResultMessage] = useState('')
   const hasInitializedHistoryRef = useRef(false)
   const isApplyingHistoryRef = useRef(false)
   const lastHistorySignatureRef = useRef('')
@@ -695,6 +697,11 @@ export default function Home() {
     logCenterTab,
     showFinalModal,
     finalGuardNotice,
+    debriefCheckAnswers,
+    debriefCheckError,
+    dataUseChoice,
+    dataUseError,
+    debriefingResultMessage,
   }), [
     step,
     currentConditionIndex,
@@ -724,6 +731,11 @@ export default function Home() {
     logCenterTab,
     showFinalModal,
     finalGuardNotice,
+    debriefCheckAnswers,
+    debriefCheckError,
+    dataUseChoice,
+    dataUseError,
+    debriefingResultMessage,
   ])
 
   useEffect(() => {
@@ -761,6 +773,11 @@ export default function Home() {
       setLogCenterTab(snapshot.logCenterTab ?? 'view')
       setShowFinalModal(snapshot.showFinalModal ?? false)
       setFinalGuardNotice(snapshot.finalGuardNotice ?? null)
+      setDebriefCheckAnswers(snapshot.debriefCheckAnswers ?? INITIAL_DEBRIEF_CHECK)
+      setDebriefCheckError(snapshot.debriefCheckError ?? '')
+      setDataUseChoice(snapshot.dataUseChoice ?? null)
+      setDataUseError(snapshot.dataUseError ?? '')
+      setDebriefingResultMessage(snapshot.debriefingResultMessage ?? '')
     }
 
     window.addEventListener('popstate', restoreFromHistory)
@@ -1810,26 +1827,49 @@ export default function Home() {
   }, [compSurveyAnswers, participantId, logEvent])
 
   const submitDebriefCheck = useCallback(() => {
-    if (debriefCheckAnswers.sourceUnderstanding === null) {
-      setDebriefCheckError('AI 정보 구성 방식에 대한 이해를 선택해 주세요.')
-      return
-    }
-    if (debriefCheckAnswers.sourceInfluence === null) {
-      setDebriefCheckError('판단 영향 정도를 선택해 주세요.')
+    if (debriefCheckAnswers.suspectedNonRealtime === null) {
+      setDebriefCheckError('의심 여부를 선택해 주세요.')
       return
     }
     setDebriefCheckError('')
-    logEvent('debriefing_check', {
-      detail: 'AI 정보 인식 확인',
+    setDataUseChoice(null)
+    setDataUseError('')
+    setDebriefingResultMessage('')
+    logEvent('ai_information_suspicion_check', {
+      detail: '디브리핑 전 AI 정보 의심 여부 확인',
       payload: {
         participantId,
-        ai_info_source_understanding: debriefCheckAnswers.sourceUnderstanding,
-        ai_info_source_influence: debriefCheckAnswers.sourceInfluence,
-        ai_info_source_comment: debriefCheckAnswers.sourceComment || null,
+        suspectedNonRealtime: debriefCheckAnswers.suspectedNonRealtime === 'yes',
+        suspicionComment: debriefCheckAnswers.suspicionComment || null,
       },
     })
     setStep('debriefing')
   }, [debriefCheckAnswers, participantId, logEvent])
+
+  const submitDataUseChoice = useCallback(() => {
+    if (!dataUseChoice) {
+      setDataUseError('디브리핑 후 자료 활용 여부를 선택해 주세요.')
+      return
+    }
+    const dataUseConsent = dataUseChoice === 'consent'
+    const withdrawAfterDebriefing = dataUseChoice === 'withdraw'
+
+    setDataUseError('')
+    setDebriefingResultMessage(
+      dataUseConsent
+        ? '자료 활용 동의가 확인되었습니다. 참여해 주셔서 감사합니다.'
+        : '데이터 폐기 요청이 접수되었습니다. 해당 자료는 분석에서 제외하고 폐기하겠습니다. 참여해 주셔서 감사합니다.'
+    )
+    logEvent('debriefing_data_use_decision', {
+      detail: dataUseConsent ? '디브리핑 후 자료 활용 동의' : '디브리핑 후 데이터 폐기 요청',
+      payload: {
+        participantId,
+        dataUseConsent,
+        withdrawAfterDebriefing,
+        timestamp: new Date().toISOString(),
+      },
+    })
+  }, [dataUseChoice, participantId, logEvent])
 
   const activeCard = useMemo(
     () => cards.find((card) => card.stimulus.id === activeStimulusId) ?? null,
@@ -1995,7 +2035,7 @@ export default function Home() {
                     <li>실험은 참가자 코드 기반으로 진행됩니다.</li>
                     <li>실험 중에는 성명, 이메일, 포트폴리오를 수집하지 않습니다.</li>
                     <li>수집 자료는 로고 시안의 후보 유지, 제외, 변경, 최종 선택 과정과 간단한 평가 응답입니다.</li>
-                    <li>제시되는 AI 판단 정보는 조건 간 비교와 자극 통제를 위해 사전에 구성된 정보일 수 있습니다.</li>
+                    <li>본 실험에 등장하는 AI 시스템의 추천 및 평가 알고리즘은 본 연구의 목적을 위해 설계된 특정 조건에 따라 작동합니다.</li>
                   </ul>
                 </section>
 
@@ -2062,7 +2102,7 @@ export default function Home() {
                   '나는 실험 중 수집되는 판단 로그와 설문 응답자료가 참가자 코드 기반으로 처리되며, 성명, 이메일, 포트폴리오 등 식별정보는 연구대상자 자격 확인, 중도 철회 처리, 사례비 지급 연락을 위해 실험자료와 분리하여 별도로 수집·관리됨을 이해했습니다.',
                   '나는 실험에서 로고 시안에 대한 후보 유지, 제외, 변경, 최종 선택 기록과 평가 응답, 설문 응답이 연구 자료로 수집됨을 이해했습니다.',
                   '나는 실험 조건에 따라 AI 관련 정보가 제공되지 않거나, AI 추천 정보 또는 AI 평가 순위와 설명이 제시될 수 있음을 이해했습니다.',
-                  '나는 실험에서 제시되는 AI 판단 정보가 조건 간 비교와 자극 통제를 위해 사전에 구성된 정보일 수 있음을 이해했습니다.',
+                  '나는 본 실험에 등장하는 AI 시스템의 추천 및 평가 알고리즘이 본 연구의 목적을 위해 설계된 특정 조건에 따라 작동하며, 이에 대한 구체적인 설명은 실험 종료 후 디브리핑에서 제공된다는 점을 확인했습니다.',
                   '나는 연구대상자 자격 확인과 사례비 지급을 위해 실험 종료 후 성명, 이메일, 연령대, 실무 경력, 프로젝트 경험, 주요 실무 분야, 생성형 이미지 도구 사용 경험, 포트폴리오 자료를 실험자료와 분리하여 제출할 수 있음을 이해했습니다.',
                   '나는 포트폴리오 자료가 연구대상자 자격 확인 목적으로만 사용되며, 실험자료로 분석되지 않고 연구 결과에 인용 또는 공개되지 않으며, 확인 후 폐기됨을 이해했습니다.',
                   '나는 연구 참여 과정에서 일시적인 피로감이나 판단 부담이 있을 수 있으며, 불편할 경우 언제든지 참여를 중단할 수 있음을 이해했습니다.',
@@ -2322,7 +2362,7 @@ export default function Home() {
               <div style={{ fontSize: 13, color: '#333333', lineHeight: 1.75, marginBottom: 12 }}>
                 본 실험에서는 동일한 브랜드 브리프를 기준으로, AI 판단 정보 제시 범위가 다른 3가지 조건을 순차적으로 수행합니다.<br />
                 각 조건에서는 9개의 로고 시안을 검토하며, 조건에 따라 AI 추천 정보 또는 AI 평가 점수·순위 정보가 함께 제시될 수 있습니다.<br />
-                해당 AI 정보는 조건 간 비교와 자극 통제를 위해 사전에 구성된 정보일 수 있습니다.<br />
+                본 실험에 등장하는 AI 시스템의 추천 및 평가 알고리즘은 본 연구의 목적을 위해 설계된 특정 조건에 따라 작동합니다.<br />
                 본 실험에는 정답이 없으며, 실제 실무에서 로고 시안 후보를 검토하듯이 판단해 주세요.
               </div>
               <div style={{ fontSize: 13, color: '#333333', lineHeight: 1.75, marginBottom: 12 }}>
@@ -2772,7 +2812,12 @@ export default function Home() {
         {/* ── 튜토리얼 오버레이 ── */}
         {showEvaluation && tutorialStep !== null && (() => {
           const step = TUTORIAL_STEPS[tutorialStep]
-          const isRight = step.position === 'right'
+          const tutorialCardPosition: React.CSSProperties =
+            step.position === 'centerRight'
+              ? { top: '50%', right: 28, transform: 'translateY(-50%)' }
+              : step.position === 'rightTop'
+                ? { top: 138, right: 300, transform: 'none' }
+                : { bottom: 92, right: 300, transform: 'none' }
           return (
             <div style={{ position: 'fixed', inset: 0, zIndex: 999, pointerEvents: 'none' }}>
               {/* 반투명 배경 */}
@@ -2781,9 +2826,7 @@ export default function Home() {
               <div
                 style={{
                   position: 'absolute',
-                  top: '50%',
-                  [isRight ? 'right' : 'left']: isRight ? '28px' : '28px',
-                  transform: 'translateY(-50%)',
+                  ...tutorialCardPosition,
                   width: 320,
                   background: '#ffffff',
                   borderRadius: 16,
@@ -2799,6 +2842,9 @@ export default function Home() {
                 >
                   ✕ 건너뛰기
                 </button>
+                <div style={{ fontSize: 10, fontWeight: 900, color: '#111111', letterSpacing: '.16em', marginBottom: 7 }}>
+                  TUTORIAL
+                </div>
                 {/* 단계 표시 */}
                 <div style={{ fontSize: 11, fontWeight: 700, color: '#9ca3af', letterSpacing: '.06em', marginBottom: 8 }}>
                   {tutorialStep + 1} / {TUTORIAL_STEPS.length}
@@ -3192,72 +3238,49 @@ export default function Home() {
           <div style={{ maxWidth: 720, margin: '0 auto', display: 'grid', gap: 0, padding: '24px 0 48px' }}>
             <div style={{ border: '1px solid rgba(17,17,17,.14)', borderRadius: 14, padding: 20, background: '#f7f7f7', marginBottom: 14 }}>
               <div style={{ fontSize: 12, fontWeight: 700, color: '#4d4d4d', marginBottom: 6 }}>실험 종료 전 확인</div>
-              <div style={{ fontSize: 20, fontWeight: 800, color: '#111111' }}>AI 정보 인식 확인</div>
+              <div style={{ fontSize: 20, fontWeight: 800, color: '#111111' }}>AI 정보 의심 여부 확인</div>
             </div>
 
             <div style={{ display: 'grid', gap: 10 }}>
-              {/* Q1: 단일선택 */}
               <div style={{ border: '1px solid rgba(17,17,17,.12)', borderRadius: 12, padding: 14, background: '#ffffff' }}>
                 <div style={{ fontSize: 13, fontWeight: 700, color: '#111111', marginBottom: 12, lineHeight: 1.6 }}>
-                  실험 중 제시된 AI 추천 또는 AI 평가 순위·설명의 구성 방식에 대해 어떻게 이해하셨습니까?
+                  실험 중 제시된 AI 추천 또는 AI 평가 정보가 실제 AI가 실시간으로 산출한 정보가 아닐 수 있다고 의심한 적이 있습니까?
                 </div>
-                <div style={{ display: 'grid', gap: 8 }}>
-                  {DEBRIEF_SOURCE_UNDERSTANDING_OPTIONS.map(({ label, value }) => (
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                  {[
+                    { label: '예', value: 'yes' as const },
+                    { label: '아니오', value: 'no' as const },
+                  ].map(({ label, value }) => (
                     <button
                       key={value}
-                      onClick={() => setDebriefCheckAnswers((prev) => ({ ...prev, sourceUnderstanding: value }))}
+                      onClick={() => setDebriefCheckAnswers((prev) => ({ ...prev, suspectedNonRealtime: value }))}
                       style={{
-                        border: `1px solid ${debriefCheckAnswers.sourceUnderstanding === value ? '#111111' : 'rgba(17,17,17,.18)'}`,
-                        background: debriefCheckAnswers.sourceUnderstanding === value ? '#111111' : '#ffffff',
-                        color: debriefCheckAnswers.sourceUnderstanding === value ? '#ffffff' : '#333333',
+                        border: `1px solid ${debriefCheckAnswers.suspectedNonRealtime === value ? '#111111' : 'rgba(17,17,17,.18)'}`,
+                        background: debriefCheckAnswers.suspectedNonRealtime === value ? '#111111' : '#ffffff',
+                        color: debriefCheckAnswers.suspectedNonRealtime === value ? '#ffffff' : '#333333',
                         borderRadius: 8, padding: '9px 14px', fontSize: 13,
-                        fontWeight: debriefCheckAnswers.sourceUnderstanding === value ? 700 : 400,
-                        cursor: 'pointer', textAlign: 'left',
+                        fontWeight: debriefCheckAnswers.suspectedNonRealtime === value ? 700 : 400,
+                        cursor: 'pointer', textAlign: 'center',
                       }}
                     >{label}</button>
                   ))}
                 </div>
               </div>
 
-              {/* Q2: 5점 리커트 */}
+              {debriefCheckAnswers.suspectedNonRealtime === 'yes' && (
               <div style={{ border: '1px solid rgba(17,17,17,.12)', borderRadius: 12, padding: 14, background: '#ffffff' }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: '#111111', marginBottom: 12, lineHeight: 1.55 }}>
-                  위와 같은 이해가 로고 시안 판단에 영향을 주었다고 생각하십니까?
+                <div style={{ fontSize: 13, fontWeight: 700, color: '#111111', marginBottom: 8 }}>
+                  그렇게 의심한 시점이나 이유가 있다면 간단히 작성해 주세요.
                 </div>
-                <div style={{ display: 'flex', gap: 6 }}>
-                  {[1, 2, 3, 4, 5].map((v) => (
-                    <button
-                      key={v}
-                      onClick={() => setDebriefCheckAnswers((prev) => ({ ...prev, sourceInfluence: v }))}
-                      style={{
-                        flex: 1, border: `1px solid ${debriefCheckAnswers.sourceInfluence === v ? '#111111' : 'rgba(17,17,17,.18)'}`,
-                        background: debriefCheckAnswers.sourceInfluence === v ? '#111111' : '#ffffff',
-                        color: debriefCheckAnswers.sourceInfluence === v ? '#ffffff' : '#333333',
-                        borderRadius: 8, padding: '8px 0', fontSize: 13, fontWeight: debriefCheckAnswers.sourceInfluence === v ? 700 : 400, cursor: 'pointer',
-                      }}
-                    >{v}</button>
-                  ))}
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 5 }}>
-                  <span style={{ fontSize: 10, color: '#6b7280' }}>1 전혀 그렇지 않다</span>
-                  <span style={{ fontSize: 10, color: '#6b7280' }}>5 매우 그렇다</span>
-                </div>
-              </div>
-
-              {/* Q3: 자유 응답 (선택) */}
-              <div style={{ border: '1px solid rgba(17,17,17,.12)', borderRadius: 12, padding: 14, background: '#ffffff' }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: '#111111', marginBottom: 4 }}>
-                  추가로 설명하고 싶은 내용이 있다면 작성해 주세요.
-                </div>
-                <div style={{ fontSize: 11, color: '#6b7280', marginBottom: 8 }}>선택 입력</div>
                 <textarea
-                  value={debriefCheckAnswers.sourceComment}
-                  onChange={(e) => setDebriefCheckAnswers((prev) => ({ ...prev, sourceComment: e.target.value }))}
+                  value={debriefCheckAnswers.suspicionComment}
+                  onChange={(e) => setDebriefCheckAnswers((prev) => ({ ...prev, suspicionComment: e.target.value }))}
                   placeholder='자유롭게 입력해 주세요.'
                   rows={3}
                   style={{ width: '100%', border: '1px solid rgba(17,17,17,.18)', borderRadius: 8, padding: '8px 10px', fontSize: 13, resize: 'vertical', outline: 'none', fontFamily: 'inherit' }}
                 />
               </div>
+              )}
 
               {debriefCheckError && (
                 <div style={{ border: '1px solid #dc2626', background: '#fff5f5', borderRadius: 8, padding: '10px 12px', color: '#b91c1c', fontSize: 13, fontWeight: 700 }}>
@@ -3278,47 +3301,74 @@ export default function Home() {
         )}
 
         {showDebriefing && (
-          <div style={{ maxWidth: 720, margin: '0 auto', display: 'grid', gap: 14, padding: '24px 0 48px' }}>
-            <div style={{ border: '1px solid rgba(17,17,17,.14)', borderRadius: 14, padding: 24, background: '#f7f7f7' }}>
+          <div style={{ maxWidth: 760, margin: '0 auto', display: 'grid', gap: 14, padding: '20px 0 42px' }}>
+            <div style={{ border: '1px solid rgba(17,17,17,.14)', borderRadius: 14, padding: 22, background: '#f7f7f7' }}>
               <div style={{ fontSize: 12, fontWeight: 700, color: '#4d4d4d', marginBottom: 6 }}>디브리핑</div>
-              <div style={{ fontSize: 28, fontWeight: 900, color: '#111111', marginBottom: 20, letterSpacing: '-.03em' }}>로고 시안 판단 과업이 완료되었습니다.</div>
-              <div style={{ display: 'grid', gap: 16, fontSize: 14, lineHeight: 1.85, color: '#1f2937' }}>
-                <p>
-                  지금까지 진행한 로고 시안 판단 과업은 모두 완료되었습니다. 이후에는 연구대상자 자격 확인, 중도 철회 처리, 사례비 지급 연락을 위한 참가자 정보 입력 단계가 이어집니다.
-                </p>
-                <p>
-                  본 연구는 생성형 AI 기반 브랜드 로고 디자인 환경에서 AI 판단 정보 유형이 전문 디자이너의 로고 시안 판단 과정에 어떤 영향을 미치는지 확인하기 위한 연구입니다.
-                </p>
-                <p>
-                  본 실험에서 제시된 로고 시안은 실험 중 실시간으로 생성된 것이 아니라, 동일한 브랜드 브리프를 기준으로 사전에 제작된 실험 자극입니다. 시안 제작 과정에는 ChatGPT를 활용한 프롬프트 구성과 Midjourney 등 생성형 AI 이미지 도구를 활용한 이미지 생성 과정이 포함될 수 있습니다. 이후 실험에 적합하도록 시안 세트를 정리하여 제시하였습니다.
-                </p>
-                <p>
-                  실험 중 제시된 AI 추천 정보와 AI 평가 순위·설명 역시 실시간 AI가 현장에서 산출한 정보가 아니라, 조건 간 비교와 자극 통제를 위해 사전에 구성된 정보입니다. 이는 참가자마다 서로 다른 AI 결과가 제시되는 것을 방지하고, 동일한 조건에서 판단 과정을 비교하기 위한 절차입니다.
-                </p>
-                <p>
-                  AI 추천 및 평가 순위·설명은 연구자가 사전에 정리한 시각 평가 기준을 바탕으로 구성되었습니다. 기준은 자연성, 조화성, 정교성과 같은 시각적 특성이며, 브랜드 전략 전체를 평가한 최종 판단은 아닙니다.
-                </p>
-                <p>
-                  따라서 AI 정보는 시각적 완성도에 가까운 판단 정보이며, 참가자가 수행한 브랜드 맥락 기반의 전문적 판단과 다를 수 있습니다.
-                </p>
-                <p>
-                  본 연구의 목적은 AI가 더 우수한 로고를 생성했는지를 평가하는 것이 아닙니다. 연구의 목적은 AI 추천, AI 평가 순위, AI 평가 설명과 같은 판단 정보가 전문 디자이너의 후보 유지, 제외, 변경, 최종 선택 판단에 어떤 영향을 미치는지를 분석하는 데 있습니다.
-                </p>
-                <p>
-                  수집된 실험자료는 참가자 코드로 가명처리되며, 성명, 이메일, 포트폴리오 등 개인을 식별할 수 있는 정보는 연구 결과에 포함되지 않습니다. 포트폴리오는 연구대상자 자격 확인 목적으로만 사용되며, 확인 후 폐기됩니다.
-                </p>
-                <p>
-                  본 디브리핑 내용을 확인한 뒤 연구 참여 자료의 사용을 원하지 않는 경우, 연구책임자에게 철회를 요청할 수 있습니다. 철회를 요청하더라도 불이익은 없습니다.
-                </p>
-                <p>
-                  연구 참여 중 궁금한 점이나 중도 철회, 개인정보 처리와 관련한 문의가 있는 경우 연구책임자에게 연락할 수 있습니다.
-                </p>
-                <p style={{ color: '#4b5563', fontSize: 13 }}>
-                  아래 버튼을 누르면 연구대상자 자격 확인 및 사례비 지급 연락을 위한 참가자 정보 입력 단계로 이동합니다.
-                </p>
+              <div style={{ fontSize: 24, fontWeight: 900, color: '#111111', marginBottom: 14, letterSpacing: '-.03em' }}>실험에 참여해 주셔서 감사합니다.</div>
+              <div style={{ display: 'grid', gap: 10, fontSize: 14, lineHeight: 1.75, color: '#1f2937' }}>
+                <p>실험 종료 후 안내드립니다. 본 실험에서 제시된 AI 추천 정보, AI 평가 순위 및 AI 평가 설명은 조건 간 비교를 위해 완전히 동일하게 사전에 통제된 텍스트와 순위였습니다.</p>
+                <p>이는 모든 연구대상자가 동일한 기준의 실험 자극을 경험하도록 하기 위한 절차입니다.</p>
+                <p>이로 인해 불쾌감을 느끼거나 본인의 데이터 활용을 원하지 않을 경우 즉시 데이터 폐기를 요청할 수 있으며, 연구대상자의 동의 철회권을 보장합니다.</p>
               </div>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+
+            <div style={{ border: '1px solid rgba(17,17,17,.14)', borderRadius: 14, padding: 18, background: '#ffffff' }}>
+              <div style={{ fontSize: 14, fontWeight: 800, color: '#111111', marginBottom: 12 }}>
+                위 디브리핑 내용을 확인한 후, 기존 응답자료의 연구 활용에 동의하십니까?
+              </div>
+              <div style={{ display: 'grid', gap: 8 }}>
+                {[
+                  { value: 'consent' as const, label: '디브리핑 내용을 확인하였으며, 기존 응답자료를 연구에 활용하는 데 동의합니다.' },
+                  { value: 'withdraw' as const, label: '디브리핑 내용을 확인하였으며, 기존 응답자료의 연구 활용을 원하지 않습니다. 데이터 폐기를 요청합니다.' },
+                ].map(({ value, label }) => (
+                  <button
+                    key={value}
+                    onClick={() => {
+                      setDataUseChoice(value)
+                      setDataUseError('')
+                      setDebriefingResultMessage('')
+                    }}
+                    style={{
+                      border: `1px solid ${dataUseChoice === value ? '#111111' : 'rgba(17,17,17,.18)'}`,
+                      background: dataUseChoice === value ? '#111111' : '#ffffff',
+                      color: dataUseChoice === value ? '#ffffff' : '#1f2937',
+                      borderRadius: 10,
+                      padding: '12px 14px',
+                      fontSize: 13,
+                      fontWeight: dataUseChoice === value ? 800 : 600,
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      lineHeight: 1.55,
+                    }}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+
+              {dataUseError && (
+                <div style={{ marginTop: 10, border: '1px solid #dc2626', background: '#fff5f5', borderRadius: 8, padding: '10px 12px', color: '#b91c1c', fontSize: 13, fontWeight: 700 }}>
+                  {dataUseError}
+                </div>
+              )}
+
+              {debriefingResultMessage && (
+                <div style={{ marginTop: 10, border: '1px solid rgba(17,17,17,.16)', background: '#f7f7f7', borderRadius: 10, padding: '12px 14px', color: '#111111', fontSize: 14, fontWeight: 800, lineHeight: 1.55 }}>
+                  {debriefingResultMessage}
+                </div>
+              )}
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
+              {!debriefingResultMessage && (
+              <button
+                onClick={submitDataUseChoice}
+                style={{ border: 'none', background: '#111111', color: '#ffffff', borderRadius: 10, padding: '12px 24px', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}
+              >
+                확인
+              </button>
+              )}
+              {debriefingResultMessage && dataUseChoice === 'consent' && (
               <button
                 onClick={() => {
                   setPostExperimentAnswers(INITIAL_POST_EXPERIMENT)
@@ -3331,6 +3381,15 @@ export default function Home() {
               >
                 확인 후 참가자 정보 입력으로 이동
               </button>
+              )}
+              {debriefingResultMessage && dataUseChoice === 'withdraw' && (
+              <button
+                onClick={() => setStep('completed')}
+                style={{ border: 'none', background: '#111111', color: '#ffffff', borderRadius: 10, padding: '12px 24px', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}
+              >
+                종료
+              </button>
+              )}
             </div>
           </div>
         )}
