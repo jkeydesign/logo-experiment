@@ -3346,13 +3346,18 @@ export default function Home() {
                   {dataUseError}
                 </div>
               )}
+            </div>
 
-              {debriefingResultMessage && (
-                <div style={{ marginTop: 10, border: '1px solid rgba(17,17,17,.16)', background: '#f7f7f7', borderRadius: 10, padding: '12px 14px', color: '#111111', fontSize: 14, fontWeight: 800, lineHeight: 1.55 }}>
+            {debriefingResultMessage && (
+              <div style={{ border: '1px solid rgba(17,17,17,.18)', borderRadius: 14, padding: 18, background: '#f7f7f7' }}>
+                <div style={{ fontSize: 12, fontWeight: 900, color: '#6b7280', letterSpacing: '.08em', marginBottom: 8 }}>
+                  확인 결과
+                </div>
+                <div style={{ color: '#111111', fontSize: 16, fontWeight: 900, lineHeight: 1.55 }}>
                   {debriefingResultMessage}
                 </div>
-              )}
-            </div>
+              </div>
+            )}
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
               {!debriefingResultMessage && (
