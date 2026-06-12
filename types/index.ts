@@ -82,6 +82,9 @@ export interface StimulusLogRow {
   display_order: number
   ai_recommended: boolean
   ai_recommend_rank: number | null
+  ai_rank: number | null
+  ai_score: number | null
+  ai_explanation: string | null
   ai_score_brand_fit: number | null
   ai_score_target_fit: number | null
   ai_score_competitive_diff: number | null
@@ -171,5 +174,6 @@ export interface ExperimentState {
   exportRowsJson: () => void
   exportRowsCsv: () => void
   exportEventsJson: () => void
+  exportEventsCsv: () => void
   resetSession: () => void
 }

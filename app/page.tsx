@@ -17,6 +17,7 @@ import type {
   AxisKey,
   AxisScores,
   BrandBrief,
+  Condition,
   ConditionAssignment,
   ConditionLabel,
   DecisionType,
@@ -316,6 +317,23 @@ const AI_VISUAL_EVALUATION_TEXT: Record<number, string> = {
   9: '조형 요소의 관계가 불안정하며 전체적인 시각 완성도가 낮게 보입니다.',
 }
 
+const CONDITION_TYPE_CODE: Record<Condition, 'A' | 'B' | 'C'> = {
+  human: 'A',
+  collab: 'B',
+  ai: 'C',
+  mixed: 'C',
+}
+
+const STATUS_CODE: Record<DecisionType, 'KEEP' | 'EXCLUDE'> = {
+  '보류': 'KEEP',
+  '제외': 'EXCLUDE',
+}
+
+const SCORE_TYPE_LABEL: Record<'brand' | 'visual', 'brandFit' | 'visualCompleteness'> = {
+  brand: 'brandFit',
+  visual: 'visualCompleteness',
+}
+
 const SYMBOL_SVG: Record<string, (color: string) => string> = {
   serif: c => `<circle cx="14" cy="22" r="10" fill="none" stroke="${c}" stroke-width="1.8"/><circle cx="14" cy="22" r="4" fill="${c}" opacity=".22"/>`,
   sans: c => `<rect x="5" y="13" width="18" height="18" rx="5" fill="none" stroke="${c}" stroke-width="1.8"/><rect x="9" y="17" width="10" height="10" rx="3" fill="${c}" opacity=".18"/>`,
@@ -392,6 +410,40 @@ function calcMetrics(scores: AxisScores) {
     visual: +visual.toFixed(3),
     total: +total.toFixed(3),
     score100: +((total / 5) * 100).toFixed(2),
+  }
+}
+
+function conditionTypeCode(condition?: Condition | null): 'A' | 'B' | 'C' | null {
+  return condition ? (CONDITION_TYPE_CODE[condition] ?? null) : null
+}
+
+function analysisConditionLabel(condition?: Condition | null): string | null {
+  if (!condition) return null
+  if (condition === 'human') return '시안 제시형'
+  if (condition === 'collab') return '추천 제시형'
+  return '평가 순위 제시형'
+}
+
+function normalizeStatus(decision: DecisionType): 'KEEP' | 'EXCLUDE' {
+  return STATUS_CODE[decision]
+}
+
+function transitionType(from: DecisionType, to: DecisionType): 'KEEP_TO_EXCLUDE' | 'EXCLUDE_TO_KEEP' | null {
+  const previous = normalizeStatus(from)
+  const next = normalizeStatus(to)
+  if (previous === 'KEEP' && next === 'EXCLUDE') return 'KEEP_TO_EXCLUDE'
+  if (previous === 'EXCLUDE' && next === 'KEEP') return 'EXCLUDE_TO_KEEP'
+  return null
+}
+
+function aiEventMeta(card?: StimulusCardState | null, exposeScore = true) {
+  const aiScore = exposeScore && card?.aiScores ? calcMetrics(card.aiScores).score100 : null
+  const aiRank = card?.stimulus.aiRank ?? null
+  return {
+    isAiRecommended: card ? toRecommended(card.stimulus) : null,
+    aiRank,
+    aiScore,
+    aiExplanation: aiRank ? (AI_VISUAL_EVALUATION_TEXT[aiRank] ?? null) : null,
   }
 }
 
@@ -534,6 +586,12 @@ function createEmptyStimulusRow(
 ): StimulusLogRow {
   const exposeAiRecommendation = assignment.condition !== 'human'
   const exposeAiScore = assignment.condition === 'ai'
+  const aiRank = assignment.condition === 'ai'
+    ? (card.stimulus.aiRank ?? null)
+    : exposeAiRecommendation
+      ? toRecommendRank(card.stimulus)
+      : null
+  const aiScore = exposeAiScore && card.aiScores ? calcMetrics(card.aiScores).score100 : null
 
   return {
     participant_id: participantId,
@@ -546,6 +604,9 @@ function createEmptyStimulusRow(
     display_order: card.displayOrder,
     ai_recommended: exposeAiRecommendation ? toRecommended(card.stimulus) : false,
     ai_recommend_rank: exposeAiRecommendation ? toRecommendRank(card.stimulus) : null,
+    ai_rank: aiRank,
+    ai_score: aiScore,
+    ai_explanation: exposeAiScore && aiRank ? (AI_VISUAL_EVALUATION_TEXT[aiRank] ?? null) : null,
     ai_score_brand_fit: exposeAiScore ? (card.aiScores?.brand_fit ?? null) : null,
     ai_score_target_fit: exposeAiScore ? (card.aiScores?.target_fit ?? null) : null,
     ai_score_competitive_diff: exposeAiScore ? (card.aiScores?.comp_diff ?? null) : null,
@@ -617,6 +678,7 @@ export default function Home() {
     exportRowsJson,
     exportRowsCsv,
     exportEventsJson,
+    exportEventsCsv,
   } = useExperiment()
 
   const [step, setStep] = useState<ScreenStep>('consent')
@@ -666,6 +728,7 @@ export default function Home() {
   const hasInitializedHistoryRef = useRef(false)
   const isApplyingHistoryRef = useRef(false)
   const lastHistorySignatureRef = useRef('')
+  const conditionStartedAtRef = useRef<number | null>(null)
 
   const historySnapshot = useMemo<AppHistoryState>(() => ({
     __aiLogoticsHistory: true,
@@ -1104,6 +1167,7 @@ export default function Home() {
   const startCondition = useCallback(() => {
     if (!activeAssignment) return
 
+    conditionStartedAtRef.current = Date.now()
     initializeConditionCards(activeAssignment)
     setBriefCodeInput(activeAssignment.setBriefCode)
     setBriefOverride(getSetBrief(activeAssignment.setId))
@@ -1130,6 +1194,7 @@ export default function Home() {
     const isSameTab = targetIndex === currentConditionIndex
     if (isSameTab && step === 'evaluation') return
 
+    conditionStartedAtRef.current = Date.now()
     setCurrentConditionIndex(targetIndex)
     initializeConditionCards(target)
     setBriefCodeInput(target.setBriefCode)
@@ -1391,6 +1456,8 @@ export default function Home() {
 
   const updateFinalDecision = useCallback((stimulusId: string, nextDecision: DecisionType) => {
     const nowIso = new Date().toISOString()
+    const targetCard = cards.find((card) => card.stimulus.id === stimulusId)
+    const previousDecision = targetCard?.finalDecision ?? null
 
     setCards((prev) => prev.map((card) => {
       if (card.stimulus.id !== stimulusId) return card
@@ -1416,6 +1483,33 @@ export default function Home() {
       })
     }
 
+    if (activeAssignment && targetCard?.initialDecision && previousDecision && previousDecision !== nextDecision) {
+      const normalizedFrom = normalizeStatus(previousDecision)
+      const normalizedTo = normalizeStatus(nextDecision)
+      logEvent('STATUS_CHANGE', {
+        condition: activeAssignment.condition,
+        conditionLabel: activeAssignment.conditionLabel,
+        setId: activeAssignment.setId,
+        stimulusId,
+        detail: '후보 상태 이동',
+        payload: {
+          eventType: 'STATUS_CHANGE',
+          participantCode: participantId,
+          conditionType: conditionTypeCode(activeAssignment.condition),
+          conditionLabel: analysisConditionLabel(activeAssignment.condition),
+          conditionOrder: activeAssignment.order,
+          setId: activeAssignment.setId,
+          logoId: stimulusId,
+          previousStatus: normalizedFrom,
+          newStatus: normalizedTo,
+          previousValue: normalizedFrom,
+          newValue: normalizedTo,
+          transitionType: transitionType(previousDecision, nextDecision),
+          ...aiEventMeta(targetCard, activeAssignment.condition === 'ai'),
+        },
+      })
+    }
+
     logEvent('decision_move', {
       condition: activeAssignment?.condition,
       conditionLabel: activeAssignment?.conditionLabel,
@@ -1424,7 +1518,7 @@ export default function Home() {
       detail: `최종 분류 변경: ${nextDecision}`,
       payload: { nextDecision },
     })
-  }, [activeAssignment, finalSelectedStimulusId, logEvent])
+  }, [activeAssignment, cards, finalSelectedStimulusId, logEvent, participantId])
 
   const updateFinalScore = useCallback((stimulusId: string, axis: AxisKey, value: number) => {
     const nowIso = new Date().toISOString()
@@ -1477,10 +1571,37 @@ export default function Home() {
         ai_direction: direction,
       },
     })
-  }, [activeAssignment, cards, logEvent])
+
+    if (activeAssignment && targetCard && before !== null && before !== value) {
+      logEvent('SCORE_CHANGE', {
+        condition: activeAssignment.condition,
+        conditionLabel: activeAssignment.conditionLabel,
+        setId: activeAssignment.setId,
+        stimulusId,
+        detail: '평가 점수 수정',
+        payload: {
+          eventType: 'SCORE_CHANGE',
+          participantCode: participantId,
+          conditionType: conditionTypeCode(activeAssignment.condition),
+          conditionLabel: analysisConditionLabel(activeAssignment.condition),
+          conditionOrder: activeAssignment.order,
+          setId: activeAssignment.setId,
+          logoId: stimulusId,
+          scoreType: axis,
+          previousScore: before,
+          newScore: value,
+          previousValue: before,
+          newValue: value,
+          ...aiEventMeta(targetCard, activeAssignment.condition === 'ai'),
+        },
+      })
+    }
+  }, [activeAssignment, cards, logEvent, participantId])
 
   const updateDetailOverallScore = useCallback((stimulusId: string, group: 'brand' | 'visual', value: number) => {
     const nowIso = new Date().toISOString()
+    const targetCard = cards.find((card) => card.stimulus.id === stimulusId)
+    const previousScore = group === 'brand' ? targetCard?.brandOverallScore : targetCard?.visualOverallScore
 
     setCards((prev) => prev.map((card) => {
       if (card.stimulus.id !== stimulusId) return card
@@ -1510,7 +1631,31 @@ export default function Home() {
       detail: group === 'brand' ? '브랜드 종합 적합도 선택' : '시각 종합 완성도 선택',
       payload: { group, value },
     })
-  }, [activeAssignment, logEvent])
+    if (activeAssignment && targetCard && typeof previousScore === 'number' && previousScore !== value) {
+      logEvent('SCORE_CHANGE', {
+        condition: activeAssignment.condition,
+        conditionLabel: activeAssignment.conditionLabel,
+        setId: activeAssignment.setId,
+        stimulusId,
+        detail: group === 'brand' ? '브랜드 종합 적합도 수정' : '시각 종합 완성도 수정',
+        payload: {
+          eventType: 'SCORE_CHANGE',
+          participantCode: participantId,
+          conditionType: conditionTypeCode(activeAssignment.condition),
+          conditionLabel: analysisConditionLabel(activeAssignment.condition),
+          conditionOrder: activeAssignment.order,
+          setId: activeAssignment.setId,
+          logoId: stimulusId,
+          scoreType: SCORE_TYPE_LABEL[group],
+          previousScore,
+          newScore: value,
+          previousValue: previousScore,
+          newValue: value,
+          ...aiEventMeta(targetCard, activeAssignment.condition === 'ai'),
+        },
+      })
+    }
+  }, [activeAssignment, cards, logEvent, participantId])
 
   const toggleMainJudgmentCriterion = useCallback((stimulusId: string, criterion: string) => {
     const target = cards.find((card) => card.stimulus.id === stimulusId)
@@ -1641,6 +1786,32 @@ export default function Home() {
       },
     })
 
+    if (activeAssignment) {
+      logEvent(previousSelectedId && previousSelectedId !== stimulusId ? 'FINAL_SELECTION_CHANGE' : 'FINAL_SELECTION', {
+        condition: activeAssignment.condition,
+        conditionLabel: activeAssignment.conditionLabel,
+        setId: activeAssignment.setId,
+        stimulusId,
+        detail: previousSelectedId && previousSelectedId !== stimulusId ? '최종 선택 시안 변경' : '최초 최종 선택',
+        payload: {
+          eventType: previousSelectedId && previousSelectedId !== stimulusId ? 'FINAL_SELECTION_CHANGE' : 'FINAL_SELECTION',
+          participantCode: participantId,
+          conditionType: conditionTypeCode(activeAssignment.condition),
+          conditionLabel: analysisConditionLabel(activeAssignment.condition),
+          conditionOrder: activeAssignment.order,
+          setId: activeAssignment.setId,
+          logoId: stimulusId,
+          previousFinalLogoId: previousSelectedId,
+          newFinalLogoId: stimulusId,
+          previousValue: previousSelectedId,
+          newValue: stimulusId,
+          finalSelectedIsAiRecommended: toRecommended(target.stimulus),
+          aiRankOneSelected: (target.stimulus.aiRank ?? null) === 1,
+          ...aiEventMeta(target, activeAssignment.condition === 'ai'),
+        },
+      })
+    }
+
     if (previousSelectedId && previousSelectedId !== stimulusId) {
       const prevCard = cards.find((c) => c.stimulus.id === previousSelectedId)
       logEvent('final_selection_changed', {
@@ -1659,7 +1830,7 @@ export default function Home() {
       })
     }
     return true
-  }, [finalSelectedStimulusId, cards, updateFinalDecision, logEvent, activeAssignment])
+  }, [finalSelectedStimulusId, cards, updateFinalDecision, logEvent, activeAssignment, participantId])
 
   const moveToNextCondition = useCallback(() => {
     if (!activeAssignment || !finalSelectedStimulusId) return
@@ -1713,10 +1884,39 @@ export default function Home() {
       detail: `${activeAssignment.conditionLabel} 종료`,
     })
 
+    const finalConfirmMs = Date.now()
+    const conditionStartMs = conditionStartedAtRef.current ?? finalConfirmMs
+    logEvent('FINAL_CONFIRM', {
+      condition: activeAssignment.condition,
+      conditionLabel: activeAssignment.conditionLabel,
+      setId: activeAssignment.setId,
+      stimulusId: finalSelectedStimulusId,
+      detail: '조건별 최종 시안 확정',
+      payload: {
+        eventType: 'FINAL_CONFIRM',
+        participantCode: participantId,
+        conditionType: conditionTypeCode(activeAssignment.condition),
+        conditionLabel: analysisConditionLabel(activeAssignment.condition),
+        conditionOrder: activeAssignment.order,
+        setId: activeAssignment.setId,
+        logoId: finalSelectedStimulusId,
+        finalLogoId: finalSelectedStimulusId,
+        newFinalLogoId: finalSelectedStimulusId,
+        newValue: finalSelectedStimulusId,
+        conditionStartTime: new Date(conditionStartMs).toISOString(),
+        finalConfirmTime: new Date(finalConfirmMs).toISOString(),
+        finalDecisionElapsedMs: Math.max(0, finalConfirmMs - conditionStartMs),
+        elapsedMs: Math.max(0, finalConfirmMs - conditionStartMs),
+        finalSelectedIsAiRecommended: selectedCard ? toRecommended(selectedCard.stimulus) : null,
+        aiRankOneSelected: selectedCard ? (selectedCard.stimulus.aiRank ?? null) === 1 : null,
+        ...aiEventMeta(selectedCard, activeAssignment.condition === 'ai'),
+      },
+    })
+
     setPostSurveyAnswers(INITIAL_POST_SURVEY)
     setPostSurveyError('')
     setStep('post_survey')
-  }, [activeAssignment, finalSelectedStimulusId, cards, currentConditionIndex, assignments.length, logEvent])
+  }, [activeAssignment, finalSelectedStimulusId, cards, currentConditionIndex, assignments.length, logEvent, participantId])
 
   const submitPostSurvey = useCallback(() => {
     if (!activeAssignment) return
@@ -3754,6 +3954,12 @@ export default function Home() {
                         style={{ border: '1px solid rgba(17,17,17,.22)', background: '#ffffff', color: '#111111', borderRadius: 9, padding: '9px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
                       >
                         행동 이벤트 로그 JSON 추출
+                      </button>
+                      <button
+                        onClick={exportEventsCsv}
+                        style={{ border: '1px solid rgba(17,17,17,.22)', background: '#ffffff', color: '#111111', borderRadius: 9, padding: '9px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
+                      >
+                        행동 이벤트 로그 CSV 추출
                       </button>
                     </div>
                   </div>

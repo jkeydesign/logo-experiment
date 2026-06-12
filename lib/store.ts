@@ -19,6 +19,9 @@ const CSV_COLUMNS: Array<keyof StimulusLogRow> = [
   'display_order',
   'ai_recommended',
   'ai_recommend_rank',
+  'ai_rank',
+  'ai_score',
+  'ai_explanation',
   'ai_score_brand_fit',
   'ai_score_target_fit',
   'ai_score_competitive_diff',
@@ -75,6 +78,40 @@ const CSV_COLUMNS: Array<keyof StimulusLogRow> = [
   'set_brief_code',
 ]
 
+const EVENT_CSV_COLUMNS = [
+  'sessionId',
+  'participantCode',
+  'conditionType',
+  'conditionLabel',
+  'conditionOrder',
+  'setId',
+  'logoId',
+  'eventType',
+  'previousValue',
+  'newValue',
+  'previousScore',
+  'newScore',
+  'previousStatus',
+  'newStatus',
+  'transitionType',
+  'previousFinalLogoId',
+  'newFinalLogoId',
+  'finalLogoId',
+  'scoreType',
+  'timestamp',
+  'elapsedMs',
+  'conditionStartTime',
+  'finalConfirmTime',
+  'finalDecisionElapsedMs',
+  'isAiRecommended',
+  'aiRank',
+  'aiScore',
+  'aiExplanation',
+  'environment',
+  'testMode',
+  'detail',
+] as const
+
 const csvCell = (value: unknown) => {
   if (value === null || value === undefined) return ''
   const str = String(value).replace(/"/g, '""')
@@ -88,6 +125,25 @@ const CONDITION_LOG_MAP: Record<string, string> = {
   human: 'presentation_only',
   collab: 'recommendation',
   ai: 'evaluation',
+}
+
+function flatEventValue(event: ActivityEvent, column: typeof EVENT_CSV_COLUMNS[number]) {
+  const payload = event.payload ?? {}
+  switch (column) {
+    case 'sessionId': return event.sessionId
+    case 'participantCode': return payload.participantCode ?? event.participantId
+    case 'conditionType': return payload.conditionType ?? event.condition
+    case 'conditionLabel': return payload.conditionLabel ?? event.conditionLabel
+    case 'conditionOrder': return payload.conditionOrder ?? payload.condition_order
+    case 'setId': return event.setId
+    case 'logoId': return payload.logoId ?? event.stimulusId
+    case 'eventType': return payload.eventType ?? event.eventName
+    case 'timestamp': return event.timestamp
+    case 'elapsedMs': return payload.elapsedMs ?? event.sinceExperimentStartMs
+    case 'detail': return event.detail
+    default:
+      return payload[column]
+  }
 }
 
 function persistEntry(payload: unknown) {
@@ -171,7 +227,11 @@ export const useExperiment = create<ExperimentState>((set, get) => ({
       setId: payload.setId,
       stimulusId: payload.stimulusId,
       detail: payload.detail,
-      payload: payload.payload,
+      payload: {
+        environment: process.env.NODE_ENV ?? 'production',
+        testMode: false,
+        ...(payload.payload ?? {}),
+      },
     }
 
     set((prev) => ({
@@ -259,6 +319,21 @@ export const useExperiment = create<ExperimentState>((set, get) => ({
     const a = document.createElement('a')
     a.href = url
     a.download = `${participantId || 'participant'}_${sessionId}_events.json`
+    a.click()
+    URL.revokeObjectURL(url)
+  },
+
+  exportEventsCsv: () => {
+    const { participantId, sessionId, events } = get()
+    const header = EVENT_CSV_COLUMNS.join(',')
+    const orderedEvents = [...events].reverse()
+    const lines = orderedEvents.map((event) => EVENT_CSV_COLUMNS.map((col) => csvCell(flatEventValue(event, col))).join(','))
+    const csv = `\uFEFF${header}\n${lines.join('\n')}`
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${participantId || 'participant'}_${sessionId}_events.csv`
     a.click()
     URL.revokeObjectURL(url)
   },
