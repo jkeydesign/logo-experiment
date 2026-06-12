@@ -508,8 +508,7 @@ function isDetailEvaluationComplete(card: StimulusCardState) {
   return (
     typeof card.brandOverallScore === 'number' &&
     typeof card.visualOverallScore === 'number' &&
-    card.mainJudgmentCriteria.length >= 1 &&
-    card.mainJudgmentCriteria.length <= 2
+    card.mainJudgmentCriteria.length === 2
   )
 }
 
@@ -1695,6 +1694,27 @@ export default function Home() {
     setDetailNotice(null)
     setFinalGuardNotice(null)
 
+    if (finalSelectedStimulusId === stimulusId && next.length < 2) {
+      setFinalSelectedStimulusId(null)
+      setFinalSelectionTs(null)
+      setShowFinalModal(false)
+      setDetailNotice({
+        stimulusId,
+        message: '주된 판단 기준 2개를 모두 선택해야 최종선택을 할 수 있습니다.',
+      })
+      logEvent('final_selection_cleared_by_detail_incomplete', {
+        condition: activeAssignment?.condition,
+        conditionLabel: activeAssignment?.conditionLabel,
+        setId: activeAssignment?.setId,
+        stimulusId,
+        detail: '주된 판단 기준 미완료로 최종선택 해제',
+        payload: {
+          selectedCriteria: next,
+          requiredCriteriaCount: 2,
+        },
+      })
+    }
+
     logEvent('detail_criteria_toggle', {
       condition: activeAssignment?.condition,
       conditionLabel: activeAssignment?.conditionLabel,
@@ -1703,7 +1723,7 @@ export default function Home() {
       detail: '주된 판단 기준 선택 변경',
       payload: { criterion, selectedCriteria: next },
     })
-  }, [activeAssignment, cards, logEvent])
+  }, [activeAssignment, cards, finalSelectedStimulusId, logEvent])
 
   const selectFinal = useCallback((stimulusId: string) => {
     const target = cards.find((card) => card.stimulus.id === stimulusId)
@@ -1745,7 +1765,7 @@ export default function Home() {
       setEditingCardId(stimulusId)
       setDetailNotice({
         stimulusId,
-        message: '브랜드 종합 적합도, 시각 종합 완성도, 주된 판단 기준 1~2개를 먼저 입력해 주세요.',
+        message: '브랜드 종합 적합도, 시각 종합 완성도, 주된 판단 기준 2개를 먼저 입력해 주세요.',
       })
       logEvent('final_selection_blocked_detail_incomplete', {
         condition: activeAssignment?.condition,
@@ -3188,7 +3208,7 @@ export default function Home() {
                               <div style={{ border: '1px solid rgba(17,17,17,.08)', borderRadius: 8, padding: 8 }}>
                                 <div style={{ fontSize: 12, fontWeight: 800, color: '#111111', marginBottom: 4 }}>주된 판단 기준</div>
                                 <div style={{ fontSize: 10, color: '#666666', lineHeight: 1.5, marginBottom: 7 }}>
-                                  판단에 가장 크게 영향을 준 기준을 최소 1개, 최대 2개 선택해 주세요.
+                                  판단에 가장 크게 영향을 준 기준을 2개 선택해 주세요.
                                 </div>
                                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: 5 }}>
                                   {MAIN_JUDGMENT_CRITERIA.map((criterion) => {
