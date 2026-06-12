@@ -1937,15 +1937,10 @@ export default function Home() {
   const showEligibilityCollection = step === 'eligibility_collection'
   const showAppHeader = !showConsentScreen && !showParticipationConsent && !showScreeningScreen
 
-  const finalSelectedLogos = useMemo(() => {
-    return rows
-      .filter((row) => row.final_selected)
-      .map((row) => {
-        const stimulus = getStimulusSet(row.set_id as SetId).find((logo) => logo.id === row.stimulus_id)
-        return stimulus ? { row, stimulus } : null
-      })
-      .filter((item): item is { row: StimulusLogRow; stimulus: Logo } => item !== null)
-  }, [rows])
+  const finalModalCard = useMemo(
+    () => cards.find((card) => card.stimulus.id === finalSelectedStimulusId) ?? null,
+    [cards, finalSelectedStimulusId]
+  )
 
   const handleUiClickCapture = useCallback((event: React.MouseEvent<HTMLElement>) => {
     const origin = event.target as HTMLElement | null
@@ -3580,39 +3575,16 @@ export default function Home() {
 
         {step === 'completed' && (
           <div style={{ minHeight: '70vh', display: 'grid', placeItems: 'center', padding: '32px 0 56px' }}>
-            <section style={{ width: 'min(1040px, 94vw)', border: '1px solid rgba(17,17,17,.14)', borderRadius: 18, background: '#ffffff', padding: '34px 36px', textAlign: 'center' }}>
+            <section style={{ width: 'min(720px, 92vw)', border: '1px solid rgba(17,17,17,.14)', borderRadius: 18, background: '#ffffff', padding: '42px 36px', textAlign: 'center' }}>
               <div style={{ fontSize: 30, fontWeight: 900, letterSpacing: '-.03em', color: '#111111', marginBottom: 10 }}>
                 실험이 모두 종료되었습니다.
               </div>
               <div style={{ fontSize: 18, fontWeight: 700, color: '#333333', marginBottom: 8 }}>
                 참여해 주셔서 감사합니다.
               </div>
-              <p style={{ fontSize: 14, color: '#6b7280', lineHeight: 1.7, marginBottom: 28 }}>
-                아래는 각 조건에서 최종 선택한 로고 시안입니다.
+              <p style={{ fontSize: 14, color: '#6b7280', lineHeight: 1.7, margin: '12px 0 0' }}>
+                최종 선택 시안은 각 조건 완료 단계에서 확인되었습니다.
               </p>
-
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 18 }}>
-                {finalSelectedLogos.map(({ row, stimulus }) => (
-                  <div
-                    key={`${row.condition_type}-${row.set_id}-${row.stimulus_id}`}
-                    style={{ border: '1px solid rgba(17,17,17,.14)', borderRadius: 14, background: '#fafafa', padding: 14, textAlign: 'left' }}
-                  >
-                    <div style={{ width: '100%', aspectRatio: '1 / 1', borderRadius: 12, background: '#ffffff', border: '1px solid rgba(17,17,17,.08)', display: 'grid', placeItems: 'center', overflow: 'hidden', marginBottom: 12 }} dangerouslySetInnerHTML={{ __html: renderLogoSvg(stimulus) }} />
-                    <div style={{ fontSize: 12, fontWeight: 800, color: '#6b7280', marginBottom: 4 }}>
-                      {row.condition_order} · {row.condition_type}
-                    </div>
-                    <div style={{ fontSize: 18, fontWeight: 900, color: '#111111' }}>
-                      최종 선택 시안 {row.stimulus_id}
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {finalSelectedLogos.length === 0 && (
-                <div style={{ border: '1px solid rgba(17,17,17,.12)', borderRadius: 12, padding: 18, background: '#f7f7f7', color: '#4b5563', fontSize: 14 }}>
-                  최종 선택 로고 정보가 아직 저장되지 않았습니다.
-                </div>
-              )}
             </section>
           </div>
         )}
@@ -3868,13 +3840,24 @@ export default function Home() {
           onClick={() => setShowFinalModal(false)}
         >
           <div
-            style={{ background: '#ffffff', borderRadius: 18, padding: '32px 28px', maxWidth: 420, width: '90vw', textAlign: 'center', boxShadow: '0 24px 80px rgba(0,0,0,.28)' }}
+            style={{ background: '#ffffff', borderRadius: 18, padding: '28px 26px', maxWidth: 460, width: '90vw', textAlign: 'center', boxShadow: '0 24px 80px rgba(0,0,0,.28)' }}
             onClick={(e) => e.stopPropagation()}
           >
             <div style={{ fontSize: 22, fontWeight: 800, color: '#111111', marginBottom: 10 }}>최종 시안 선택을 완료하시겠습니까?</div>
             <div style={{ fontSize: 13, color: '#555555', lineHeight: 1.7, marginBottom: 8 }}>
               <strong style={{ color: '#111111' }}>{finalSelectedStimulusId}</strong> 시안을 최종 시안으로 확정합니다.
             </div>
+            {finalModalCard && (
+              <div style={{ border: '1px solid rgba(17,17,17,.14)', background: '#fafafa', borderRadius: 14, padding: 12, margin: '12px auto 10px', textAlign: 'left' }}>
+                <div style={{ width: '100%', aspectRatio: '1 / 1', borderRadius: 12, background: '#ffffff', border: '1px solid rgba(17,17,17,.08)', display: 'grid', placeItems: 'center', overflow: 'hidden', marginBottom: 10 }} dangerouslySetInnerHTML={{ __html: renderLogoSvg(finalModalCard.stimulus) }} />
+                <div style={{ fontSize: 12, fontWeight: 800, color: '#6b7280', marginBottom: 3 }}>
+                  {activeAssignment?.conditionLabel} · Set {activeAssignment?.setId}
+                </div>
+                <div style={{ fontSize: 17, fontWeight: 900, color: '#111111' }}>
+                  최종 선택 시안 {finalModalCard.stimulus.id}
+                </div>
+              </div>
+            )}
             <div style={{ border: '1px solid rgba(17,17,17,.12)', background: '#f7f7f7', borderRadius: 10, padding: '9px 10px', fontSize: 13, fontWeight: 700, color: '#111111', lineHeight: 1.55, marginBottom: 10 }}>
               최종 시안은 1개만 선택할 수 있습니다.
             </div>
