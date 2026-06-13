@@ -2125,13 +2125,20 @@ export default function Home() {
   const showInstruction = step === 'instruction' && activeAssignment && activeBrief
   const showEvaluation = step === 'evaluation' && activeAssignment && activeBrief
 
-  // 튜토리얼: 평가 화면 첫 진입 시 자동 실행
+  const isTutorialReady =
+    showEvaluation &&
+    hasGenerated &&
+    !isGenerating &&
+    cards.length > 0 &&
+    visibleCards.length === cards.length
+
+  // 튜토리얼: 빈 캔버스가 아니라 9개 시안 생성이 끝난 뒤 자동 실행
   useEffect(() => {
-    if (showEvaluation && tutorialStep === null) {
+    if (isTutorialReady && tutorialStep === null) {
       const seen = typeof window !== 'undefined' ? localStorage.getItem(TUTORIAL_SEEN_KEY) : null
       if (!seen) setTutorialStep(0)
     }
-  }, [showEvaluation, tutorialStep])
+  }, [isTutorialReady, tutorialStep])
 
   const completeTutorial = useCallback((skipped: boolean) => {
     if (typeof window !== 'undefined') localStorage.setItem(TUTORIAL_SEEN_KEY, '1')
@@ -3025,11 +3032,11 @@ export default function Home() {
         )}
 
         {/* ── 튜토리얼 오버레이 ── */}
-        {showEvaluation && tutorialStep !== null && (() => {
+        {isTutorialReady && tutorialStep !== null && (() => {
           const step = TUTORIAL_STEPS[tutorialStep]
           const tutorialCardPosition: React.CSSProperties =
             step.position === 'centerRight'
-              ? { top: '50%', right: 28, transform: 'translateY(-50%)' }
+              ? { top: 170, right: 'clamp(360px, 34vw, 660px)', transform: 'none' }
               : step.position === 'rightTop'
                 ? { top: 138, right: 300, transform: 'none' }
                 : { bottom: 92, right: 300, transform: 'none' }
