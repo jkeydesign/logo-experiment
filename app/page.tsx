@@ -2164,43 +2164,32 @@ export default function Home() {
   const showEligibilityCollection = step === 'eligibility_collection'
   const showAppHeader = !showConsentScreen && !showParticipationConsent && !showScreeningScreen
 
-  const headerTickerMessages = useMemo(() => {
-    const generalMessages = [
-      'AI Logics 판단 로직이 활성화되었습니다.',
-      'AI Logics가 브랜드 로고 시안 분석을 준비하고 있습니다.',
-      '브랜드 브리프와 시각 기준을 바탕으로 시안을 검토합니다.',
-      '브랜드 맥락과 시각 체계를 함께 고려해 시안을 검토해 주세요.',
-      'AI Logics Review Engine이 현재 활성 상태입니다.',
-      '현재 세션의 로고 판단 환경이 안정적으로 작동 중입니다.',
-    ]
-    const conditionMessages: string[] = []
-    if (activeAssignment?.conditionLabel === '추천 제시형') {
-      conditionMessages.push(
-        'AI 추천 로직이 후보 시안의 시각 특성을 분석 중입니다.',
-        '추천 정보가 판단 화면에 동기화되고 있습니다.',
-        'AI 분석 정보는 참고 자료이며, 최종 판단은 디자이너가 수행합니다.'
-      )
-    }
-    if (activeAssignment?.conditionLabel === '평가 근거 제시형') {
-      conditionMessages.push(
-        'AI 추천 로직이 후보 시안의 시각 특성을 분석 중입니다.',
-        '추천 정보와 평가 정보가 판단 화면에 동기화되고 있습니다.',
-        'AI 분석 정보는 참고 자료이며, 최종 판단은 디자이너가 수행합니다.'
-      )
-    }
-
-    const actionMessages: string[] = []
+  const headerStatusMessage = useMemo(() => {
     if (isGenerating) {
-      actionMessages.push('AI 로고 시안 생성중...', 'AI Logics가 브랜드 로고 시안 분석을 준비하고 있습니다.')
-    } else if (showEvaluation && hasGenerated) {
-      actionMessages.push('선택, 후보 유지, 제외 판단이 세션에 반영되고 있습니다.')
+      const nextCount = Math.min(visibleGeneratedCount + 1, cards.length || 9)
+      return `AI 로고 시안 생성중... ${nextCount}번째 시안을 준비하고 있습니다.`
     }
-    if (finalSelectedStimulusId) {
-      actionMessages.push('최종 시안 판단이 현재 세션에 반영되고 있습니다.')
-    }
-
-    return [...actionMessages, ...conditionMessages, ...generalMessages]
-  }, [activeAssignment?.conditionLabel, finalSelectedStimulusId, hasGenerated, isGenerating, showEvaluation])
+    if (finalSelectedStimulusId) return `${finalSelectedStimulusId} 시안이 최종 선택 후보로 세션에 반영되었습니다.`
+    if (showEvaluation && !hasGenerated) return '브랜드 브리프와 판단 기준을 확인한 뒤 AI 로고 시안 생성을 시작해 주세요.'
+    if (showEvaluation && hasGenerated && rightTab === 'hold') return '최종 후보 패널에서 후보 유지 시안을 비교하고 가장 적합한 1개를 선택해 주세요.'
+    if (showEvaluation && hasGenerated && rightTab === 'exclude') return '제외 패널에서 제외한 시안을 확인하고 필요하면 후보 유지로 복원할 수 있습니다.'
+    if (showInstruction) return '조건 안내를 확인한 뒤 실제 실무처럼 로고 시안을 검토해 주세요.'
+    if (showBrief) return '브랜드 브리프와 판단 기준을 먼저 확인해 주세요.'
+    if (activeAssignment?.conditionLabel === '추천 제시형') return 'AI 추천 정보는 참고 자료이며, 후보 유지와 제외 판단은 디자이너가 수행합니다.'
+    if (activeAssignment?.conditionLabel === '평가 근거 제시형') return 'AI 평가 순위와 시각 설명을 참고하되, 최종 판단은 디자이너가 수행합니다.'
+    return 'AI Logics 판단 환경이 안정적으로 작동 중입니다.'
+  }, [
+    activeAssignment?.conditionLabel,
+    cards.length,
+    finalSelectedStimulusId,
+    hasGenerated,
+    isGenerating,
+    rightTab,
+    showBrief,
+    showEvaluation,
+    showInstruction,
+    visibleGeneratedCount,
+  ])
 
   const finalModalCard = useMemo(
     () => cards.find((card) => card.stimulus.id === finalSelectedStimulusId) ?? null,
@@ -2244,25 +2233,15 @@ export default function Home() {
     <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', background: '#ffffff' }}>
       {showAppHeader && (
         <header style={{ padding: '10px 16px', borderBottom: '1px solid rgba(17,17,17,.12)', display: 'grid', gridTemplateColumns: '380px minmax(620px, 1fr) 620px', alignItems: 'center', gap: 14, minHeight: 64, overflow: 'hidden' }}>
-          <style>{`
-            @keyframes headerTickerSlide {
-              0% { transform: translateX(0); }
-              100% { transform: translateX(-50%); }
-            }
-          `}</style>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, minWidth: 0, width: '100%' }}>
             <div style={{ fontSize: 26, fontWeight: 900, letterSpacing: '-.04em', color: '#111111', lineHeight: 1, whiteSpace: 'nowrap' }}>AI Logics</div>
             <div style={{ fontSize: 12, fontWeight: 700, color: '#6b7280', letterSpacing: '.02em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Logo Judgment Assistant</div>
           </div>
-          <div style={{ justifySelf: 'stretch', width: 'calc(100% + 180px)', marginLeft: -90, overflow: 'hidden', border: '1px solid rgba(17,17,17,.12)', borderRadius: 999, background: '#f7f7f7', height: 34, display: 'flex', alignItems: 'center' }} aria-label="AI Logics 상태 안내">
-            <div style={{ display: 'flex', alignItems: 'center', gap: 28, whiteSpace: 'nowrap', animation: 'headerTickerSlide 34s linear infinite', paddingLeft: 22 }}>
-              {[...headerTickerMessages, ...headerTickerMessages].map((message, index) => (
-                <span key={`${message}-${index}`} style={{ display: 'inline-flex', alignItems: 'center', gap: 10, fontSize: 13, fontWeight: 700, color: '#374151' }}>
-                  <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#9ca3af', display: 'inline-block' }} />
-                  {message}
-                </span>
-              ))}
-            </div>
+          <div style={{ justifySelf: 'stretch', width: '100%', minWidth: 0, overflow: 'hidden', border: '1px solid rgba(17,17,17,.12)', borderRadius: 999, background: '#f7f7f7', height: 34, display: 'flex', alignItems: 'center', padding: '0 18px' }} aria-live="polite" aria-label="AI Logics 상태 안내">
+            <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#9ca3af', flex: '0 0 auto', marginRight: 10 }} />
+            <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 13, fontWeight: 800, color: '#374151' }}>
+              {headerStatusMessage}
+            </span>
           </div>
           <div style={{ textAlign: 'right', fontSize: 12, color: '#4d4d4d', justifySelf: 'stretch' }}>
             <div>참가자 코드: {participantId || '-'}</div>
