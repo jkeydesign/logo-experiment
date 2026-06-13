@@ -2164,6 +2164,44 @@ export default function Home() {
   const showEligibilityCollection = step === 'eligibility_collection'
   const showAppHeader = !showConsentScreen && !showParticipationConsent && !showScreeningScreen
 
+  const headerTickerMessages = useMemo(() => {
+    const generalMessages = [
+      'AI Logics 판단 로직이 활성화되었습니다.',
+      'AI Logics가 브랜드 로고 시안 분석을 준비하고 있습니다.',
+      '브랜드 브리프와 시각 기준을 바탕으로 시안을 검토합니다.',
+      '브랜드 맥락과 시각 체계를 함께 고려해 시안을 검토해 주세요.',
+      'AI Logics Review Engine이 현재 활성 상태입니다.',
+      '현재 세션의 로고 판단 환경이 안정적으로 작동 중입니다.',
+    ]
+    const conditionMessages: string[] = []
+    if (activeAssignment?.conditionLabel === '추천 제시형') {
+      conditionMessages.push(
+        'AI 추천 로직이 후보 시안의 시각 특성을 분석 중입니다.',
+        '추천 정보가 판단 화면에 동기화되고 있습니다.',
+        'AI 분석 정보는 참고 자료이며, 최종 판단은 디자이너가 수행합니다.'
+      )
+    }
+    if (activeAssignment?.conditionLabel === '평가 근거 제시형') {
+      conditionMessages.push(
+        'AI 추천 로직이 후보 시안의 시각 특성을 분석 중입니다.',
+        '추천 정보와 평가 정보가 판단 화면에 동기화되고 있습니다.',
+        'AI 분석 정보는 참고 자료이며, 최종 판단은 디자이너가 수행합니다.'
+      )
+    }
+
+    const actionMessages: string[] = []
+    if (isGenerating) {
+      actionMessages.push('AI 로고 시안 생성중...', 'AI Logics가 브랜드 로고 시안 분석을 준비하고 있습니다.')
+    } else if (showEvaluation && hasGenerated) {
+      actionMessages.push('선택, 후보 유지, 제외 판단이 세션에 반영되고 있습니다.')
+    }
+    if (finalSelectedStimulusId) {
+      actionMessages.push('최종 시안 판단이 현재 세션에 반영되고 있습니다.')
+    }
+
+    return [...actionMessages, ...conditionMessages, ...generalMessages]
+  }, [activeAssignment?.conditionLabel, finalSelectedStimulusId, hasGenerated, isGenerating, showEvaluation])
+
   const finalModalCard = useMemo(
     () => cards.find((card) => card.stimulus.id === finalSelectedStimulusId) ?? null,
     [cards, finalSelectedStimulusId]
@@ -2205,14 +2243,31 @@ export default function Home() {
   return (
     <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', background: '#ffffff' }}>
       {showAppHeader && (
-        <header style={{ padding: '12px 16px', borderBottom: '1px solid rgba(17,17,17,.12)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div>
-            <div style={{ fontSize: 12, color: '#666666' }}>생성형 AI 기반 브랜드 로고 시안 판단 실험</div>
+        <header style={{ padding: '10px 16px', borderBottom: '1px solid rgba(17,17,17,.12)', display: 'grid', gridTemplateColumns: '320px minmax(360px, 1fr) 220px', alignItems: 'center', gap: 18, minHeight: 64 }}>
+          <style>{`
+            @keyframes headerTickerSlide {
+              0% { transform: translateX(0); }
+              100% { transform: translateX(-50%); }
+            }
+          `}</style>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, minWidth: 0 }}>
+            <div style={{ fontSize: 26, fontWeight: 900, letterSpacing: '-.04em', color: '#111111', lineHeight: 1 }}>AI Logics</div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: '#6b7280', letterSpacing: '.02em', whiteSpace: 'nowrap' }}>Logo Judgment Assistant</div>
+          </div>
+          <div style={{ justifySelf: 'center', width: 'min(820px, 100%)', overflow: 'hidden', border: '1px solid rgba(17,17,17,.12)', borderRadius: 999, background: '#f7f7f7', height: 34, display: 'flex', alignItems: 'center' }} aria-label="AI Logics 상태 안내">
+            <div style={{ display: 'flex', alignItems: 'center', gap: 28, whiteSpace: 'nowrap', animation: 'headerTickerSlide 34s linear infinite', paddingLeft: 22 }}>
+              {[...headerTickerMessages, ...headerTickerMessages].map((message, index) => (
+                <span key={`${message}-${index}`} style={{ display: 'inline-flex', alignItems: 'center', gap: 10, fontSize: 13, fontWeight: 700, color: '#374151' }}>
+                  <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#9ca3af', display: 'inline-block' }} />
+                  {message}
+                </span>
+              ))}
+            </div>
           </div>
           <div style={{ textAlign: 'right', fontSize: 12, color: '#4d4d4d' }}>
             <div>참가자 코드: {participantId || '-'}</div>
-            <div>LS 그룹: {assignments[0]?.latinSquareGroup ?? '-'}</div>
-            <div>저장된 로그 행: {rows.length}</div>
+            <div>세션 ID: {assignments[0]?.latinSquareGroup ?? '-'}</div>
+            <div style={{ color: '#9ca3af' }}>연구자 로그: 내부 저장 중</div>
           </div>
         </header>
       )}
@@ -2229,16 +2284,17 @@ export default function Home() {
 
               <div style={{ maxWidth: 820, margin: '0 auto', display: 'grid', gap: 34, fontSize: 16, lineHeight: 1.85, color: '#1f2937' }}>
                 <section style={{ display: 'grid', gap: 14 }}>
+                  <p>안녕하십니까?</p>
                   <p>
-                    본 실험은 생성형 AI 기반 로고 디자인 환경에서 전문 디자이너의 로고 시안 판단 과정을 분석하기 위한 온라인 실험입니다.
+                    먼저 바쁘신 중에도 본 실험에 참여해 주셔서 진심으로 감사드립니다.<br />
+                    본 실험은 생성형 AI 기반 로고 디자인 환경에서 전문 디자이너가 로고 시안을 판단하는 과정을 살펴보기 위한 온라인 실험입니다.
                   </p>
                   <p>
-                    본 연구는 로고 시안의 미적 우열이나 AI 생성 성능을 평가하는 것이 아닙니다.<br />
-                    브랜드 브리프를 바탕으로 전문 디자이너가 어떤 기준과 과정으로 시안을 판단하는지를 살펴보는 데 목적이 있습니다.
+                    본 연구는 로고 시안의 미적 우열이나 AI 생성 성능을 평가하기 위한 것이 아닙니다.<br />
+                    연구의 목적은 브랜드 브리프를 바탕으로 전문 디자이너가 여러 로고 시안을 비교하고 판단하는 과정에서, AI 관련 정보가 판단 과정에 어떠한 차이를 만드는지 확인하는 데 있습니다.
                   </p>
                   <p>
-                    참가자께서는 실제 실무에서 후보 시안을 검토하듯이, 제시된 브랜드 맥락과 로고 시안을 바탕으로 판단해 주시면 됩니다.<br />
-                    본 실험에는 정답이 없으며, 본인의 전문적 판단에 따라 응답해 주시면 됩니다.
+                    참가자께서는 실제 실무에서 로고 후보 시안을 검토하듯이, 제시된 브랜드 맥락과 로고 시안을 바탕으로 판단해 주시면 됩니다. 본 실험에는 정답이 없으며, 참가자 본인의 전문적 판단에 따라 응답해 주시면 됩니다.
                   </p>
                 </section>
 
@@ -2255,33 +2311,35 @@ export default function Home() {
                   <h2 style={{ fontSize: 18, fontWeight: 800, color: '#111111', marginBottom: 10 }}>[실험 진행 방식]</h2>
                   <ul style={{ display: 'grid', gap: 6, paddingLeft: 20 }}>
                     <li>실험은 참가자 코드 기반으로 진행됩니다.</li>
-                    <li>실험 중에는 성명, 이메일, 포트폴리오를 수집하지 않습니다.</li>
-                    <li>수집 자료는 로고 시안의 후보 유지, 제외, 변경, 최종 선택 과정과 간단한 평가 응답입니다.</li>
-                    <li>본 실험에 등장하는 AI 시스템의 추천 및 평가 알고리즘은 본 연구의 목적을 위해 설계된 특정 조건에 따라 작동합니다.</li>
+                    <li>실험 중에는 성명, 이메일, 포트폴리오 등 개인 식별 정보를 수집하지 않습니다.</li>
+                    <li>수집 자료는 로고 시안에 대한 후보 유지, 제외, 변경, 최종 선택 과정과 간단한 평가 응답입니다.</li>
+                    <li>실험 화면에 제시되는 AI 추천 및 평가 정보는 연구 목적에 맞게 구성된 조건에 따라 제시됩니다.</li>
+                    <li>참가자는 원하지 않을 경우 언제든지 실험 참여를 중단할 수 있습니다.</li>
                   </ul>
                 </section>
 
                 <section>
                   <h2 style={{ fontSize: 18, fontWeight: 800, color: '#111111', marginBottom: 10 }}>[실험 종료 후 자격 확인 및 사례비 지급]</h2>
                   <ul style={{ display: 'grid', gap: 6, paddingLeft: 20 }}>
-                    <li>실험 종료 후 사례비 지급과 연구대상자 자격 확인을 위해 성명, 이메일, 포트폴리오 자료를 별도로 요청합니다.</li>
-                    <li>포트폴리오는 자격 확인 목적으로만 사용되며, 실험 자료로 분석하지 않고 폐기됩니다.</li>
-                    <li>사례비는 선정기준을 충족하고, 포트폴리오를 통해 로고 또는 브랜드 아이덴티티 프로젝트 경험이 확인된 참가자에게 지급됩니다.</li>
-                    <li>최종 분석에는 연구대상자 선정기준을 충족하고 자격 확인이 완료된 응답만 포함됩니다.</li>
+                    <li>실험 종료 후 사례비 지급과 연구대상자 자격 확인을 위해 성명, 이메일, 포트폴리오 자료를 별도로 요청할 수 있습니다.</li>
+                    <li>포트폴리오는 참가 자격 확인 목적으로만 사용되며, 실험 분석 자료로 사용하지 않습니다.</li>
+                    <li>자격 확인이 완료된 후 포트폴리오 자료는 분석 자료와 분리하여 관리하며, 연구 목적 외로 사용하지 않습니다.</li>
+                    <li>사례비는 실험을 완료하고 연구대상자 선정 기준 충족이 확인된 참가자에게 지급됩니다.</li>
                   </ul>
                 </section>
 
                 <section>
                   <p>
-                    디자인 업계와 학계의 연구 발전을 위해 적극적이고 신중한 참여를 부탁드립니다. 감사합니다.
+                    디자인 업계와 학술 연구 발전을 위해 귀한 시간을 내어 주셔서 다시 한 번 감사드립니다.<br />
+                    참가자께서 제공해 주시는 판단 과정 자료는 전문 디자이너와 AI의 협력적 판단 구조를 이해하는 데 소중한 연구 자료로 활용됩니다.
                   </p>
                 </section>
 
                 <section>
                   <h2 style={{ fontSize: 18, fontWeight: 800, color: '#111111', marginBottom: 10 }}>연구자 정보</h2>
-                  <p>연구자: 강은영</p>
-                  <p>소속: 홍익대학교 대학원 시각디자인 전공 박사과정</p>
-                  <p>이메일: kjully1492@gmail.com</p>
+                  <p>소속: 홍익대학교 대학원 디자인공예학과 시각디자인전공</p>
+                  <p>연구자: 박사과정 강은영</p>
+                  <p>지도교수: 허민재</p>
                 </section>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, paddingTop: 8 }}>
