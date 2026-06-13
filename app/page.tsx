@@ -2237,8 +2237,7 @@ export default function Home() {
             <div style={{ fontSize: 26, fontWeight: 900, letterSpacing: '-.04em', color: '#111111', lineHeight: 1, whiteSpace: 'nowrap' }}>AI Logics</div>
             <div style={{ fontSize: 12, fontWeight: 700, color: '#6b7280', letterSpacing: '.02em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Logo Judgment Assistant</div>
           </div>
-          <div style={{ justifySelf: 'stretch', width: '100%', minWidth: 0, overflow: 'hidden', border: '1px solid rgba(17,17,17,.12)', borderRadius: 999, background: '#f7f7f7', height: 34, display: 'flex', alignItems: 'center', padding: '0 18px' }} aria-live="polite" aria-label="AI Logics 상태 안내">
-            <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#9ca3af', flex: '0 0 auto', marginRight: 10 }} />
+          <div style={{ justifySelf: 'stretch', width: '100%', minWidth: 0, overflow: 'hidden', height: 34, display: 'flex', alignItems: 'center' }} aria-live="polite" aria-label="AI Logics 상태 안내">
             <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 13, fontWeight: 800, color: '#374151' }}>
               {headerStatusMessage}
             </span>
