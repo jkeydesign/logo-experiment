@@ -2243,18 +2243,18 @@ export default function Home() {
   return (
     <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', background: '#ffffff' }}>
       {showAppHeader && (
-        <header style={{ padding: '10px 16px', borderBottom: '1px solid rgba(17,17,17,.12)', display: 'grid', gridTemplateColumns: '320px minmax(360px, 1fr) 220px', alignItems: 'center', gap: 18, minHeight: 64 }}>
+        <header style={{ padding: '10px 16px', borderBottom: '1px solid rgba(17,17,17,.12)', display: 'grid', gridTemplateColumns: '380px minmax(620px, 1fr) 620px', alignItems: 'center', gap: 14, minHeight: 64, overflow: 'hidden' }}>
           <style>{`
             @keyframes headerTickerSlide {
               0% { transform: translateX(0); }
               100% { transform: translateX(-50%); }
             }
           `}</style>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, minWidth: 0 }}>
-            <div style={{ fontSize: 26, fontWeight: 900, letterSpacing: '-.04em', color: '#111111', lineHeight: 1 }}>AI Logics</div>
-            <div style={{ fontSize: 12, fontWeight: 700, color: '#6b7280', letterSpacing: '.02em', whiteSpace: 'nowrap' }}>Logo Judgment Assistant</div>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, minWidth: 0, width: '100%' }}>
+            <div style={{ fontSize: 26, fontWeight: 900, letterSpacing: '-.04em', color: '#111111', lineHeight: 1, whiteSpace: 'nowrap' }}>AI Logics</div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: '#6b7280', letterSpacing: '.02em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Logo Judgment Assistant</div>
           </div>
-          <div style={{ justifySelf: 'center', width: 'min(820px, 100%)', overflow: 'hidden', border: '1px solid rgba(17,17,17,.12)', borderRadius: 999, background: '#f7f7f7', height: 34, display: 'flex', alignItems: 'center' }} aria-label="AI Logics 상태 안내">
+          <div style={{ justifySelf: 'stretch', width: 'calc(100% + 180px)', marginLeft: -90, overflow: 'hidden', border: '1px solid rgba(17,17,17,.12)', borderRadius: 999, background: '#f7f7f7', height: 34, display: 'flex', alignItems: 'center' }} aria-label="AI Logics 상태 안내">
             <div style={{ display: 'flex', alignItems: 'center', gap: 28, whiteSpace: 'nowrap', animation: 'headerTickerSlide 34s linear infinite', paddingLeft: 22 }}>
               {[...headerTickerMessages, ...headerTickerMessages].map((message, index) => (
                 <span key={`${message}-${index}`} style={{ display: 'inline-flex', alignItems: 'center', gap: 10, fontSize: 13, fontWeight: 700, color: '#374151' }}>
@@ -2264,7 +2264,7 @@ export default function Home() {
               ))}
             </div>
           </div>
-          <div style={{ textAlign: 'right', fontSize: 12, color: '#4d4d4d' }}>
+          <div style={{ textAlign: 'right', fontSize: 12, color: '#4d4d4d', justifySelf: 'stretch' }}>
             <div>참가자 코드: {participantId || '-'}</div>
             <div>세션 ID: {assignments[0]?.latinSquareGroup ?? '-'}</div>
             <div style={{ color: '#9ca3af' }}>연구자 로그: 내부 저장 중</div>
