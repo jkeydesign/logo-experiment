@@ -2171,7 +2171,7 @@ export default function Home() {
     }
     if (finalSelectedStimulusId) return `${finalSelectedStimulusId} 시안이 최종 선택 후보로 세션에 반영되었습니다.`
     if (showEvaluation && !hasGenerated) return '브랜드 브리프와 판단 기준을 확인한 뒤 AI 로고 시안 생성을 시작해 주세요.'
-    if (showEvaluation && hasGenerated && rightTab === 'hold') return '최종 후보 패널에서 후보 유지 시안을 비교하고 가장 적합한 1개를 선택해 주세요.'
+    if (showEvaluation && hasGenerated && rightTab === 'hold') return '최종 후보 패널에서 최종 선택을 위한 후보 유지 시안을 선택 혹은 제외해 주세요.'
     if (showEvaluation && hasGenerated && rightTab === 'exclude') return '제외 패널에서 제외한 시안을 확인하고 필요하면 후보 유지로 복원할 수 있습니다.'
     if (showInstruction) return '조건 안내를 확인한 뒤 실제 실무처럼 로고 시안을 검토해 주세요.'
     if (showBrief) return '브랜드 브리프와 판단 기준을 먼저 확인해 주세요.'
