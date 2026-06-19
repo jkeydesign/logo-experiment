@@ -663,6 +663,114 @@ function createEmptyStimulusRow(
   }
 }
 
+// Interactive dot grid background component for brief input screen
+function InteractiveDotGrid() {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null)
+  
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+    
+    let animationFrameId: number
+    let width = canvas.width = canvas.parentElement?.clientWidth || window.innerWidth
+    let height = canvas.height = canvas.parentElement?.clientHeight || window.innerHeight
+    
+    let mouse = { x: -1000, y: -1000 }
+    
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!canvas) return
+      const rect = canvas.getBoundingClientRect()
+      mouse.x = e.clientX - rect.left
+      mouse.y = e.clientY - rect.top
+    }
+    
+    const handleMouseLeave = () => {
+      mouse.x = -1000
+      mouse.y = -1000
+    }
+    
+    const handleResize = () => {
+      if (!canvas || !canvas.parentElement) return
+      width = canvas.width = canvas.parentElement.clientWidth
+      height = canvas.height = canvas.parentElement.clientHeight
+    }
+    
+    const parent = canvas.parentElement
+    if (parent) {
+      parent.addEventListener('mousemove', handleMouseMove)
+      parent.addEventListener('mouseleave', handleMouseLeave)
+    }
+    window.addEventListener('resize', handleResize)
+    
+    const dotSpacing = 32
+    
+    const draw = () => {
+      ctx.clearRect(0, 0, width, height)
+      
+      const cols = Math.floor(width / dotSpacing) + 2
+      const rows = Math.floor(height / dotSpacing) + 2
+      
+      for (let i = 0; i < cols; i++) {
+        for (let j = 0; j < rows; j++) {
+          const x = i * dotSpacing
+          const y = j * dotSpacing
+          
+          const dx = mouse.x - x
+          const dy = mouse.y - y
+          const dist = Math.sqrt(dx * dx + dy * dy)
+          
+          let radius = 1.2
+          let opacity = 0.08
+          let color = '107, 114, 128'
+          
+          if (dist < 180) {
+            const factor = 1 - dist / 180
+            radius = 1.2 + factor * 2.5
+            opacity = 0.08 + factor * 0.45
+            color = '0, 242, 254'
+          }
+          
+          ctx.fillStyle = `rgba(${color}, ${opacity})`
+          ctx.beginPath()
+          ctx.arc(x, y, radius, 0, Math.PI * 2)
+          ctx.fill()
+        }
+      }
+      
+      animationFrameId = requestAnimationFrame(draw)
+    }
+    
+    draw()
+    
+    return () => {
+      cancelAnimationFrame(animationFrameId)
+      if (parent) {
+        parent.removeEventListener('mousemove', handleMouseMove)
+        parent.removeEventListener('mouseleave', handleMouseLeave)
+      }
+      window.removeEventListener('resize', handleResize)
+    }
+  }, [])
+  
+  return (
+    <canvas
+      ref={canvasRef}
+      style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+        pointerEvents: 'none',
+        zIndex: 0
+      }}
+    />
+  )
+}
+
 export default function Home() {
   const {
     participantId,
@@ -2255,40 +2363,75 @@ export default function Home() {
   return (
     <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', background: '#ffffff' }}>
       {showAppHeader && (
-        uiVersion === 'v1' ? (
-          <header style={{ padding: '10px 16px', borderBottom: '1px solid rgba(17,17,17,.12)', display: 'grid', gridTemplateColumns: '380px minmax(620px, 1fr) 620px', alignItems: 'center', gap: 14, minHeight: 64, overflow: 'hidden' }}>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, minWidth: 0, width: '100%' }}>
-              <div style={{ fontSize: 26, fontWeight: 900, letterSpacing: '-.04em', color: '#111111', lineHeight: 1, whiteSpace: 'nowrap' }}>AI Logics</div>
-              <div style={{ fontSize: 12, fontWeight: 700, color: '#6b7280', letterSpacing: '.02em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Logo Judgment Assistant</div>
+        (step === 'brief' && wizardPreviewBrief === null) ? (
+          <header style={{ padding: '10px 24px', background: '#ffffff', borderBottom: '1px solid rgba(17,17,17,.08)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', minHeight: 64 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ fontSize: 22, fontWeight: 900, letterSpacing: '-.05em', color: '#111827' }}>logopony</span>
+              <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#00f2fe', marginTop: 8 }}></span>
             </div>
-            <div style={{ justifySelf: 'stretch', width: '100%', minWidth: 0, overflow: 'hidden', height: 34, display: 'flex', alignItems: 'center' }} aria-live="polite" aria-label="AI Logics 상태 안내">
-              <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 13, fontWeight: 800, color: '#374151' }}>
-                {headerStatusMessage}
-              </span>
+            
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16, fontSize: 13, fontWeight: 700 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#9ca3af' }}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 18, height: 18, borderRadius: '50%', background: '#e5e7eb', color: '#6b7280', fontSize: 10 }}>✓</span>
+                <span>Name</span>
+              </div>
+              <span style={{ color: '#d1d5db', fontSize: 11 }}>➔</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#00f2fe' }}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 18, height: 18, borderRadius: '50%', background: '#00f2fe', color: '#ffffff', fontSize: 10, fontWeight: 800 }}>2</span>
+                <span>Details</span>
+              </div>
+              <span style={{ color: '#d1d5db', fontSize: 11 }}>➔</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#9ca3af' }}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 18, height: 18, borderRadius: '50%', background: '#f3f4f6', color: '#9ca3af', fontSize: 10 }}>3</span>
+                <span>Choose</span>
+              </div>
+              <span style={{ color: '#d1d5db', fontSize: 11 }}>➔</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#9ca3af' }}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 18, height: 18, borderRadius: '50%', background: '#f3f4f6', color: '#9ca3af', fontSize: 10 }}>4</span>
+                <span>Edit</span>
+              </div>
             </div>
-            <div style={{ textAlign: 'right', fontSize: 12, color: '#4d4d4d', justifySelf: 'stretch' }}>
-              <div>참가자 코드: {participantId || '-'}</div>
-              <div>세션 ID: {assignments[0]?.latinSquareGroup ?? '-'}</div>
-              <div style={{ color: '#9ca3af' }}>연구자 로그: 내부 저장 중</div>
+
+            <div style={{ fontSize: 12, color: '#4b5563', fontWeight: 600 }}>
+              참가자 코드: {participantId || '-'}
             </div>
           </header>
         ) : (
-          <header style={{ padding: '10px 16px', background: '#0b0f19', borderBottom: '1px solid #1f2937', display: 'grid', gridTemplateColumns: '380px minmax(620px, 1fr) 620px', alignItems: 'center', gap: 14, minHeight: 64, overflow: 'hidden' }}>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, minWidth: 0, width: '100%' }}>
-              <div style={{ fontSize: 26, fontWeight: 900, letterSpacing: '-.04em', color: '#ffffff', lineHeight: 1, whiteSpace: 'nowrap' }}>AI Logics</div>
-              <div style={{ fontSize: 12, fontWeight: 700, color: '#9ca3af', letterSpacing: '.02em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Logo Judgment Assistant</div>
-            </div>
-            <div className="marquee-container" style={{ justifySelf: 'stretch', width: '100%', minWidth: 0, height: 34, display: 'flex', alignItems: 'center' }} aria-live="polite" aria-label="AI Logics 상태 안내">
-              <span className="marquee-content" style={{ minWidth: 0, fontSize: 13.5, fontWeight: 800, color: '#f3f4f6' }}>
-                {headerStatusMessage}
-              </span>
-            </div>
-            <div style={{ textAlign: 'right', fontSize: 12, color: '#9ca3af', justifySelf: 'stretch', lineHeight: 1.35 }}>
-              <div>참가자 코드: {participantId || '-'}</div>
-              <div>세션 ID: {assignments[0]?.latinSquareGroup ?? '-'}</div>
-              <div style={{ color: '#6b7280' }}>연구자 로그: 내부 저장 중</div>
-            </div>
-          </header>
+          uiVersion === 'v1' ? (
+            <header style={{ padding: '10px 16px', borderBottom: '1px solid rgba(17,17,17,.12)', display: 'grid', gridTemplateColumns: '380px minmax(620px, 1fr) 620px', alignItems: 'center', gap: 14, minHeight: 64, overflow: 'hidden' }}>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, minWidth: 0, width: '100%' }}>
+                <div style={{ fontSize: 26, fontWeight: 900, letterSpacing: '-.04em', color: '#111111', lineHeight: 1, whiteSpace: 'nowrap' }}>AI Logics</div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: '#6b7280', letterSpacing: '.02em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Logo Judgment Assistant</div>
+              </div>
+              <div style={{ justifySelf: 'stretch', width: '100%', minWidth: 0, overflow: 'hidden', height: 34, display: 'flex', alignItems: 'center' }} aria-live="polite" aria-label="AI Logics 상태 안내">
+                <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 13, fontWeight: 800, color: '#374151' }}>
+                  {headerStatusMessage}
+                </span>
+              </div>
+              <div style={{ textAlign: 'right', fontSize: 12, color: '#4d4d4d', justifySelf: 'stretch' }}>
+                <div>참가자 코드: {participantId || '-'}</div>
+                <div>세션 ID: {assignments[0]?.latinSquareGroup ?? '-'}</div>
+                <div style={{ color: '#9ca3af' }}>연구자 로그: 내부 저장 중</div>
+              </div>
+            </header>
+          ) : (
+            <header style={{ padding: '10px 16px', background: '#0b0f19', borderBottom: '1px solid #1f2937', display: 'grid', gridTemplateColumns: '380px minmax(620px, 1fr) 620px', alignItems: 'center', gap: 14, minHeight: 64, overflow: 'hidden' }}>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, minWidth: 0, width: '100%' }}>
+                <div style={{ fontSize: 26, fontWeight: 900, letterSpacing: '-.04em', color: '#ffffff', lineHeight: 1, whiteSpace: 'nowrap' }}>AI Logics</div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: '#9ca3af', letterSpacing: '.02em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Logo Judgment Assistant</div>
+              </div>
+              <div className="marquee-container" style={{ justifySelf: 'stretch', width: '100%', minWidth: 0, height: 34, display: 'flex', alignItems: 'center' }} aria-live="polite" aria-label="AI Logics 상태 안내">
+                <span className="marquee-content" style={{ minWidth: 0, fontSize: 13.5, fontWeight: 800, color: '#f3f4f6' }}>
+                  {headerStatusMessage}
+                </span>
+              </div>
+              <div style={{ textAlign: 'right', fontSize: 12, color: '#9ca3af', justifySelf: 'stretch', lineHeight: 1.35 }}>
+                <div>참가자 코드: {participantId || '-'}</div>
+                <div>세션 ID: {assignments[0]?.latinSquareGroup ?? '-'}</div>
+                <div style={{ color: '#6b7280' }}>연구자 로그: 내부 저장 중</div>
+              </div>
+            </header>
+          )
         )
       )}
 
@@ -2650,7 +2793,8 @@ export default function Home() {
               </button>
             </div>
           ) : (
-            <div style={{ minHeight: '80vh', display: 'grid', placeItems: 'center', padding: '20px 0' }}>
+            <div style={{ position: 'relative', minHeight: '80vh', display: 'grid', placeItems: 'center', padding: '20px 0', overflow: 'hidden' }}>
+              {wizardPreviewBrief === null && <InteractiveDotGrid />}
               {wizardPreviewBrief === null ? (
                 <div className="brand-card-pulse wizard-fade-in" style={{ width: 'min(600px, 92vw)', background: 'rgba(255, 255, 255, 0.85)', backdropFilter: 'blur(16px)', borderRadius: 16, border: '1px solid rgba(17,17,17,0.08)', padding: '40px 30px', display: 'flex', flexDirection: 'column' }}>
                   <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
