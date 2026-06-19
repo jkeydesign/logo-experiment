@@ -33,6 +33,13 @@ jobs:
           GITHUB_PAGES: true
           NEXT_PUBLIC_STATIC_EXPORT: true
           NEXT_PUBLIC_GAS_URL: ${{ secrets.NEXT_PUBLIC_GAS_URL }}
+          NEXT_PUBLIC_FIREBASE_API_KEY: AIzaSyBMONwh1FPKeXq-ExsrSZhcD9YdMhpVVrs
+          NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: ovbne-experiment.firebaseapp.com
+          NEXT_PUBLIC_FIREBASE_PROJECT_ID: ovbne-experiment
+          NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: ovbne-experiment.firebasestorage.app
+          NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: "1043329915526"
+          NEXT_PUBLIC_FIREBASE_APP_ID: "1:1043329915526:web:c2e8c7f6856852eb708f07"
+
 
       - uses: actions/upload-pages-artifact@v3
         with:

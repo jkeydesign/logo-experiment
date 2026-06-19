@@ -13,7 +13,8 @@
     "react-dom": "^18",
     "@anthropic-ai/sdk": "^0.24.0",
     "zustand": "^4.5.0",
-    "clsx": "^2.1.0"
+    "clsx": "^2.1.0",
+    "firebase": "^10.8.0"
   },
   "devDependencies": {
     "typescript": "^5",

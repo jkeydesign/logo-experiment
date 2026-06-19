@@ -1,10 +1,12 @@
-﻿import { create } from 'zustand'
+import { create } from 'zustand'
 import type {
   ActivityEvent,
   ConditionAssignment,
   ExperimentState,
   StimulusLogRow,
 } from '@/types'
+import { db } from './firebase'
+import { collection, addDoc } from 'firebase/firestore'
 
 const makeSessionId = () => `session_${Date.now()}`
 
@@ -146,15 +148,39 @@ function flatEventValue(event: ActivityEvent, column: typeof EVENT_CSV_COLUMNS[n
   }
 }
 
-function persistEntry(payload: unknown) {
-  if (!GAS_URL) return
-  // text/plain 으로 보내면 CORS preflight(OPTIONS) 없이 GAS에 전달됨
-  fetch(GAS_URL, {
-    method: 'POST',
-    body: JSON.stringify(payload),
-  }).catch(() => {
-    // 네트워크 오류 시 실험 진행에 영향 없도록 무시
-  })
+function persistEntry(payload: any) {
+  // 1. Google Apps Script 연동
+  if (GAS_URL) {
+    // text/plain 으로 보내면 CORS preflight(OPTIONS) 없이 GAS에 전달됨
+    fetch(GAS_URL, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }).catch(() => {
+      // 네트워크 오류 시 실험 진행에 영향 없도록 무시
+    })
+  }
+
+  // 2. Firebase Firestore 연동
+  if (db) {
+    try {
+      const { kind, ...rest } = payload
+      const collectionName =
+        kind === 'assignment' ? 'assignments' :
+        kind === 'event' ? 'events' :
+        kind === 'stimulus_row' ? 'stimulus_rows' :
+        'misc_submissions'
+
+      const colRef = collection(db, collectionName)
+      addDoc(colRef, {
+        ...rest,
+        timestamp_submitted: new Date().toISOString()
+      }).catch((err) => {
+        console.error(`Firebase write error for ${kind}:`, err)
+      })
+    } catch (err) {
+      console.error("Firebase write error:", err)
+    }
+  }
 }
 
 function getRowKey(row: StimulusLogRow) {
