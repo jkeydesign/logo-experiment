@@ -2084,7 +2084,7 @@ export default function Home() {
       return
     }
     if (missingFreeText) {
-      setPostSurveyError('이번 단계에서 가장 판단하기 어려웠던 점을 입력해 주세요.')
+      setPostSurveyError('판단 혹은 평가 과정에서의 소감을 입력해 주세요.')
       return
     }
     setPostSurveyError('')
@@ -3875,8 +3875,8 @@ export default function Home() {
                 })}
 
                 <div style={{ border: '1px solid rgba(17,17,17,.12)', borderRadius: 12, padding: 14, background: '#ffffff' }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: '#111111', marginBottom: 4 }}>
-                    이번 단계에서 가장 판단하기 어려웠던 점이 있다면 간단히 적어 주세요.
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#111111', marginBottom: 4, lineHeight: 1.5, wordBreak: 'keep-all' }}>
+                    방금 실험한 시안들을 판단 혹은 평가하는 과정에서 어렵거나 고민되었던 점이 있었다면 간단한 소감을 부탁드립니다.
                   </div>
                   <div style={{ fontSize: 11, color: '#dc2626', fontWeight: 700, marginBottom: 8 }}>필수 입력</div>
                   <textarea
