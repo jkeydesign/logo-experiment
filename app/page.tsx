@@ -2652,7 +2652,7 @@ export default function Home() {
           ) : (
             <div style={{ minHeight: '80vh', display: 'grid', placeItems: 'center', padding: '20px 0' }}>
               {wizardPreviewBrief === null ? (
-                <div className="brand-card-pulse wizard-fade-in" style={{ width: 'min(600px, 92vw)', background: '#ffffff', borderRadius: 16, border: '1px solid rgba(17,17,17,0.06)', padding: '40px 30px', display: 'flex', flexDirection: 'column' }}>
+                <div className="brand-card-pulse wizard-fade-in" style={{ width: 'min(600px, 92vw)', background: 'rgba(255, 255, 255, 0.85)', backdropFilter: 'blur(16px)', borderRadius: 16, border: '1px solid rgba(17,17,17,0.08)', padding: '40px 30px', display: 'flex', flexDirection: 'column' }}>
                   <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       <span style={{ fontSize: 24, fontWeight: 900, letterSpacing: '-.04em', color: '#111827' }}>AI Logo Generator</span>
@@ -2667,16 +2667,25 @@ export default function Home() {
                       <div style={{ fontSize: 12, fontWeight: 700, color: '#4b5563', marginBottom: 6, letterSpacing: '.01em' }}>
                         코드 입력 (저장된 브랜드 브리프 불러오기)
                       </div>
-                      <input
-                        type="text"
-                        value={wizardBrandCode}
-                        onChange={(e) => {
-                          setWizardBrandCode(e.target.value)
-                          setWizardError('')
-                        }}
-                        placeholder=""
-                        style={{ width: '100%', height: 44, border: '1px solid rgba(17,17,17,.18)', borderRadius: 10, padding: '0 14px', fontSize: 13.5, background: '#ffffff', outline: 'none' }}
-                      />
+                      <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                        <input
+                          type="text"
+                          value={wizardBrandCode}
+                          onChange={(e) => {
+                            setWizardBrandCode(e.target.value)
+                            setWizardError('')
+                          }}
+                          placeholder=""
+                          style={{ width: '100%', height: 44, border: '1px solid rgba(17,17,17,.18)', borderRadius: 10, padding: '0 40px 0 14px', fontSize: 13.5, background: '#ffffff', outline: 'none' }}
+                          className="wizard-input-glow"
+                        />
+                        <span style={{ position: 'absolute', right: 14, pointerEvents: 'none', display: 'flex', alignItems: 'center', color: '#9ca3af' }}>
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M12 20h9" />
+                            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+                          </svg>
+                        </span>
+                      </div>
                     </div>
 
                     <div>
@@ -2691,6 +2700,7 @@ export default function Home() {
                         }}
                         placeholder=""
                         style={{ width: '100%', minHeight: 110, border: '1px solid rgba(17,17,17,.18)', borderRadius: 10, padding: '12px 14px', fontSize: 13.5, fontFamily: 'inherit', resize: 'vertical', background: '#ffffff', outline: 'none', lineHeight: 1.5 }}
+                        className="wizard-input-glow"
                       />
                     </div>
 
@@ -2698,16 +2708,25 @@ export default function Home() {
                       <div style={{ fontSize: 12, fontWeight: 700, color: '#4b5563', marginBottom: 6, letterSpacing: '.01em' }}>
                         브랜드 슬로건 (Slogan, 선택사항)
                       </div>
-                      <input
-                        type="text"
-                        value={wizardSlogan}
-                        onChange={(e) => {
-                          setWizardSlogan(e.target.value)
-                          setWizardError('')
-                        }}
-                        placeholder=""
-                        style={{ width: '100%', height: 44, border: '1px solid rgba(17,17,17,.18)', borderRadius: 10, padding: '0 14px', fontSize: 13.5, background: '#ffffff', outline: 'none' }}
-                      />
+                      <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                        <input
+                          type="text"
+                          value={wizardSlogan}
+                          onChange={(e) => {
+                            setWizardSlogan(e.target.value)
+                            setWizardError('')
+                          }}
+                          placeholder=""
+                          style={{ width: '100%', height: 44, border: '1px solid rgba(17,17,17,.18)', borderRadius: 10, padding: '0 40px 0 14px', fontSize: 13.5, background: '#ffffff', outline: 'none' }}
+                          className="wizard-input-glow"
+                        />
+                        <span style={{ position: 'absolute', right: 14, pointerEvents: 'none', display: 'flex', alignItems: 'center', color: '#9ca3af' }}>
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M12 20h9" />
+                            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+                          </svg>
+                        </span>
+                      </div>
                     </div>
 
                     {wizardError && (
@@ -2733,7 +2752,8 @@ export default function Home() {
                         setWizardPreviewBrief(activeBrief)
                         setWizardError('')
                       }}
-                      style={{ width: '100%', marginTop: 10, border: 'none', background: '#111827', color: '#ffffff', borderRadius: 10, padding: '14px 12px', fontSize: 14, fontWeight: 800, cursor: 'pointer', transition: 'all 0.15s ease' }}
+                      className="wizard-btn-gradient"
+                      style={{ width: '100%', marginTop: 10, border: 'none', color: '#ffffff', borderRadius: 9999, padding: '14px 12px', fontSize: 14, fontWeight: 900, letterSpacing: '0.04em', cursor: 'pointer', boxShadow: '0 4px 15px rgba(0, 0, 0, 0.15)' }}
                     >
                       브랜드 정보 불러오기
                     </button>

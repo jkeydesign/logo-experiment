@@ -165,17 +165,17 @@ button[aria-disabled="true"] {
 /* --- 브랜드 코드창 (AI Generator 위저드) 전용 애니메이션 --- */
 @keyframes pulseGlow {
   0%, 100% {
-    box-shadow: 0 0 15px rgba(0, 0, 0, 0.05), 0 20px 40px rgba(0, 0, 0, 0.06);
-    border-color: rgba(17, 17, 17, 0.06);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1), 0 0 15px rgba(220, 220, 220, 0.35);
+    border-color: rgba(17, 17, 17, 0.08);
   }
   50% {
-    box-shadow: 0 0 28px rgba(17, 17, 17, 0.12), 0 20px 40px rgba(0, 0, 0, 0.06);
-    border-color: rgba(17, 17, 17, 0.18);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.14), 0 0 30px rgba(180, 180, 180, 0.55);
+    border-color: rgba(17, 17, 17, 0.2);
   }
 }
 .brand-card-pulse {
   animation: pulseGlow 4s ease-in-out infinite;
-  transition: border-color 0.3s ease;
+  transition: border-color 0.3s ease, background-color 0.3s ease;
 }
 
 @keyframes wizardFadeIn {
@@ -185,4 +185,30 @@ button[aria-disabled="true"] {
 .wizard-fade-in {
   animation: wizardFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
+
+/* --- 추가 스타일: 그라데이션 모비즘 및 입력창/버튼 고정효과 --- */
+.wizard-input-glow {
+  transition: border-color 0.22s ease, box-shadow 0.22s ease, background-color 0.22s ease !important;
+}
+.wizard-input-glow:focus {
+  border-color: #4b5563 !important;
+  box-shadow: 0 0 0 3px rgba(75, 85, 99, 0.18) !important;
+  background-color: #fafafa !important;
+}
+
+.wizard-btn-gradient {
+  background: linear-gradient(135deg, #9ca3af 0%, #4b5563 50%, #111827 100%);
+  background-size: 200% auto;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+.wizard-btn-gradient:hover {
+  background-position: right center;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.24), 0 0 16px rgba(107, 114, 128, 0.35) !important;
+  transform: translateY(-2px) !important;
+}
+.wizard-btn-gradient:active {
+  transform: translateY(1px) scale(0.98) !important;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.18) !important;
+}
+
 
