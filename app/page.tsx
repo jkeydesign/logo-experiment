@@ -2811,10 +2811,10 @@ export default function Home() {
               ) : (
                 <div className="brand-card-pulse wizard-fade-in" style={{ width: 'min(640px, 92vw)', background: '#ffffff', borderRadius: 16, border: '1px solid rgba(17,17,17,0.06)', padding: '40px 30px', display: 'flex', flexDirection: 'column' }}>
                   <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
-                    <span style={{ fontSize: 22, fontWeight: 900, letterSpacing: '-.03em', color: '#111827' }}>AI 분석 결과 확인</span>
+                    <span style={{ fontSize: 22, fontWeight: 900, letterSpacing: '-.03em', color: '#111827' }}>브랜드 브리프 정보 확인</span>
                   </div>
                   <div style={{ fontSize: 13, color: '#6b7280', textAlign: 'center', marginBottom: 26, lineHeight: 1.6, wordBreak: 'keep-all' }}>
-                    입력하신 브랜드 브리프 정보가 분석되었습니다. 아래의 핵심 맥락이 로고 시안 생성의 기준이 됩니다.
+                    입력하신 브랜드 브리프 정보입니다. 내용 확인 후 아래의 이동 버튼을 눌러주세요.
                   </div>
 
                   <div style={{ display: 'grid', gap: 12, border: '1px solid rgba(17,17,17,.08)', borderRadius: 12, padding: 18, background: '#fafafa', marginBottom: 24, fontSize: 13.5, lineHeight: 1.65 }}>
