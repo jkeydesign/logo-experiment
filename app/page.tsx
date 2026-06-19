@@ -841,10 +841,10 @@ export default function Home() {
   const [uiVersion, setUiVersion] = useState<'v1' | 'v2'>('v2')
 
   // Brand Code Screen Wizard States
-  const [wizardBrandNameInput, setWizardBrandNameInput] = useState('')
-  const [wizardBusinessDesc, setWizardBusinessDesc] = useState('')
+  const [wizardBrandNameInput, setWizardBrandNameInput] = useState('OVBNE')
+  const [wizardBusinessDesc, setWizardBusinessDesc] = useState('OVBNE')
   const [wizardSlogan, setWizardSlogan] = useState('')
-  const [wizardBrandCode, setWizardBrandCode] = useState('')
+  const [wizardBrandCode, setWizardBrandCode] = useState('OVBNE')
   const [wizardError, setWizardError] = useState('')
   const [wizardPreviewBrief, setWizardPreviewBrief] = useState<BrandBrief | null>(null)
 
@@ -2728,14 +2728,14 @@ export default function Home() {
                     Make your own<br />logo with AI
                   </h1>
                   <p style={{ fontSize: 14.5, color: '#4b5563', lineHeight: 1.6, wordBreak: 'keep-all' }}>
-                    AI LOGO PRO가 단 몇 초 만에 브랜드에 어울리는 최적의 프리미엄 로고 시안을 생성합니다. 회사명을 입력하여 시작해 보세요.
+                    AI LOGO PRO가 단 몇 초 만에 브랜드에 어울리는 최적의 프리미엄 로고 시안을 생성합니다. 전문디자이너와 함께 만들어 보세요.
                   </p>
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                   <div>
                     <label htmlFor="company-name-input" style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#4b5563', marginBottom: 8, letterSpacing: '0.02em' }}>
-                      COMPANY NAME
+                      What your name?
                     </label>
                     <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
                       <input
@@ -2746,7 +2746,7 @@ export default function Home() {
                           setWizardBrandNameInput(e.target.value)
                           setWizardError('')
                         }}
-                        placeholder="Enter your company name"
+                        placeholder="Are you Pro?"
                         style={{ width: '100%', height: 50, border: '1px solid rgba(0, 242, 254, 0.4)', borderRadius: 12, padding: '0 44px 0 16px', fontSize: 15, background: '#ffffff', outline: 'none' }}
                         className="wizard-input-cyan"
                       />
@@ -2786,7 +2786,7 @@ export default function Home() {
                         <path d="M12 20h9" />
                         <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
                       </svg>
-                      GENERATE LOGOS
+                      START Logos Pro
                     </span>
                   </button>
                 </div>
