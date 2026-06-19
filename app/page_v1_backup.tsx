@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
@@ -728,30 +728,6 @@ export default function Home() {
   const isApplyingHistoryRef = useRef(false)
   const lastHistorySignatureRef = useRef('')
   const conditionStartedAtRef = useRef<number | null>(null)
-
-  // UI Version Toggle (V1 vs V2)
-  const [uiVersion, setUiVersion] = useState<'v1' | 'v2'>('v2')
-
-  // Brand Code Screen Wizard States
-  const [wizardMode, setWizardMode] = useState<'new' | 'existing'>('new')
-  const [wizardBusinessDesc, setWizardBusinessDesc] = useState('')
-  const [wizardSlogan, setWizardSlogan] = useState('')
-  const [wizardBrandCode, setWizardBrandCode] = useState('')
-  const [wizardError, setWizardError] = useState('')
-  const [wizardPreviewBrief, setWizardPreviewBrief] = useState<BrandBrief | null>(null)
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search)
-      const ui = params.get('ui')
-      if (ui === 'v1') {
-        setUiVersion('v1')
-      } else if (ui === 'v2') {
-        setUiVersion('v2')
-      }
-    }
-  }, [])
-
 
   const historySnapshot = useMemo<AppHistoryState>(() => ({
     __aiLogoticsHistory: true,
@@ -2256,41 +2232,22 @@ export default function Home() {
   return (
     <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', background: '#ffffff' }}>
       {showAppHeader && (
-        uiVersion === 'v1' ? (
-          <header style={{ padding: '10px 16px', borderBottom: '1px solid rgba(17,17,17,.12)', display: 'grid', gridTemplateColumns: '380px minmax(620px, 1fr) 620px', alignItems: 'center', gap: 14, minHeight: 64, overflow: 'hidden' }}>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, minWidth: 0, width: '100%' }}>
-              <div style={{ fontSize: 26, fontWeight: 900, letterSpacing: '-.04em', color: '#111111', lineHeight: 1, whiteSpace: 'nowrap' }}>AI Logics</div>
-              <div style={{ fontSize: 12, fontWeight: 700, color: '#6b7280', letterSpacing: '.02em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Logo Judgment Assistant</div>
-            </div>
-            <div style={{ justifySelf: 'stretch', width: '100%', minWidth: 0, overflow: 'hidden', height: 34, display: 'flex', alignItems: 'center' }} aria-live="polite" aria-label="AI Logics 상태 안내">
-              <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 13, fontWeight: 800, color: '#374151' }}>
-                {headerStatusMessage}
-              </span>
-            </div>
-            <div style={{ textAlign: 'right', fontSize: 12, color: '#4d4d4d', justifySelf: 'stretch' }}>
-              <div>참가자 코드: {participantId || '-'}</div>
-              <div>세션 ID: {assignments[0]?.latinSquareGroup ?? '-'}</div>
-              <div style={{ color: '#9ca3af' }}>연구자 로그: 내부 저장 중</div>
-            </div>
-          </header>
-        ) : (
-          <header style={{ padding: '10px 16px', background: '#0b0f19', borderBottom: '1px solid #1f2937', display: 'grid', gridTemplateColumns: '380px minmax(620px, 1fr) 620px', alignItems: 'center', gap: 14, minHeight: 64, overflow: 'hidden' }}>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, minWidth: 0, width: '100%' }}>
-              <div style={{ fontSize: 26, fontWeight: 900, letterSpacing: '-.04em', color: '#ffffff', lineHeight: 1, whiteSpace: 'nowrap' }}>AI Logics</div>
-              <div style={{ fontSize: 12, fontWeight: 700, color: '#9ca3af', letterSpacing: '.02em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Logo Judgment Assistant</div>
-            </div>
-            <div className="marquee-container" style={{ justifySelf: 'stretch', width: '100%', minWidth: 0, height: 34, display: 'flex', alignItems: 'center' }} aria-live="polite" aria-label="AI Logics 상태 안내">
-              <span className="marquee-content" style={{ minWidth: 0, fontSize: 13.5, fontWeight: 800, color: '#f3f4f6' }}>
-                {headerStatusMessage}
-              </span>
-            </div>
-            <div style={{ textAlign: 'right', fontSize: 12, color: '#9ca3af', justifySelf: 'stretch', lineHeight: 1.35 }}>
-              <div>참가자 코드: {participantId || '-'}</div>
-              <div>세션 ID: {assignments[0]?.latinSquareGroup ?? '-'}</div>
-              <div style={{ color: '#6b7280' }}>연구자 로그: 내부 저장 중</div>
-            </div>
-          </header>
-        )
+        <header style={{ padding: '10px 16px', borderBottom: '1px solid rgba(17,17,17,.12)', display: 'grid', gridTemplateColumns: '380px minmax(620px, 1fr) 620px', alignItems: 'center', gap: 14, minHeight: 64, overflow: 'hidden' }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, minWidth: 0, width: '100%' }}>
+            <div style={{ fontSize: 26, fontWeight: 900, letterSpacing: '-.04em', color: '#111111', lineHeight: 1, whiteSpace: 'nowrap' }}>AI Logics</div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: '#6b7280', letterSpacing: '.02em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Logo Judgment Assistant</div>
+          </div>
+          <div style={{ justifySelf: 'stretch', width: '100%', minWidth: 0, overflow: 'hidden', height: 34, display: 'flex', alignItems: 'center' }} aria-live="polite" aria-label="AI Logics 상태 안내">
+            <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 13, fontWeight: 800, color: '#374151' }}>
+              {headerStatusMessage}
+            </span>
+          </div>
+          <div style={{ textAlign: 'right', fontSize: 12, color: '#4d4d4d', justifySelf: 'stretch' }}>
+            <div>참가자 코드: {participantId || '-'}</div>
+            <div>세션 ID: {assignments[0]?.latinSquareGroup ?? '-'}</div>
+            <div style={{ color: '#9ca3af' }}>연구자 로그: 내부 저장 중</div>
+          </div>
+        </header>
       )}
 
       <main style={{ flex: 1, overflow: 'auto', padding: 16 }} onClickCapture={handleUiClickCapture}>
@@ -2557,326 +2514,98 @@ export default function Home() {
         )}
 
         {showBrief && (
-          uiVersion === 'v1' ? (
-            <div style={{ maxWidth: 980, margin: '0 auto', display: 'grid', gap: 14 }}>
-              <section style={{ border: '1px solid rgba(17,17,17,.14)', borderRadius: 16, padding: 22, background: '#ffffff' }}>
-                <div style={{ fontSize: 12, fontWeight: 800, color: currentConditionColor, marginBottom: 8 }}>
-                  조건 {activeAssignment.order}/3 · {activeAssignment.conditionLabel}
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, alignItems: 'start', marginBottom: 18 }}>
-                  <div>
-                    <div style={{ fontSize: 24, fontWeight: 900, color: '#111111', letterSpacing: '-.03em', marginBottom: 6 }}>
-                      브랜드 브리프
-                    </div>
-                    <div style={{ fontSize: 15, color: '#374151', lineHeight: 1.65 }}>
-                      로고 시안을 보기 전, 브랜드의 맥락과 판단 기준이 되는 핵심 정보를 먼저 확인해 주세요.
-                    </div>
+          <div style={{ maxWidth: 980, margin: '0 auto', display: 'grid', gap: 14 }}>
+            <section style={{ border: '1px solid rgba(17,17,17,.14)', borderRadius: 16, padding: 22, background: '#ffffff' }}>
+              <div style={{ fontSize: 12, fontWeight: 800, color: currentConditionColor, marginBottom: 8 }}>
+                조건 {activeAssignment.order}/3 · {activeAssignment.conditionLabel}
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, alignItems: 'start', marginBottom: 18 }}>
+                <div>
+                  <div style={{ fontSize: 24, fontWeight: 900, color: '#111111', letterSpacing: '-.03em', marginBottom: 6 }}>
+                    브랜드 브리프
                   </div>
-                  <div style={{ border: '1px solid rgba(17,17,17,.14)', borderRadius: 999, padding: '7px 12px', fontSize: 12, fontWeight: 800, color: '#111111', background: '#f7f7f7', whiteSpace: 'nowrap' }}>
-                    {activeAssignment.setBriefCode}
+                  <div style={{ fontSize: 15, color: '#374151', lineHeight: 1.65 }}>
+                    로고 시안을 보기 전, 브랜드의 맥락과 판단 기준이 되는 핵심 정보를 먼저 확인해 주세요.
                   </div>
                 </div>
-
-                <div style={{ border: '1px solid rgba(17,17,17,.12)', borderRadius: 14, padding: 18, background: '#f8f8f8', marginBottom: 14 }}>
-                  <div style={{ fontSize: 12, color: '#6b7280', fontWeight: 800, marginBottom: 6 }}>브랜드명</div>
-                  <div style={{ fontSize: 24, fontWeight: 900, color: '#111111', letterSpacing: '-.02em', marginBottom: 10 }}>
-                    {activeBrief.name}
-                  </div>
-                  {activeBrief.namingMeaning && (
-                    <div style={{ fontSize: 14, color: '#333333', lineHeight: 1.75 }}>
-                      {activeBrief.namingMeaning}
-                    </div>
-                  )}
+                <div style={{ border: '1px solid rgba(17,17,17,.14)', borderRadius: 999, padding: '7px 12px', fontSize: 12, fontWeight: 800, color: '#111111', background: '#f7f7f7', whiteSpace: 'nowrap' }}>
+                  {activeAssignment.setBriefCode}
                 </div>
+              </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 12, marginBottom: 14 }}>
-                  {[
-                    ['업종', activeBrief.category],
-                    ['가격대', activeBrief.priceRange],
-                    ['타깃', activeBrief.target],
-                    ['톤앤매너', activeBrief.toneManner],
-                    ['개발 방향', activeBrief.developmentDirection],
-                    ['브랜드 개요', activeBrief.overview],
-                    ['포지셔닝', activeBrief.positioning],
-                    ['경쟁 맥락', activeBrief.competitiveContext ?? activeBrief.competitors],
-                  ].filter(([, value]) => !!value).map(([label, value]) => (
-                    <div key={label} style={{ border: '1px solid rgba(17,17,17,.1)', borderRadius: 12, padding: 14, background: '#ffffff' }}>
-                      <div style={{ fontSize: 12, color: '#6b7280', fontWeight: 800, marginBottom: 7 }}>{label}</div>
-                      <div style={{ fontSize: 14, color: '#222222', lineHeight: 1.72 }}>{value}</div>
-                    </div>
-                  ))}
+              <div style={{ border: '1px solid rgba(17,17,17,.12)', borderRadius: 14, padding: 18, background: '#f8f8f8', marginBottom: 14 }}>
+                <div style={{ fontSize: 12, color: '#6b7280', fontWeight: 800, marginBottom: 6 }}>브랜드명</div>
+                <div style={{ fontSize: 24, fontWeight: 900, color: '#111111', letterSpacing: '-.02em', marginBottom: 10 }}>
+                  {activeBrief.name}
                 </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                  <div style={{ border: '1px solid rgba(17,17,17,.1)', borderRadius: 12, padding: 14, background: '#ffffff' }}>
-                    <div style={{ fontSize: 12, color: '#6b7280', fontWeight: 800, marginBottom: 9 }}>핵심 가치</div>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                      {activeBrief.keywords.map((keyword) => (
-                        <span key={keyword} style={{ border: '1px solid rgba(17,17,17,.14)', background: '#f3f4f6', borderRadius: 999, padding: '6px 10px', fontSize: 12, color: '#111111', fontWeight: 800 }}>
-                          {keyword}
-                        </span>
-                      ))}
-                    </div>
+                {activeBrief.namingMeaning && (
+                  <div style={{ fontSize: 14, color: '#333333', lineHeight: 1.75 }}>
+                    {activeBrief.namingMeaning}
                   </div>
-                  <div style={{ border: '1px solid rgba(17,17,17,.1)', borderRadius: 12, padding: 14, background: '#ffffff' }}>
-                    <div style={{ fontSize: 12, color: '#6b7280', fontWeight: 800, marginBottom: 9 }}>적용 매체</div>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                      {(activeBrief.applicationMedia ?? activeBrief.environments).map((media) => (
-                        <span key={media} style={{ border: '1px solid rgba(17,17,17,.14)', background: '#f7f7f7', borderRadius: 999, padding: '6px 10px', fontSize: 12, color: '#333333', fontWeight: 700 }}>
-                          {media}
-                        </span>
-                      ))}
-                    </div>
+                )}
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 12, marginBottom: 14 }}>
+                {[
+                  ['업종', activeBrief.category],
+                  ['가격대', activeBrief.priceRange],
+                  ['타깃', activeBrief.target],
+                  ['톤앤매너', activeBrief.toneManner],
+                  ['개발 방향', activeBrief.developmentDirection],
+                  ['브랜드 개요', activeBrief.overview],
+                  ['포지셔닝', activeBrief.positioning],
+                  ['경쟁 맥락', activeBrief.competitiveContext ?? activeBrief.competitors],
+                ].filter(([, value]) => !!value).map(([label, value]) => (
+                  <div key={label} style={{ border: '1px solid rgba(17,17,17,.1)', borderRadius: 12, padding: 14, background: '#ffffff' }}>
+                    <div style={{ fontSize: 12, color: '#6b7280', fontWeight: 800, marginBottom: 7 }}>{label}</div>
+                    <div style={{ fontSize: 14, color: '#222222', lineHeight: 1.72 }}>{value}</div>
+                  </div>
+                ))}
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div style={{ border: '1px solid rgba(17,17,17,.1)', borderRadius: 12, padding: 14, background: '#ffffff' }}>
+                  <div style={{ fontSize: 12, color: '#6b7280', fontWeight: 800, marginBottom: 9 }}>핵심 가치</div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                    {activeBrief.keywords.map((keyword) => (
+                      <span key={keyword} style={{ border: '1px solid rgba(17,17,17,.14)', background: '#f3f4f6', borderRadius: 999, padding: '6px 10px', fontSize: 12, color: '#111111', fontWeight: 800 }}>
+                        {keyword}
+                      </span>
+                    ))}
                   </div>
                 </div>
-              </section>
-
-              <button
-                onClick={() => {
-                  setStep('instruction')
-                  logEvent('brief_review_complete', {
-                    condition: activeAssignment.condition,
-                    conditionLabel: activeAssignment.conditionLabel,
-                    setId: activeAssignment.setId,
-                    detail: '브랜드 브리프 확인 완료',
-                    payload: {
-                      brief_code: activeAssignment.setBriefCode,
-                      brand_name: activeBrief.name,
-                    },
-                  })
-                }}
-                style={{ justifySelf: 'end', border: 'none', background: currentConditionColor, color: '#ffffff', borderRadius: 10, padding: '10px 14px', fontSize: 14, fontWeight: 800, cursor: 'pointer' }}
-              >
-                조건 안내 확인하기
-              </button>
-            </div>
-          ) : (
-            <div style={{ minHeight: '80vh', display: 'grid', placeItems: 'center', padding: '20px 0' }}>
-              {wizardPreviewBrief === null ? (
-                <div className="brand-card-pulse wizard-fade-in" style={{ width: 'min(600px, 92vw)', background: '#ffffff', borderRadius: 16, border: '1px solid rgba(17,17,17,0.06)', padding: '40px 30px', display: 'flex', flexDirection: 'column' }}>
-                  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span style={{ fontSize: 24, fontWeight: 900, letterSpacing: '-.04em', color: '#111827' }}>AI Logo Generator</span>
-                    </div>
+                <div style={{ border: '1px solid rgba(17,17,17,.1)', borderRadius: 12, padding: 14, background: '#ffffff' }}>
+                  <div style={{ fontSize: 12, color: '#6b7280', fontWeight: 800, marginBottom: 9 }}>적용 매체</div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                    {(activeBrief.applicationMedia ?? activeBrief.environments).map((media) => (
+                      <span key={media} style={{ border: '1px solid rgba(17,17,17,.14)', background: '#f7f7f7', borderRadius: 999, padding: '6px 10px', fontSize: 12, color: '#333333', fontWeight: 700 }}>
+                        {media}
+                      </span>
+                    ))}
                   </div>
-                  <div style={{ fontSize: 13, color: '#6b7280', textAlign: 'center', marginBottom: 30, lineHeight: 1.6, wordBreak: 'keep-all' }}>
-                    Describe your business and let AI do the rest - generating logos from a curated collection of premium assets in seconds.
-                  </div>
-
-                  {wizardMode === 'new' ? (
-                    <div className="wizard-fade-in" style={{ display: 'grid', gap: 16 }}>
-                      <div>
-                        <div style={{ fontSize: 12, fontWeight: 700, color: '#4b5563', marginBottom: 6, letterSpacing: '.01em' }}>
-                          비즈니스 설명 (Description)
-                        </div>
-                        <textarea
-                          value={wizardBusinessDesc}
-                          onChange={(e) => {
-                            setWizardBusinessDesc(e.target.value)
-                            setWizardError('')
-                          }}
-                          placeholder="예: 일상 오브제가 지닌 가치와 균형 잡힌 생활 감각을 제공하는 취향성 리빙 편집숍 브랜드를 만들고 싶습니다."
-                          style={{ width: '100%', minHeight: 110, border: '1px solid rgba(17,17,17,.18)', borderRadius: 10, padding: '12px 14px', fontSize: 13.5, fontFamily: 'inherit', resize: 'vertical', background: '#ffffff', outline: 'none', lineHeight: 1.5 }}
-                        />
-                      </div>
-
-                      <div>
-                        <div style={{ fontSize: 12, fontWeight: 700, color: '#4b5563', marginBottom: 6, letterSpacing: '.01em' }}>
-                          브랜드 슬로건 (Slogan, 선택사항)
-                        </div>
-                        <input
-                          type="text"
-                          value={wizardSlogan}
-                          onChange={(e) => {
-                            setWizardSlogan(e.target.value)
-                            setWizardError('')
-                          }}
-                          placeholder="예: Everyday Objet & Balance"
-                          style={{ width: '100%', height: 44, border: '1px solid rgba(17,17,17,.18)', borderRadius: 10, padding: '0 14px', fontSize: 13.5, background: '#ffffff', outline: 'none' }}
-                        />
-                      </div>
-
-                      <div>
-                        <div style={{ fontSize: 12, fontWeight: 700, color: '#4b5563', marginBottom: 6, letterSpacing: '.01em' }}>
-                          새로운 브랜드 코드 (Brand Code)
-                        </div>
-                        <input
-                          type="text"
-                          value={wizardBrandCode}
-                          onChange={(e) => {
-                            setWizardBrandCode(e.target.value)
-                            setWizardError('')
-                          }}
-                          placeholder="저장할 브랜드 코드를 기입하세요 (예: B0002)"
-                          style={{ width: '100%', height: 44, border: '1px solid rgba(17,17,17,.18)', borderRadius: 10, padding: '0 14px', fontSize: 13.5, background: '#ffffff', outline: 'none' }}
-                        />
-                      </div>
-
-                      {wizardError && (
-                        <div style={{ color: '#dc2626', fontSize: 12.5, fontWeight: 700, padding: '2px 4px' }}>
-                          ⚠️ {wizardError}
-                        </div>
-                      )}
-
-                      <button
-                        onClick={() => {
-                          if (!wizardBusinessDesc.trim()) {
-                            setWizardError('비즈니스 설명을 기입해 주세요.')
-                            return
-                          }
-                          if (!wizardBrandCode.trim()) {
-                            setWizardError('브랜드 코드를 입력해 주세요.')
-                            return
-                          }
-                          if (wizardBrandCode.trim().toUpperCase() !== activeAssignment.setBriefCode.trim().toUpperCase()) {
-                            setWizardError(`올바르지 않은 브랜드 코드입니다. 실험을 진행하기 위해 약속된 브랜드 코드를 기입해 주세요. (힌트: ${activeAssignment.setBriefCode})`)
-                            return
-                          }
-                          setWizardPreviewBrief(activeBrief)
-                          setWizardError('')
-                        }}
-                        style={{ width: '100%', marginTop: 10, border: 'none', background: '#111827', color: '#ffffff', borderRadius: 10, padding: '14px 12px', fontSize: 14, fontWeight: 800, cursor: 'pointer', transition: 'all 0.15s ease' }}
-                      >
-                        브랜드 정보 등록 및 분석하기
-                      </button>
-
-                      <div style={{ textAlign: 'center', marginTop: 14 }}>
-                        <button
-                          onClick={() => {
-                            setWizardMode('existing')
-                            setWizardError('')
-                          }}
-                          style={{ border: 'none', background: 'none', color: '#6b7280', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', textDecoration: 'underline' }}
-                        >
-                          기존 입력하신 브랜드 브리프가 있으신가요?
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="wizard-fade-in" style={{ display: 'grid', gap: 16 }}>
-                      <div>
-                        <div style={{ fontSize: 12, fontWeight: 700, color: '#4b5563', marginBottom: 6, letterSpacing: '.01em' }}>
-                          저장된 브랜드 브리프 코드를 입력하세요
-                        </div>
-                        <input
-                          type="text"
-                          value={wizardBrandCode}
-                          onChange={(e) => {
-                            setWizardBrandCode(e.target.value)
-                            setWizardError('')
-                          }}
-                          placeholder="예: B0002"
-                          style={{ width: '100%', height: 44, border: '1px solid rgba(17,17,17,.18)', borderRadius: 10, padding: '0 14px', fontSize: 13.5, background: '#ffffff', outline: 'none' }}
-                        />
-                      </div>
-
-                      {wizardError && (
-                        <div style={{ color: '#dc2626', fontSize: 12.5, fontWeight: 700, padding: '2px 4px' }}>
-                          ⚠️ {wizardError}
-                        </div>
-                      )}
-
-                      <button
-                        onClick={() => {
-                          if (!wizardBrandCode.trim()) {
-                            setWizardError('브랜드 코드를 입력해 주세요.')
-                            return
-                          }
-                          if (wizardBrandCode.trim().toUpperCase() !== activeAssignment.setBriefCode.trim().toUpperCase()) {
-                            setWizardError(`올바르지 않은 브랜드 코드입니다. 저장된 코드를 기입해 주세요. (힌트: ${activeAssignment.setBriefCode})`)
-                            return
-                          }
-                          setWizardPreviewBrief(activeBrief)
-                          setWizardError('')
-                        }}
-                        style={{ width: '100%', marginTop: 10, border: 'none', background: '#111827', color: '#ffffff', borderRadius: 10, padding: '14px 12px', fontSize: 14, fontWeight: 800, cursor: 'pointer', transition: 'all 0.15s ease' }}
-                      >
-                        불러오기
-                      </button>
-
-                      <div style={{ textAlign: 'center', marginTop: 14 }}>
-                        <button
-                          onClick={() => {
-                            setWizardMode('new')
-                            setWizardError('')
-                          }}
-                          style={{ border: 'none', background: 'none', color: '#6b7280', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', textDecoration: 'underline' }}
-                        >
-                          새로운 브랜드를 처음부터 생성하시겠습니까?
-                        </button>
-                      </div>
-                    </div>
-                  )}
                 </div>
-              ) : (
-                <div className="brand-card-pulse wizard-fade-in" style={{ width: 'min(640px, 92vw)', background: '#ffffff', borderRadius: 16, border: '1px solid rgba(17,17,17,0.06)', padding: '40px 30px', display: 'flex', flexDirection: 'column' }}>
-                  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
-                    <span style={{ fontSize: 22, fontWeight: 900, letterSpacing: '-.03em', color: '#111827' }}>AI 분석 결과 확인</span>
-                  </div>
-                  <div style={{ fontSize: 13, color: '#6b7280', textAlign: 'center', marginBottom: 26, lineHeight: 1.6, wordBreak: 'keep-all' }}>
-                    입력하신 브랜드 브리프 정보가 분석되었습니다. 아래의 핵심 맥락이 로고 시안 생성의 기준이 됩니다.
-                  </div>
+              </div>
+            </section>
 
-                  <div style={{ display: 'grid', gap: 12, border: '1px solid rgba(17,17,17,.08)', borderRadius: 12, padding: 18, background: '#fafafa', marginBottom: 24, fontSize: 13.5, lineHeight: 1.65 }}>
-                    <div style={{ borderBottom: '1px solid rgba(17,17,17,.06)', paddingBottom: 8 }}>
-                      <span style={{ fontWeight: 800, color: '#4b5563', marginRight: 10 }}>브랜드명:</span>
-                      <span style={{ fontWeight: 900, color: '#111827', fontSize: 15 }}>{wizardPreviewBrief.name}</span>
-                    </div>
-                    {wizardBusinessDesc && (
-                      <div style={{ borderBottom: '1px solid rgba(17,17,17,.06)', paddingBottom: 8 }}>
-                        <span style={{ fontWeight: 800, color: '#4b5563', display: 'block', marginBottom: 3 }}>입력된 비즈니스 설명:</span>
-                        <span style={{ color: '#111827', fontStyle: 'italic' }}>&ldquo;{wizardBusinessDesc}&rdquo;</span>
-                      </div>
-                    )}
-                    <div style={{ borderBottom: '1px solid rgba(17,17,17,.06)', paddingBottom: 8 }}>
-                      <span style={{ fontWeight: 800, color: '#4b5563', marginRight: 10 }}>업종:</span>
-                      <span style={{ color: '#333333' }}>{wizardPreviewBrief.category}</span>
-                    </div>
-                    <div style={{ borderBottom: '1px solid rgba(17,17,17,.06)', paddingBottom: 8 }}>
-                      <span style={{ fontWeight: 800, color: '#4b5563', marginRight: 10 }}>포지셔닝:</span>
-                      <span style={{ color: '#333333' }}>{wizardPreviewBrief.positioning}</span>
-                    </div>
-                    <div>
-                      <span style={{ fontWeight: 800, color: '#4b5563', display: 'block', marginBottom: 5 }}>핵심 키워드:</span>
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                        {wizardPreviewBrief.keywords.map((k) => (
-                          <span key={k} style={{ border: '1px solid rgba(17,17,17,.1)', background: '#ffffff', borderRadius: 999, padding: '3px 8px', fontSize: 11.5, color: '#111827', fontWeight: 800 }}>
-                            #{k}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={() => {
-                      setStep('instruction')
-                      logEvent('brief_review_complete', {
-                        condition: activeAssignment.condition,
-                        conditionLabel: activeAssignment.conditionLabel,
-                        setId: activeAssignment.setId,
-                        detail: '브랜드 브리프 확인 완료',
-                        payload: {
-                          brief_code: activeAssignment.setBriefCode,
-                          brand_name: activeBrief.name,
-                          wizard_description: wizardBusinessDesc,
-                          wizard_slogan: wizardSlogan,
-                        },
-                      })
-                      // Reset wizard states for the next set
-                      setWizardPreviewBrief(null)
-                      setWizardBusinessDesc('')
-                      setWizardSlogan('')
-                      setWizardBrandCode('')
-                    }}
-                    style={{ width: '100%', border: 'none', background: '#111827', color: '#ffffff', borderRadius: 10, padding: '14px 12px', fontSize: 14, fontWeight: 800, cursor: 'pointer', transition: 'all 0.15s ease', boxShadow: '0 4px 12px rgba(17,17,17,0.15)' }}
-                  >
-                    내용이 맞다면 생성모드창으로 이동하세요
-                  </button>
-                </div>
-              )}
-            </div>
-          )
+            <button
+              onClick={() => {
+                setStep('instruction')
+                logEvent('brief_review_complete', {
+                  condition: activeAssignment.condition,
+                  conditionLabel: activeAssignment.conditionLabel,
+                  setId: activeAssignment.setId,
+                  detail: '브랜드 브리프 확인 완료',
+                  payload: {
+                    brief_code: activeAssignment.setBriefCode,
+                    brand_name: activeBrief.name,
+                  },
+                })
+              }}
+              style={{ justifySelf: 'end', border: 'none', background: currentConditionColor, color: '#ffffff', borderRadius: 10, padding: '10px 14px', fontSize: 14, fontWeight: 800, cursor: 'pointer' }}
+            >
+              조건 안내 확인하기
+            </button>
+          </div>
         )}
 
         {showInstruction && (
