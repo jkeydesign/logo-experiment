@@ -1,4 +1,4 @@
-﻿export type Condition = 'human' | 'collab' | 'ai' | 'mixed'
+export type Condition = 'human' | 'collab' | 'ai' | 'mixed'
 
 export type ConditionLabel =
   | '시안 제시형'
@@ -60,6 +60,7 @@ export interface Logo {
   imageSrc?: string
   isAiRecommended?: boolean
   aiRank?: number
+  aiExplanation?: string
 }
 
 export interface ConditionAssignment {

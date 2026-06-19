@@ -443,7 +443,7 @@ function aiEventMeta(card?: StimulusCardState | null, exposeScore = true) {
     isAiRecommended: card ? toRecommended(card.stimulus) : null,
     aiRank,
     aiScore,
-    aiExplanation: aiRank ? (AI_VISUAL_EVALUATION_TEXT[aiRank] ?? null) : null,
+    aiExplanation: card?.stimulus.aiExplanation ?? (aiRank ? (AI_VISUAL_EVALUATION_TEXT[aiRank] ?? null) : null),
   }
 }
 
@@ -605,7 +605,7 @@ function createEmptyStimulusRow(
     ai_recommend_rank: exposeAiRecommendation ? toRecommendRank(card.stimulus) : null,
     ai_rank: aiRank,
     ai_score: aiScore,
-    ai_explanation: exposeAiScore && aiRank ? (AI_VISUAL_EVALUATION_TEXT[aiRank] ?? null) : null,
+    ai_explanation: exposeAiScore ? (card.stimulus.aiExplanation ?? (aiRank ? (AI_VISUAL_EVALUATION_TEXT[aiRank] ?? null) : null)) : null,
     ai_score_brand_fit: exposeAiScore ? (card.aiScores?.brand_fit ?? null) : null,
     ai_score_target_fit: exposeAiScore ? (card.aiScores?.target_fit ?? null) : null,
     ai_score_competitive_diff: exposeAiScore ? (card.aiScores?.comp_diff ?? null) : null,
@@ -3248,7 +3248,7 @@ export default function Home() {
                     const showBadge = (isCollab || isAiCond) && isRecommended
                     const aiRank = card.stimulus.aiRank ?? null
                     const displayRank = aiRank ?? card.displayOrder
-                    const aiVisualText = AI_VISUAL_EVALUATION_TEXT[displayRank] ?? ''
+                    const aiVisualText = card.stimulus.aiExplanation ?? (AI_VISUAL_EVALUATION_TEXT[displayRank] ?? '')
 
                     const cardBorder = isActive
                       ? `2px solid ${currentConditionColor}`
