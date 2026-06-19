@@ -733,7 +733,6 @@ export default function Home() {
   const [uiVersion, setUiVersion] = useState<'v1' | 'v2'>('v2')
 
   // Brand Code Screen Wizard States
-  const [wizardMode, setWizardMode] = useState<'new' | 'existing'>('new')
   const [wizardBusinessDesc, setWizardBusinessDesc] = useState('')
   const [wizardSlogan, setWizardSlogan] = useState('')
   const [wizardBrandCode, setWizardBrandCode] = useState('')
@@ -2663,150 +2662,82 @@ export default function Home() {
                     Describe your business and let AI do the rest - generating logos from a curated collection of premium assets in seconds.
                   </div>
 
-                  {wizardMode === 'new' ? (
-                    <div className="wizard-fade-in" style={{ display: 'grid', gap: 16 }}>
-                      <div>
-                        <div style={{ fontSize: 12, fontWeight: 700, color: '#4b5563', marginBottom: 6, letterSpacing: '.01em' }}>
-                          비즈니스 설명 (Description)
-                        </div>
-                        <textarea
-                          value={wizardBusinessDesc}
-                          onChange={(e) => {
-                            setWizardBusinessDesc(e.target.value)
-                            setWizardError('')
-                          }}
-                          placeholder="예: 일상 오브제가 지닌 가치와 균형 잡힌 생활 감각을 제공하는 취향성 리빙 편집숍 브랜드를 만들고 싶습니다."
-                          style={{ width: '100%', minHeight: 110, border: '1px solid rgba(17,17,17,.18)', borderRadius: 10, padding: '12px 14px', fontSize: 13.5, fontFamily: 'inherit', resize: 'vertical', background: '#ffffff', outline: 'none', lineHeight: 1.5 }}
-                        />
+                  <div className="wizard-fade-in" style={{ display: 'grid', gap: 16 }}>
+                    <div>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: '#4b5563', marginBottom: 6, letterSpacing: '.01em' }}>
+                        코드 입력 (저장된 브랜드 브리프 불러오기)
                       </div>
-
-                      <div>
-                        <div style={{ fontSize: 12, fontWeight: 700, color: '#4b5563', marginBottom: 6, letterSpacing: '.01em' }}>
-                          브랜드 슬로건 (Slogan, 선택사항)
-                        </div>
-                        <input
-                          type="text"
-                          value={wizardSlogan}
-                          onChange={(e) => {
-                            setWizardSlogan(e.target.value)
-                            setWizardError('')
-                          }}
-                          placeholder="예: Everyday Objet & Balance"
-                          style={{ width: '100%', height: 44, border: '1px solid rgba(17,17,17,.18)', borderRadius: 10, padding: '0 14px', fontSize: 13.5, background: '#ffffff', outline: 'none' }}
-                        />
-                      </div>
-
-                      <div>
-                        <div style={{ fontSize: 12, fontWeight: 700, color: '#4b5563', marginBottom: 6, letterSpacing: '.01em' }}>
-                          새로운 브랜드 코드 (Brand Code)
-                        </div>
-                        <input
-                          type="text"
-                          value={wizardBrandCode}
-                          onChange={(e) => {
-                            setWizardBrandCode(e.target.value)
-                            setWizardError('')
-                          }}
-                          placeholder="저장할 브랜드 코드를 기입하세요 (예: OVBNE)"
-                          style={{ width: '100%', height: 44, border: '1px solid rgba(17,17,17,.18)', borderRadius: 10, padding: '0 14px', fontSize: 13.5, background: '#ffffff', outline: 'none' }}
-                        />
-                      </div>
-
-                      {wizardError && (
-                        <div style={{ color: '#dc2626', fontSize: 12.5, fontWeight: 700, padding: '2px 4px' }}>
-                          ⚠️ {wizardError}
-                        </div>
-                      )}
-
-                      <button
-                        onClick={() => {
-                          if (!wizardBusinessDesc.trim()) {
-                            setWizardError('비즈니스 설명을 기입해 주세요.')
-                            return
-                          }
-                          if (!wizardBrandCode.trim()) {
-                            setWizardError('브랜드 코드를 입력해 주세요.')
-                            return
-                          }
-                          if (wizardBrandCode.trim().toUpperCase() !== activeAssignment.setBriefCode.trim().toUpperCase()) {
-                            setWizardError(`올바르지 않은 브랜드 코드입니다. 실험을 진행하기 위해 약속된 브랜드 코드를 기입해 주세요. (힌트: ${activeAssignment.setBriefCode})`)
-                            return
-                          }
-                          setWizardPreviewBrief(activeBrief)
+                      <input
+                        type="text"
+                        value={wizardBrandCode}
+                        onChange={(e) => {
+                          setWizardBrandCode(e.target.value)
                           setWizardError('')
                         }}
-                        style={{ width: '100%', marginTop: 10, border: 'none', background: '#111827', color: '#ffffff', borderRadius: 10, padding: '14px 12px', fontSize: 14, fontWeight: 800, cursor: 'pointer', transition: 'all 0.15s ease' }}
-                      >
-                        브랜드 정보 등록 및 분석하기
-                      </button>
-
-                      <div style={{ textAlign: 'center', marginTop: 14 }}>
-                        <button
-                          onClick={() => {
-                            setWizardMode('existing')
-                            setWizardError('')
-                          }}
-                          style={{ border: 'none', background: 'none', color: '#6b7280', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', textDecoration: 'underline' }}
-                        >
-                          기존 입력하신 브랜드 브리프가 있으신가요?
-                        </button>
-                      </div>
+                        placeholder="예: OVBNE"
+                        style={{ width: '100%', height: 44, border: '1px solid rgba(17,17,17,.18)', borderRadius: 10, padding: '0 14px', fontSize: 13.5, background: '#ffffff', outline: 'none' }}
+                      />
                     </div>
-                  ) : (
-                    <div className="wizard-fade-in" style={{ display: 'grid', gap: 16 }}>
-                      <div>
-                        <div style={{ fontSize: 12, fontWeight: 700, color: '#4b5563', marginBottom: 6, letterSpacing: '.01em' }}>
-                          저장된 브랜드 브리프 코드를 입력하세요
-                        </div>
-                        <input
-                          type="text"
-                          value={wizardBrandCode}
-                          onChange={(e) => {
-                            setWizardBrandCode(e.target.value)
-                            setWizardError('')
-                          }}
-                          placeholder="예: OVBNE"
-                          style={{ width: '100%', height: 44, border: '1px solid rgba(17,17,17,.18)', borderRadius: 10, padding: '0 14px', fontSize: 13.5, background: '#ffffff', outline: 'none' }}
-                        />
+
+                    <div>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: '#4b5563', marginBottom: 6, letterSpacing: '.01em' }}>
+                        비즈니스 설명 (Description)
                       </div>
-
-                      {wizardError && (
-                        <div style={{ color: '#dc2626', fontSize: 12.5, fontWeight: 700, padding: '2px 4px' }}>
-                          ⚠️ {wizardError}
-                        </div>
-                      )}
-
-                      <button
-                        onClick={() => {
-                          if (!wizardBrandCode.trim()) {
-                            setWizardError('브랜드 코드를 입력해 주세요.')
-                            return
-                          }
-                          if (wizardBrandCode.trim().toUpperCase() !== activeAssignment.setBriefCode.trim().toUpperCase()) {
-                            setWizardError(`올바르지 않은 브랜드 코드입니다. 저장된 코드를 기입해 주세요. (힌트: ${activeAssignment.setBriefCode})`)
-                            return
-                          }
-                          setWizardPreviewBrief(activeBrief)
+                      <textarea
+                        value={wizardBusinessDesc}
+                        onChange={(e) => {
+                          setWizardBusinessDesc(e.target.value)
                           setWizardError('')
                         }}
-                        style={{ width: '100%', marginTop: 10, border: 'none', background: '#111827', color: '#ffffff', borderRadius: 10, padding: '14px 12px', fontSize: 14, fontWeight: 800, cursor: 'pointer', transition: 'all 0.15s ease' }}
-                      >
-                        불러오기
-                      </button>
-
-                      <div style={{ textAlign: 'center', marginTop: 14 }}>
-                        <button
-                          onClick={() => {
-                            setWizardMode('new')
-                            setWizardError('')
-                          }}
-                          style={{ border: 'none', background: 'none', color: '#6b7280', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', textDecoration: 'underline' }}
-                        >
-                          새로운 브랜드를 처음부터 생성하시겠습니까?
-                        </button>
-                      </div>
+                        placeholder="예: 일상 오브제가 지닌 가치와 균형 잡힌 생활 감각을 제공하는 취향성 리빙 편집숍 브랜드를 만들고 싶습니다."
+                        style={{ width: '100%', minHeight: 110, border: '1px solid rgba(17,17,17,.18)', borderRadius: 10, padding: '12px 14px', fontSize: 13.5, fontFamily: 'inherit', resize: 'vertical', background: '#ffffff', outline: 'none', lineHeight: 1.5 }}
+                      />
                     </div>
-                  )}
+
+                    <div>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: '#4b5563', marginBottom: 6, letterSpacing: '.01em' }}>
+                        브랜드 슬로건 (Slogan, 선택사항)
+                      </div>
+                      <input
+                        type="text"
+                        value={wizardSlogan}
+                        onChange={(e) => {
+                          setWizardSlogan(e.target.value)
+                          setWizardError('')
+                        }}
+                        placeholder="예: Everyday Objet & Balance"
+                        style={{ width: '100%', height: 44, border: '1px solid rgba(17,17,17,.18)', borderRadius: 10, padding: '0 14px', fontSize: 13.5, background: '#ffffff', outline: 'none' }}
+                      />
+                    </div>
+
+                    {wizardError && (
+                      <div style={{ color: '#dc2626', fontSize: 12.5, fontWeight: 700, padding: '2px 4px' }}>
+                        ⚠️ {wizardError}
+                      </div>
+                    )}
+
+                    <button
+                      onClick={() => {
+                        if (!wizardBrandCode.trim()) {
+                          setWizardError('브랜드 코드를 입력해 주세요.')
+                          return
+                        }
+                        if (wizardBrandCode.trim().toUpperCase() !== activeAssignment.setBriefCode.trim().toUpperCase()) {
+                          setWizardError(`올바르지 않은 브랜드 코드입니다. 저장된 코드를 기입해 주세요. (힌트: ${activeAssignment.setBriefCode})`)
+                          return
+                        }
+                        if (!wizardBusinessDesc.trim()) {
+                          setWizardError('비즈니스 설명을 기입해 주세요.')
+                          return
+                        }
+                        setWizardPreviewBrief(activeBrief)
+                        setWizardError('')
+                      }}
+                      style={{ width: '100%', marginTop: 10, border: 'none', background: '#111827', color: '#ffffff', borderRadius: 10, padding: '14px 12px', fontSize: 14, fontWeight: 800, cursor: 'pointer', transition: 'all 0.15s ease' }}
+                    >
+                      브랜드 정보 등록 및 분석하기
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <div className="brand-card-pulse wizard-fade-in" style={{ width: 'min(640px, 92vw)', background: '#ffffff', borderRadius: 16, border: '1px solid rgba(17,17,17,0.06)', padding: '40px 30px', display: 'flex', flexDirection: 'column' }}>
