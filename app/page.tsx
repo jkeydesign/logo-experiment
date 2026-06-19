@@ -712,6 +712,26 @@ function InteractiveDotGrid() {
       const cols = Math.floor(width / dotSpacing) + 2
       const rows = Math.floor(height / dotSpacing) + 2
       
+      // Draw grid lines
+      ctx.strokeStyle = 'rgba(107, 114, 128, 0.06)'
+      ctx.lineWidth = 0.5
+      
+      for (let i = 0; i < cols; i++) {
+        const x = i * dotSpacing
+        ctx.beginPath()
+        ctx.moveTo(x, 0)
+        ctx.lineTo(x, height)
+        ctx.stroke()
+      }
+      
+      for (let j = 0; j < rows; j++) {
+        const y = j * dotSpacing
+        ctx.beginPath()
+        ctx.moveTo(0, y)
+        ctx.lineTo(width, y)
+        ctx.stroke()
+      }
+      
       for (let i = 0; i < cols; i++) {
         for (let j = 0; j < rows; j++) {
           const x = i * dotSpacing
@@ -1069,6 +1089,8 @@ export default function Home() {
     setVisibleGeneratedCount(0)
     setFinalSelectedStimulusId(null)
     setFinalSelectionTs(null)
+    setPostSurveyAnswers(INITIAL_POST_SURVEY)
+    setPostSurveyError('')
   }, [])
 
   const rebuildRows = useCallback((nextCards: StimulusCardState[], selectedId: string | null, selectedTs: string | null) => {
@@ -2064,10 +2086,44 @@ export default function Home() {
       },
     })
 
-    setPostSurveyAnswers(INITIAL_POST_SURVEY)
     setPostSurveyError('')
     setStep('post_survey')
   }, [activeAssignment, finalSelectedStimulusId, cards, currentConditionIndex, assignments.length, logEvent, participantId])
+
+  const saveIntermediatePostSurvey = useCallback(() => {
+    if (!activeAssignment) return
+    const cond = activeAssignment.condition
+    const needsCollab = cond === 'collab'
+    const needsAiOnly = cond === 'ai'
+    logEvent('condition_post_survey_draft', {
+      condition: activeAssignment.condition,
+      conditionLabel: activeAssignment.conditionLabel,
+      setId: activeAssignment.setId,
+      stimulusId: finalSelectedStimulusId ?? undefined,
+      detail: `조건별 사후 설문 중간 저장: ${activeAssignment.conditionLabel}`,
+      payload: {
+        participant_code: participantId,
+        latin_square_group: activeAssignment.latinSquareGroup,
+        trial_order: activeAssignment.order,
+        condition_type: cond === 'human' ? 'presentation_only' : cond === 'collab' ? 'recommendation' : 'evaluation',
+        stimulus_set_id: activeAssignment.setId,
+        selected_final_logo_id: finalSelectedStimulusId,
+        manipulation_check_ai_info_type: postSurveyAnswers.infoType,
+        final_choice_appropriateness: postSurveyAnswers.q3,
+        perceived_control: postSurveyAnswers.q4,
+        perceived_ai_intervention: postSurveyAnswers.q5,
+        ai_recommendation_trust: needsCollab ? (postSurveyAnswers.q6 ?? null) : null,
+        ai_recommendation_usefulness: needsCollab ? (postSurveyAnswers.q7 ?? null) : null,
+        ai_score_rank_trust: needsAiOnly ? (postSurveyAnswers.q6 ?? null) : null,
+        ai_score_rank_usefulness: needsAiOnly ? (postSurveyAnswers.q7 ?? null) : null,
+        ai_score_rank_criterion_shift: needsAiOnly ? (postSurveyAnswers.q8 ?? null) : null,
+        condition_difficulty_comment: postSurveyAnswers.freeText || null,
+      },
+    })
+    alert('중간 저장되었습니다.')
+  }, [
+    activeAssignment, postSurveyAnswers, finalSelectedStimulusId, participantId, logEvent
+  ])
 
   const submitPostSurvey = useCallback(() => {
     if (!activeAssignment) return
@@ -2780,13 +2836,7 @@ export default function Home() {
                     className="wizard-btn-gradient"
                     style={{ width: '100%', height: 50, border: 'none', color: '#ffffff', borderRadius: 9999, fontSize: 15, fontWeight: 900, letterSpacing: '0.06em', cursor: 'pointer', boxShadow: '0 4px 15px rgba(0, 0, 0, 0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                   >
-                    <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M12 20h9" />
-                        <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
-                      </svg>
-                      START Logos Pro
-                    </span>
+                    START Logos Pro
                   </button>
                 </div>
               </div>
@@ -2794,7 +2844,7 @@ export default function Home() {
               {/* Right Column */}
               <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%' }}>
                 <img
-                  src="/logo_mockups_grayscale.png"
+                  src="logo_mockups_grayscale.png"
                   alt="AI Logo Pro Mockup Grayscale"
                   style={{ width: '100%', maxWidth: 500, height: 'auto', borderRadius: 16, border: '1px solid rgba(17,17,17,0.06)', boxShadow: '0 12px 36px rgba(0,0,0,0.08)' }}
                 />
@@ -3894,13 +3944,27 @@ export default function Home() {
                   </div>
                 )}
 
-                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 4 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12 }}>
                   <button
-                    onClick={submitPostSurvey}
-                    style={{ border: 'none', background: currentConditionColor, color: '#ffffff', borderRadius: 10, padding: '11px 20px', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}
+                    onClick={() => setStep('evaluation')}
+                    style={{ border: '1px solid rgba(17,17,17,.18)', background: '#ffffff', color: '#333333', borderRadius: 10, padding: '11px 20px', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}
                   >
-                    {currentConditionIndex < assignments.length - 1 ? '저장 후 다음 조건' : '저장 후 비교 설문'}
+                    뒤로 가서 수정/확인하기
                   </button>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button
+                      onClick={saveIntermediatePostSurvey}
+                      style={{ border: '1px solid rgba(17,17,17,.18)', background: '#ffffff', color: '#333333', borderRadius: 10, padding: '11px 20px', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}
+                    >
+                      중간 저장
+                    </button>
+                    <button
+                      onClick={submitPostSurvey}
+                      style={{ border: 'none', background: currentConditionColor, color: '#ffffff', borderRadius: 10, padding: '11px 20px', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}
+                    >
+                      다음 단계로
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
