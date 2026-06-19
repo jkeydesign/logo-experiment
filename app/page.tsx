@@ -81,10 +81,9 @@ const INITIAL_DEBRIEF_CHECK: DebriefCheckAnswers = {
   suspectedNonRealtime: null, suspicionComment: '',
 }
 const POST_SURVEY_INFO_TYPE_OPTIONS: Array<{ label: string; value: string }> = [
-  { label: 'AI 관련 정보 없이 로고 시안만 제시되었다', value: 'visual_only' },
-  { label: 'AI 추천 시안이 표시되었다', value: 'recommendation' },
-  { label: 'AI 평가 순위와 시각 평가 설명이 표시되었다.', value: 'score_rank' },
-  { label: '잘 모르겠다', value: 'unknown' },
+  { label: '로고 시안만 제시되었다.', value: 'visual_only' },
+  { label: 'AI 추천이 제시되었다.', value: 'recommendation' },
+  { label: 'AI 평가 내용과 순위가 제시되었다.', value: 'score_rank' },
 ]
 const POST_SURVEY_COMMON: Array<{ key: PostSurveyLikertKey; text: string }> = [
   { key: 'q3', text: '최종 선택한 시안은 적절하다고 생각한다.' },
