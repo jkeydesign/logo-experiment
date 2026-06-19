@@ -2674,7 +2674,7 @@ export default function Home() {
                           setWizardBrandCode(e.target.value)
                           setWizardError('')
                         }}
-                        placeholder="예: OVBNE"
+                        placeholder=""
                         style={{ width: '100%', height: 44, border: '1px solid rgba(17,17,17,.18)', borderRadius: 10, padding: '0 14px', fontSize: 13.5, background: '#ffffff', outline: 'none' }}
                       />
                     </div>
@@ -2689,7 +2689,7 @@ export default function Home() {
                           setWizardBusinessDesc(e.target.value)
                           setWizardError('')
                         }}
-                        placeholder="예: 일상 오브제가 지닌 가치와 균형 잡힌 생활 감각을 제공하는 취향성 리빙 편집숍 브랜드를 만들고 싶습니다."
+                        placeholder=""
                         style={{ width: '100%', minHeight: 110, border: '1px solid rgba(17,17,17,.18)', borderRadius: 10, padding: '12px 14px', fontSize: 13.5, fontFamily: 'inherit', resize: 'vertical', background: '#ffffff', outline: 'none', lineHeight: 1.5 }}
                       />
                     </div>
@@ -2705,7 +2705,7 @@ export default function Home() {
                           setWizardSlogan(e.target.value)
                           setWizardError('')
                         }}
-                        placeholder="예: Everyday Objet & Balance"
+                        placeholder=""
                         style={{ width: '100%', height: 44, border: '1px solid rgba(17,17,17,.18)', borderRadius: 10, padding: '0 14px', fontSize: 13.5, background: '#ffffff', outline: 'none' }}
                       />
                     </div>
@@ -2735,7 +2735,7 @@ export default function Home() {
                       }}
                       style={{ width: '100%', marginTop: 10, border: 'none', background: '#111827', color: '#ffffff', borderRadius: 10, padding: '14px 12px', fontSize: 14, fontWeight: 800, cursor: 'pointer', transition: 'all 0.15s ease' }}
                     >
-                      브랜드 정보 등록 및 분석하기
+                      브랜드 정보 불러오기
                     </button>
                   </div>
                 </div>
