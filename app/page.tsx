@@ -26,7 +26,7 @@ import type {
   StimulusLogRow,
 } from '@/types'
 
-type ScreenStep = 'consent' | 'participation_consent' | 'screening' | 'brief' | 'instruction' | 'evaluation' | 'result' | 'post_survey' | 'comparison_survey' | 'debriefing_check' | 'debriefing' | 'eligibility_collection' | 'completed'
+type ScreenStep = 'consent' | 'participation_consent' | 'screening' | 'brief_landing' | 'brief' | 'instruction' | 'evaluation' | 'result' | 'post_survey' | 'comparison_survey' | 'debriefing_check' | 'debriefing' | 'eligibility_collection' | 'completed'
 type RightTab = 'hold' | 'exclude'
 type EligibilityCheck = {
   q1: 'yes' | 'no' | null
@@ -841,6 +841,7 @@ export default function Home() {
   const [uiVersion, setUiVersion] = useState<'v1' | 'v2'>('v2')
 
   // Brand Code Screen Wizard States
+  const [wizardBrandNameInput, setWizardBrandNameInput] = useState('')
   const [wizardBusinessDesc, setWizardBusinessDesc] = useState('')
   const [wizardSlogan, setWizardSlogan] = useState('')
   const [wizardBrandCode, setWizardBrandCode] = useState('')
@@ -1183,7 +1184,7 @@ export default function Home() {
     startExperiment(Date.now())
     setParticipantError('')
     setCurrentConditionIndex(0)
-    setStep('brief')
+    setStep('brief_landing')
 
     logEvent('experiment_start', {
       detail: '실험 시작',
@@ -2252,6 +2253,7 @@ export default function Home() {
   const showConsentScreen = step === 'consent'
   const showParticipationConsent = step === 'participation_consent'
   const showScreeningScreen = step === 'screening'
+  const showBriefLanding = step === 'brief_landing' && activeAssignment && activeBrief
   const showBrief = step === 'brief' && activeAssignment && activeBrief
   const showInstruction = step === 'instruction' && activeAssignment && activeBrief
   const showEvaluation = step === 'evaluation' && activeAssignment && activeBrief
@@ -2363,24 +2365,40 @@ export default function Home() {
   return (
     <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', background: '#ffffff' }}>
       {showAppHeader && (
-        (step === 'brief' && wizardPreviewBrief === null) ? (
+        ((step === 'brief_landing' || step === 'brief') && wizardPreviewBrief === null) ? (
           <header style={{ padding: '10px 24px', background: '#ffffff', borderBottom: '1px solid rgba(17,17,17,.08)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', minHeight: 64 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ fontSize: 22, fontWeight: 900, letterSpacing: '-.05em', color: '#111827' }}>logopony</span>
+              <span style={{ fontSize: 22, fontWeight: 900, letterSpacing: '-.05em', color: '#111827' }}>AI LOGO PRO</span>
               <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#00f2fe', marginTop: 8 }}></span>
             </div>
             
             <div style={{ display: 'flex', alignItems: 'center', gap: 16, fontSize: 13, fontWeight: 700 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#9ca3af' }}>
-                <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 18, height: 18, borderRadius: '50%', background: '#e5e7eb', color: '#6b7280', fontSize: 10 }}>✓</span>
-                <span>Name</span>
-              </div>
+              {step === 'brief_landing' ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#00f2fe' }}>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 18, height: 18, borderRadius: '50%', background: '#00f2fe', color: '#ffffff', fontSize: 10, fontWeight: 800 }}>1</span>
+                  <span>Name</span>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#9ca3af' }}>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 18, height: 18, borderRadius: '50%', background: '#e5e7eb', color: '#6b7280', fontSize: 10 }}>✓</span>
+                  <span>Name</span>
+                </div>
+              )}
               <span style={{ color: '#d1d5db', fontSize: 11 }}>➔</span>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#00f2fe' }}>
-                <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 18, height: 18, borderRadius: '50%', background: '#00f2fe', color: '#ffffff', fontSize: 10, fontWeight: 800 }}>2</span>
-                <span>Details</span>
-              </div>
+              
+              {step === 'brief_landing' ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#9ca3af' }}>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 18, height: 18, borderRadius: '50%', background: '#f3f4f6', color: '#9ca3af', fontSize: 10 }}>2</span>
+                  <span>Details</span>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#00f2fe' }}>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 18, height: 18, borderRadius: '50%', background: '#00f2fe', color: '#ffffff', fontSize: 10, fontWeight: 800 }}>2</span>
+                  <span>Details</span>
+                </div>
+              )}
               <span style={{ color: '#d1d5db', fontSize: 11 }}>➔</span>
+              
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#9ca3af' }}>
                 <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 18, height: 18, borderRadius: '50%', background: '#f3f4f6', color: '#9ca3af', fontSize: 10 }}>3</span>
                 <span>Choose</span>
@@ -2400,10 +2418,10 @@ export default function Home() {
           uiVersion === 'v1' ? (
             <header style={{ padding: '10px 16px', borderBottom: '1px solid rgba(17,17,17,.12)', display: 'grid', gridTemplateColumns: '380px minmax(620px, 1fr) 620px', alignItems: 'center', gap: 14, minHeight: 64, overflow: 'hidden' }}>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, minWidth: 0, width: '100%' }}>
-                <div style={{ fontSize: 26, fontWeight: 900, letterSpacing: '-.04em', color: '#111111', lineHeight: 1, whiteSpace: 'nowrap' }}>AI Logics</div>
+                <div style={{ fontSize: 26, fontWeight: 900, letterSpacing: '-.04em', color: '#111111', lineHeight: 1, whiteSpace: 'nowrap' }}>AI LOGO PRO</div>
                 <div style={{ fontSize: 12, fontWeight: 700, color: '#6b7280', letterSpacing: '.02em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Logo Judgment Assistant</div>
               </div>
-              <div style={{ justifySelf: 'stretch', width: '100%', minWidth: 0, overflow: 'hidden', height: 34, display: 'flex', alignItems: 'center' }} aria-live="polite" aria-label="AI Logics 상태 안내">
+              <div style={{ justifySelf: 'stretch', width: '100%', minWidth: 0, overflow: 'hidden', height: 34, display: 'flex', alignItems: 'center' }} aria-live="polite" aria-label="AI LOGO PRO 상태 안내">
                 <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 13, fontWeight: 800, color: '#374151' }}>
                   {headerStatusMessage}
                 </span>
@@ -2417,10 +2435,10 @@ export default function Home() {
           ) : (
             <header style={{ padding: '10px 16px', background: '#0b0f19', borderBottom: '1px solid #1f2937', display: 'grid', gridTemplateColumns: '380px minmax(620px, 1fr) 620px', alignItems: 'center', gap: 14, minHeight: 64, overflow: 'hidden' }}>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, minWidth: 0, width: '100%' }}>
-                <div style={{ fontSize: 26, fontWeight: 900, letterSpacing: '-.04em', color: '#ffffff', lineHeight: 1, whiteSpace: 'nowrap' }}>AI Logics</div>
+                <div style={{ fontSize: 26, fontWeight: 900, letterSpacing: '-.04em', color: '#ffffff', lineHeight: 1, whiteSpace: 'nowrap' }}>AI LOGO PRO</div>
                 <div style={{ fontSize: 12, fontWeight: 700, color: '#9ca3af', letterSpacing: '.02em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Logo Judgment Assistant</div>
               </div>
-              <div className="marquee-container" style={{ justifySelf: 'stretch', width: '100%', minWidth: 0, height: 34, display: 'flex', alignItems: 'center' }} aria-live="polite" aria-label="AI Logics 상태 안내">
+              <div className="marquee-container" style={{ justifySelf: 'stretch', width: '100%', minWidth: 0, height: 34, display: 'flex', alignItems: 'center' }} aria-live="polite" aria-label="AI LOGO PRO 상태 안내">
                 <span className="marquee-content" style={{ minWidth: 0, fontSize: 13.5, fontWeight: 800, color: '#f3f4f6' }}>
                   {headerStatusMessage}
                 </span>
@@ -2698,6 +2716,95 @@ export default function Home() {
           </div>
         )}
 
+        {showBriefLanding && (
+          <div style={{ position: 'relative', minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 0', overflow: 'hidden' }}>
+            <InteractiveDotGrid />
+            <div className="brand-card-pulse wizard-fade-in" style={{ width: 'min(1160px, 94vw)', zIndex: 10, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 40, alignItems: 'center', background: 'rgba(255, 255, 255, 0.85)', backdropFilter: 'blur(16px)', borderRadius: 24, padding: '50px 40px', boxShadow: '0 12px 40px rgba(0,0,0,0.06)' }}>
+              
+              {/* Left Column */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 24, textAlign: 'left' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  <h1 style={{ fontSize: 'clamp(28px, 4vw, 42px)', fontWeight: 900, color: '#111827', letterSpacing: '-0.04em', lineHeight: 1.15 }}>
+                    Make your own<br />logo with AI
+                  </h1>
+                  <p style={{ fontSize: 14.5, color: '#4b5563', lineHeight: 1.6, wordBreak: 'keep-all' }}>
+                    AI LOGO PRO가 단 몇 초 만에 브랜드에 어울리는 최적의 프리미엄 로고 시안을 생성합니다. 회사명을 입력하여 시작해 보세요.
+                  </p>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                  <div>
+                    <label htmlFor="company-name-input" style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#4b5563', marginBottom: 8, letterSpacing: '0.02em' }}>
+                      COMPANY NAME
+                    </label>
+                    <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                      <input
+                        id="company-name-input"
+                        type="text"
+                        value={wizardBrandNameInput}
+                        onChange={(e) => {
+                          setWizardBrandNameInput(e.target.value)
+                          setWizardError('')
+                        }}
+                        placeholder="Enter your company name"
+                        style={{ width: '100%', height: 50, border: '1px solid rgba(0, 242, 254, 0.4)', borderRadius: 12, padding: '0 44px 0 16px', fontSize: 15, background: '#ffffff', outline: 'none' }}
+                        className="wizard-input-cyan"
+                      />
+                      <span style={{ position: 'absolute', right: 16, pointerEvents: 'none', display: 'flex', alignItems: 'center', color: '#9ca3af' }}>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M12 20h9" />
+                          <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+                        </svg>
+                      </span>
+                    </div>
+                  </div>
+
+                  {wizardError && (
+                    <div style={{ color: '#dc2626', fontSize: 13, fontWeight: 700, paddingLeft: 4 }}>
+                      ⚠️ {wizardError}
+                    </div>
+                  )}
+
+                  <button
+                    onClick={() => {
+                      if (!wizardBrandNameInput.trim()) {
+                        setWizardError('회사명을 기입해 주세요.')
+                        return
+                      }
+                      logEvent('landing_name_submitted', {
+                        payload: {
+                          brand_name: wizardBrandNameInput,
+                        }
+                      })
+                      setStep('brief')
+                    }}
+                    className="wizard-btn-gradient"
+                    style={{ width: '100%', height: 50, border: 'none', color: '#ffffff', borderRadius: 9999, fontSize: 15, fontWeight: 900, letterSpacing: '0.06em', cursor: 'pointer', boxShadow: '0 4px 15px rgba(0, 0, 0, 0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                  >
+                    <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M12 20h9" />
+                        <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+                      </svg>
+                      GENERATE LOGOS
+                    </span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Right Column */}
+              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%' }}>
+                <img
+                  src="/logo_mockups_grayscale.png"
+                  alt="AI Logo Pro Mockup Grayscale"
+                  style={{ width: '100%', maxWidth: 500, height: 'auto', borderRadius: 16, border: '1px solid rgba(17,17,17,0.06)', boxShadow: '0 12px 36px rgba(0,0,0,0.08)' }}
+                />
+              </div>
+
+            </div>
+          </div>
+        )}
+
         {showBrief && (
           uiVersion === 'v1' ? (
             <div style={{ maxWidth: 980, margin: '0 auto', display: 'grid', gap: 14 }}>
@@ -2899,7 +3006,13 @@ export default function Home() {
                       className="wizard-btn-gradient"
                       style={{ width: '100%', marginTop: 10, border: 'none', color: '#ffffff', borderRadius: 9999, padding: '14px 12px', fontSize: 14, fontWeight: 900, letterSpacing: '0.04em', cursor: 'pointer', boxShadow: '0 4px 15px rgba(0, 0, 0, 0.15)' }}
                     >
-                      브랜드 정보 불러오기
+                      <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M12 20h9" />
+                          <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+                        </svg>
+                        브랜드 정보 불러오기
+                      </span>
                     </button>
                   </div>
                 </div>
