@@ -2707,7 +2707,7 @@ export default function Home() {
                             setWizardBrandCode(e.target.value)
                             setWizardError('')
                           }}
-                          placeholder="저장할 브랜드 코드를 기입하세요 (예: B0002)"
+                          placeholder="저장할 브랜드 코드를 기입하세요 (예: OVBNE)"
                           style={{ width: '100%', height: 44, border: '1px solid rgba(17,17,17,.18)', borderRadius: 10, padding: '0 14px', fontSize: 13.5, background: '#ffffff', outline: 'none' }}
                         />
                       </div>
@@ -2765,7 +2765,7 @@ export default function Home() {
                             setWizardBrandCode(e.target.value)
                             setWizardError('')
                           }}
-                          placeholder="예: B0002"
+                          placeholder="예: OVBNE"
                           style={{ width: '100%', height: 44, border: '1px solid rgba(17,17,17,.18)', borderRadius: 10, padding: '0 14px', fontSize: 13.5, background: '#ffffff', outline: 'none' }}
                         />
                       </div>
@@ -2818,16 +2818,16 @@ export default function Home() {
                   </div>
 
                   <div style={{ display: 'grid', gap: 12, border: '1px solid rgba(17,17,17,.08)', borderRadius: 12, padding: 18, background: '#fafafa', marginBottom: 24, fontSize: 13.5, lineHeight: 1.65 }}>
-                    <div style={{ borderBottom: '1px solid rgba(17,17,17,.06)', paddingBottom: 8 }}>
-                      <span style={{ fontWeight: 800, color: '#4b5563', marginRight: 10 }}>브랜드명:</span>
-                      <span style={{ fontWeight: 900, color: '#111827', fontSize: 15 }}>{wizardPreviewBrief.name}</span>
-                    </div>
                     {wizardBusinessDesc && (
                       <div style={{ borderBottom: '1px solid rgba(17,17,17,.06)', paddingBottom: 8 }}>
                         <span style={{ fontWeight: 800, color: '#4b5563', display: 'block', marginBottom: 3 }}>입력된 비즈니스 설명:</span>
                         <span style={{ color: '#111827', fontStyle: 'italic' }}>&ldquo;{wizardBusinessDesc}&rdquo;</span>
                       </div>
                     )}
+                    <div style={{ borderBottom: '1px solid rgba(17,17,17,.06)', paddingBottom: 8 }}>
+                      <span style={{ fontWeight: 800, color: '#4b5563', marginRight: 10 }}>브랜드명:</span>
+                      <span style={{ fontWeight: 900, color: '#111827', fontSize: 15 }}>{wizardPreviewBrief.name}</span>
+                    </div>
                     <div style={{ borderBottom: '1px solid rgba(17,17,17,.06)', paddingBottom: 8 }}>
                       <span style={{ fontWeight: 800, color: '#4b5563', marginRight: 10 }}>업종:</span>
                       <span style={{ color: '#333333' }}>{wizardPreviewBrief.category}</span>
@@ -2871,7 +2871,7 @@ export default function Home() {
                     }}
                     style={{ width: '100%', border: 'none', background: '#111827', color: '#ffffff', borderRadius: 10, padding: '14px 12px', fontSize: 14, fontWeight: 800, cursor: 'pointer', transition: 'all 0.15s ease', boxShadow: '0 4px 12px rgba(17,17,17,0.15)' }}
                   >
-                    내용이 맞다면 생성모드창으로 이동하세요
+                    생성 모드 이동
                   </button>
                 </div>
               )}

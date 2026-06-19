@@ -1,4 +1,4 @@
-﻿import type {
+import type {
   AxisScores,
   BrandBrief,
   Condition,
@@ -87,8 +87,8 @@ export const BRIEF_LIBRARY: Record<string, BrandBrief> = {
     keywords: ['공존', '따뜻함', '곡선성', '친근함', '생활감', '대중성'],
     judgeAxes: BRAND_JUDGE_AXES,
   },
-  B0002: {
-    code: 'B0002',
+  OVBNE: {
+    code: 'OVBNE',
     name: '오브네 OVBNE',
     namingMeaning: 'OVBNE는 Objet, Value, Balance, New, Everyday의 의미를 결합한 조어로, 일상 오브제가 지닌 가치와 균형 잡힌 생활 감각, 새롭게 감각화된 일상을 의미한다.',
     category: '리빙 오브제·홈데코 큐레이션 매장 및 온라인 쇼핑몰',
@@ -119,9 +119,9 @@ export const BRIEF_LIBRARY: Record<string, BrandBrief> = {
 }
 
 export const SET_BRIEF_MAP: Record<SetId, string> = {
-  A: 'B0002',
-  B: 'B0002',
-  C: 'B0002',
+  A: 'OVBNE',
+  B: 'OVBNE',
+  C: 'OVBNE',
 }
 
 const STIMULUS_SETS: Record<SetId, Logo[]> = {
