@@ -143,9 +143,13 @@ button[aria-disabled="true"] {
 }
 
 /* --- 상단 V2 헤더 마키(흐르는 텍스트) 애니메이션 --- */
-@keyframes marquee {
-  0% { transform: translateX(100%); }
-  100% { transform: translateX(-100%); }
+@keyframes marquee-scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+@keyframes marquee-blink {
+  0%, 75%, 79%, 83%, 100% { opacity: 1; }
+  77%, 81% { opacity: 0.15; }
 }
 .marquee-container {
   overflow: hidden;
@@ -153,12 +157,16 @@ button[aria-disabled="true"] {
   width: 100%;
   position: relative;
 }
+.marquee-inner {
+  display: inline-flex;
+  animation: marquee-scroll 35s linear infinite, marquee-blink 5s ease-in-out infinite;
+}
 .marquee-content {
   display: inline-block;
-  padding-left: 20px;
-  animation: marquee 15s linear infinite;
+  white-space: nowrap;
+  padding-right: 20px;
 }
-.marquee-container:hover .marquee-content {
+.marquee-container:hover .marquee-inner {
   animation-play-state: paused;
 }
 

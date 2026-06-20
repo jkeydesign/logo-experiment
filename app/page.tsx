@@ -2494,9 +2494,14 @@ export default function Home() {
                 <div style={{ fontSize: 12, fontWeight: 700, color: '#9ca3af', letterSpacing: '.02em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Logo Judgment Assistant</div>
               </div>
               <div className="marquee-container" style={{ justifySelf: 'stretch', width: '100%', minWidth: 0, height: 34, display: 'flex', alignItems: 'center' }} aria-live="polite" aria-label="AI LOGO PRO 상태 안내">
-                <span className="marquee-content" style={{ minWidth: 0, fontSize: 13.5, fontWeight: 800, color: '#f3f4f6' }}>
-                  {headerStatusMessage}
-                </span>
+                <div className="marquee-inner">
+                  <span className="marquee-content" style={{ minWidth: 0, fontSize: 13.5, fontWeight: 800, color: '#f3f4f6' }}>
+                    {Array(6).fill(headerStatusMessage).join('      ·      ') + '      ·      '}
+                  </span>
+                  <span className="marquee-content" style={{ minWidth: 0, fontSize: 13.5, fontWeight: 800, color: '#f3f4f6' }}>
+                    {Array(6).fill(headerStatusMessage).join('      ·      ') + '      ·      '}
+                  </span>
+                </div>
               </div>
               <div style={{ textAlign: 'right', fontSize: 12, color: '#9ca3af', justifySelf: 'stretch', lineHeight: 1.35 }}>
                 <div>참가자 코드: {participantId || '-'}</div>
