@@ -963,6 +963,7 @@ export default function Home() {
   const [logCenterTab, setLogCenterTab] = useState<'view' | 'export'>('view')
   const [showFinalModal, setShowFinalModal] = useState(false)
   const [showPostSurveyModal, setShowPostSurveyModal] = useState(false)
+  const [isBriefLoading, setIsBriefLoading] = useState(false)
   const [finalGuardNotice, setFinalGuardNotice] = useState<{ attemptedStimulusId: string; incompleteIds: string[] } | null>(null)
   const [postSurveyAnswers, setPostSurveyAnswers] = useState<PostSurveyAnswers>(INITIAL_POST_SURVEY)
   const [postSurveyError, setPostSurveyError] = useState('')
@@ -2626,7 +2627,13 @@ export default function Home() {
                     </div>
                   ) : (
                     <>
-                      <div style={{ fontSize: 26, fontWeight: 900, letterSpacing: '-.04em', color: '#111111', lineHeight: 1, whiteSpace: 'nowrap' }}>AI LOGO PRO</div>
+                      <div
+                        onClick={() => setStep('brief_landing')}
+                        style={{ fontSize: 26, fontWeight: 900, letterSpacing: '-.04em', color: '#111111', lineHeight: 1, whiteSpace: 'nowrap', cursor: 'pointer' }}
+                        className="btn-interact"
+                      >
+                        AI LOGO PRO
+                      </div>
                       <div style={{ fontSize: 12, fontWeight: 700, color: '#6b7280', letterSpacing: '.02em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Logo Judgment Assistant</div>
                     </>
                   )}
@@ -2666,7 +2673,13 @@ export default function Home() {
                     </div>
                   ) : (
                     <>
-                      <div style={{ fontSize: 26, fontWeight: 900, letterSpacing: '-.04em', color: '#ffffff', lineHeight: 1, whiteSpace: 'nowrap' }}>AI LOGO PRO</div>
+                      <div
+                        onClick={() => setStep('brief_landing')}
+                        style={{ fontSize: 26, fontWeight: 900, letterSpacing: '-.04em', color: '#ffffff', lineHeight: 1, whiteSpace: 'nowrap', cursor: 'pointer' }}
+                        className="btn-interact"
+                      >
+                        AI LOGO PRO
+                      </div>
                       <div style={{ fontSize: 12, fontWeight: 700, color: '#9ca3af', letterSpacing: '.02em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Logo Judgment Assistant</div>
                     </>
                   )}
