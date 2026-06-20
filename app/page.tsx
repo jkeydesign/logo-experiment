@@ -833,7 +833,7 @@ function GenerationLoadingScreen({ onComplete }: { onComplete: () => void }) {
     "Refining brand personality....",
     "Pairing typefaces...",
     "Refining visual harmony...",
-    "Ready Make Logo..."
+    "Ready Create Logo..."
   ], [])
   
   useEffect(() => {
@@ -2567,10 +2567,16 @@ export default function Home() {
   return (
     <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', background: '#ffffff' }}>
       {showAppHeader && (
-        ((step === 'brief_landing' || step === 'brief') && wizardPreviewBrief === null) ? (
+        (step === 'brief_landing' || step === 'brief') ? (
           <header style={{ padding: '10px 24px', background: '#ffffff', borderBottom: '1px solid rgba(17,17,17,.08)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', minHeight: 64 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ fontSize: 22, fontWeight: 900, letterSpacing: '-.05em', color: '#111827' }}>AI LOGO PRO</span>
+              <span
+                onClick={() => setStep('brief_landing')}
+                style={{ fontSize: 22, fontWeight: 900, letterSpacing: '-.05em', color: '#111827', cursor: 'pointer' }}
+                className="btn-interact"
+              >
+                AI LOGO PRO
+              </span>
               <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#111827', marginTop: 8 }}></span>
             </div>
             
