@@ -2456,12 +2456,12 @@ export default function Home() {
               
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#9ca3af' }}>
                 <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 18, height: 18, borderRadius: '50%', background: '#f3f4f6', color: '#9ca3af', fontSize: 10 }}>3</span>
-                <span>Choose</span>
+                <span>Creation</span>
               </div>
               <span style={{ color: '#d1d5db', fontSize: 11 }}>➔</span>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#9ca3af' }}>
                 <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 18, height: 18, borderRadius: '50%', background: '#f3f4f6', color: '#9ca3af', fontSize: 10 }}>4</span>
-                <span>Edit</span>
+                <span>Choose</span>
               </div>
             </div>
 
