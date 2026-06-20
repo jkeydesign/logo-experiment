@@ -776,13 +776,13 @@ function InteractiveDotGrid({ isLoading = false }: { isLoading?: boolean }) {
             const factor = 1 - dist / 180
             radius = 1.2 + factor * 2.5 + rippleEffect
             opacity = 0.08 + factor * 0.45
-            color = '0, 242, 254'
+            color = '17, 24, 39'
           } else if (isLoading && rippleEffect > 0.4) {
             // Apply ripple effect color/size to the outer dots too during loading
             const rf = (rippleEffect - 0.4) / 0.6
             radius = 1.2 + rf * 1.5
             opacity = 0.08 + rf * 0.18
-            color = '0, 242, 254'
+            color = '75, 85, 99'
           }
           
           ctx.fillStyle = `rgba(${color}, ${opacity})`
@@ -888,7 +888,7 @@ function GenerationLoadingScreen({ onComplete }: { onComplete: () => void }) {
             style={{ 
               width: `${progress}%`, 
               height: '100%', 
-              background: '#00f2fe', 
+              background: 'linear-gradient(90deg, #4b5563, #111827)', 
               borderRadius: 3,
               transition: 'width 0.03s linear'
             }} 
@@ -2565,13 +2565,13 @@ export default function Home() {
           <header style={{ padding: '10px 24px', background: '#ffffff', borderBottom: '1px solid rgba(17,17,17,.08)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', minHeight: 64 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <span style={{ fontSize: 22, fontWeight: 900, letterSpacing: '-.05em', color: '#111827' }}>AI LOGO PRO</span>
-              <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#00f2fe', marginTop: 8 }}></span>
+              <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#111827', marginTop: 8 }}></span>
             </div>
             
             <div style={{ display: 'flex', alignItems: 'center', gap: 16, fontSize: 13, fontWeight: 700 }}>
               {step === 'brief_landing' ? (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#00f2fe' }}>
-                  <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 18, height: 18, borderRadius: '50%', background: '#00f2fe', color: '#ffffff', fontSize: 10, fontWeight: 800 }}>1</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#111827' }}>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 18, height: 18, borderRadius: '50%', background: '#111827', color: '#ffffff', fontSize: 10, fontWeight: 800 }}>1</span>
                   <span>Name</span>
                 </div>
               ) : (
@@ -2588,8 +2588,8 @@ export default function Home() {
                   <span>Details</span>
                 </div>
               ) : (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#00f2fe' }}>
-                  <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 18, height: 18, borderRadius: '50%', background: '#00f2fe', color: '#ffffff', fontSize: 10, fontWeight: 800 }}>2</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#111827' }}>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 18, height: 18, borderRadius: '50%', background: '#111827', color: '#ffffff', fontSize: 10, fontWeight: 800 }}>2</span>
                   <span>Details</span>
                 </div>
               )}
@@ -2638,10 +2638,9 @@ export default function Home() {
                     Set {activeAssignment.setId} 실험 안내
                   </div>
                 ) : (
-                  <div style={{ textAlign: 'right', fontSize: 12, color: '#4d4d4d', justifySelf: 'stretch' }}>
-                    <div>참가자 코드: {participantId || '-'}</div>
+                  <div style={{ textAlign: 'right', fontSize: 12, color: '#4d4d4d', justifySelf: 'stretch', lineHeight: 1.35 }}>
+                    <div style={{ fontSize: 15, fontWeight: 900, color: '#111111', marginBottom: 2 }}>SET {activeAssignment?.setId ?? assignments[0]?.setId ?? '-'}</div>
                     <div>세션 ID: {assignments[0]?.latinSquareGroup ?? '-'}</div>
-                    <div style={{ color: '#9ca3af' }}>연구자 로그: 내부 저장 중</div>
                   </div>
                 )}
               </div>
@@ -2685,9 +2684,8 @@ export default function Home() {
                   </div>
                 ) : (
                   <div style={{ textAlign: 'right', fontSize: 12, color: '#9ca3af', justifySelf: 'stretch', lineHeight: 1.35 }}>
-                    <div>참가자 코드: {participantId || '-'}</div>
+                    <div style={{ fontSize: 15, fontWeight: 900, color: '#ffffff', marginBottom: 2 }}>SET {activeAssignment?.setId ?? assignments[0]?.setId ?? '-'}</div>
                     <div>세션 ID: {assignments[0]?.latinSquareGroup ?? '-'}</div>
-                    <div style={{ color: '#6b7280' }}>연구자 로그: 내부 저장 중</div>
                   </div>
                 )}
               </div>
@@ -3168,7 +3166,7 @@ export default function Home() {
                           setWizardError('')
                         }}
                         placeholder="Are you Pro?"
-                        style={{ width: '100%', height: 50, border: '1px solid rgba(0, 242, 254, 0.4)', borderRadius: 12, padding: '0 44px 0 16px', fontSize: 15, background: '#ffffff', outline: 'none' }}
+                        style={{ width: '100%', height: 50, border: '1px solid rgba(107, 114, 128, 0.4)', borderRadius: 12, padding: '0 44px 0 16px', fontSize: 15, background: '#ffffff', outline: 'none' }}
                         className="wizard-input-cyan"
                       />
                       <span style={{ position: 'absolute', right: 16, pointerEvents: 'none', display: 'flex', alignItems: 'center', color: '#9ca3af' }}>
@@ -3343,7 +3341,7 @@ export default function Home() {
                             setWizardError('')
                           }}
                           placeholder=""
-                          style={{ width: '100%', height: 44, border: '1px solid rgba(0, 242, 254, 0.4)', borderRadius: 10, padding: '0 40px 0 14px', fontSize: 13.5, background: '#ffffff', outline: 'none' }}
+                          style={{ width: '100%', height: 44, border: '1px solid rgba(107, 114, 128, 0.4)', borderRadius: 10, padding: '0 40px 0 14px', fontSize: 13.5, background: '#ffffff', outline: 'none' }}
                           className="wizard-input-cyan"
                         />
                         <span style={{ position: 'absolute', right: 14, pointerEvents: 'none', display: 'flex', alignItems: 'center', color: '#9ca3af' }}>
@@ -3406,24 +3404,38 @@ export default function Home() {
                           setWizardError(`올바르지 않은 브랜드 코드입니다. 저장된 코드를 기입해 주세요. (힌트: ${activeAssignment.setBriefCode})`)
                           return
                         }
-                        setWizardPreviewBrief(activeBrief)
+                        setIsBriefLoading(true)
                         setWizardError('')
+                        setTimeout(() => {
+                          setWizardPreviewBrief(activeBrief)
+                          setIsBriefLoading(false)
+                        }, 1200)
                       }}
+                      disabled={isBriefLoading}
                       className="wizard-btn-gradient"
-                      style={{ width: '100%', marginTop: 10, border: 'none', color: '#ffffff', borderRadius: 9999, padding: '14px 12px', fontSize: 14, fontWeight: 900, letterSpacing: '0.04em', cursor: 'pointer', boxShadow: '0 4px 15px rgba(0, 0, 0, 0.15)' }}
+                      style={{ width: '100%', marginTop: 10, border: 'none', color: '#ffffff', borderRadius: 9999, padding: '14px 12px', fontSize: 14, fontWeight: 900, letterSpacing: '0.04em', cursor: isBriefLoading ? 'not-allowed' : 'pointer', boxShadow: '0 4px 15px rgba(0, 0, 0, 0.15)', opacity: isBriefLoading ? 0.8 : 1 }}
                     >
-                      <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M12 20h9" />
-                          <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
-                        </svg>
-                        브랜드 정보 불러오기
-                      </span>
+                      {isBriefLoading ? (
+                        <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                          <span className="ai-thinking-orbit" style={{ width: 14, height: 14, borderWidth: 1.5, borderTopColor: '#ffffff' }}>
+                            <span className="ai-thinking-core" style={{ fontSize: 5, color: '#ffffff' }}>AI</span>
+                          </span>
+                          브랜드 정보 불러오는 중...
+                        </span>
+                      ) : (
+                        <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M12 20h9" />
+                            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+                          </svg>
+                          브랜드 정보 불러오기
+                        </span>
+                      )}
                     </button>
                   </div>
                 </div>
               ) : (
-                <div className="brand-card-pulse wizard-fade-in" style={{ width: 'min(640px, 92vw)', background: 'rgba(255, 255, 255, 0.85)', backdropFilter: 'blur(16px)', borderRadius: 16, border: '1px solid rgba(17,17,17,0.06)', padding: '40px 30px', display: 'flex', flexDirection: 'column', zIndex: 10 }}>
+                <div className="brand-card-pulse wizard-slow-fade-in" style={{ width: 'min(640px, 92vw)', background: 'rgba(255, 255, 255, 0.85)', backdropFilter: 'blur(16px)', borderRadius: 16, border: '1px solid rgba(17,17,17,0.06)', padding: '40px 30px', display: 'flex', flexDirection: 'column', zIndex: 10 }}>
                   <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
                     <span style={{ fontSize: 22, fontWeight: 900, letterSpacing: '-.03em', color: '#111827' }}>브랜드 브리프 정보 확인</span>
                   </div>
@@ -3656,7 +3668,8 @@ export default function Home() {
                   <button
                     onClick={generateLogos}
                     disabled={isGenerating}
-                    style={{ border: 'none', background: isGenerating ? '#9ca3af' : currentConditionColor, color: '#ffffff', borderRadius: 12, padding: '14px 24px', fontSize: 15, fontWeight: 800, cursor: isGenerating ? 'not-allowed' : 'pointer', minWidth: 220 }}
+                    className={isGenerating ? '' : 'btn-shimmer-gray'}
+                    style={{ border: 'none', background: isGenerating ? '#9ca3af' : undefined, color: '#ffffff', borderRadius: 12, padding: '14px 24px', fontSize: 15, fontWeight: 800, cursor: isGenerating ? 'not-allowed' : 'pointer', minWidth: 220 }}
                   >
                     {isGenerating ? (
                       <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>

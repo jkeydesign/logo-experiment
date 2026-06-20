@@ -169,17 +169,17 @@ button[aria-disabled="true"] {
 /* --- 브랜드 코드창 (AI Generator 위저드) 전용 애니메이션 --- */
 @keyframes pulseGlow {
   0%, 100% {
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06), 0 0 20px rgba(0, 242, 254, 0.42);
-    border-color: rgba(0, 242, 254, 0.55);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06), 0 0 20px rgba(107, 114, 128, 0.28);
+    border-color: rgba(107, 114, 128, 0.4);
   }
   50% {
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1), 0 0 36px rgba(0, 242, 254, 0.75);
-    border-color: rgba(0, 242, 254, 0.85);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.10), 0 0 36px rgba(17, 24, 39, 0.42);
+    border-color: rgba(17, 24, 39, 0.65);
   }
 }
 .brand-card-pulse {
   animation: pulseGlow 4s ease-in-out infinite;
-  border: 1.5px solid rgba(0, 242, 254, 0.55) !important;
+  border: 1.5px solid rgba(107, 114, 128, 0.4) !important;
   transition: border-color 0.3s ease, background-color 0.3s ease;
 }
 
@@ -191,14 +191,22 @@ button[aria-disabled="true"] {
   animation: wizardFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
+@keyframes wizardSlowFadeIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.wizard-slow-fade-in {
+  animation: wizardSlowFadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
 /* --- 추가 스타일: 그라데이션 모비즘 및 입력창/버튼 고정효과 --- */
 .wizard-input-cyan {
-  border: 1.5px solid rgba(0, 210, 230, 0.72) !important;
+  border: 1.5px solid rgba(107, 114, 128, 0.35) !important;
   transition: border-color 0.22s ease, box-shadow 0.22s ease, background-color 0.22s ease !important;
 }
 .wizard-input-cyan:focus {
-  border-color: #00b4d8 !important;
-  box-shadow: 0 0 0 3px rgba(0, 242, 254, 0.35) !important;
+  border-color: #1f2937 !important;
+  box-shadow: 0 0 0 3px rgba(17, 24, 39, 0.12) !important;
   background-color: #ffffff !important;
 }
 
@@ -207,8 +215,8 @@ button[aria-disabled="true"] {
   transition: border-color 0.22s ease, box-shadow 0.22s ease, background-color 0.22s ease !important;
 }
 .wizard-input-glow:focus {
-  border-color: #00f2fe !important;
-  box-shadow: 0 0 0 3px rgba(0, 242, 254, 0.22) !important;
+  border-color: #111827 !important;
+  box-shadow: 0 0 0 3px rgba(17, 24, 39, 0.10) !important;
   background-color: #ffffff !important;
 }
 
@@ -277,22 +285,22 @@ button[aria-disabled="true"] {
 }
 
 .shape-mint {
-  background: #34d399;
+  background: #111827;
   animation: morphMint 5s ease-in-out infinite alternate;
 }
 
 .shape-cyan {
-  background: #00f2fe;
+  background: #374151;
   animation: morphCyan 4.2s ease-in-out infinite alternate;
 }
 
 .shape-slate {
-  background: #374151;
+  background: #6b7280;
   animation: morphSlate 4.7s ease-in-out infinite alternate;
 }
 
 .shape-green {
-  background: #10b981;
+  background: #9ca3af;
   animation: morphGreen 3.8s ease-in-out infinite alternate;
 }
 
@@ -377,5 +385,24 @@ button[aria-disabled="true"] {
 .brief-item-animate {
   opacity: 0;
   animation: briefItemSlideIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* --- 움직이는 흑백 그라데이션 버튼 애니메이션 --- */
+@keyframes movingShimmer {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+.btn-shimmer-gray {
+  background: linear-gradient(135deg, #111827 0%, #4b5563 25%, #1f2937 50%, #9ca3af 75%, #111827 100%);
+  background-size: 400% 400%;
+  animation: movingShimmer 8s ease infinite;
+  color: #ffffff;
+  transition: all 0.3s ease;
+}
+.btn-shimmer-gray:hover {
+  background-size: 200% 200%;
+  animation-duration: 4s;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22);
 }
 
