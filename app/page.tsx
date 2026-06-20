@@ -861,9 +861,9 @@ export default function Home() {
 
   // Brand Code Screen Wizard States
   const [wizardBrandNameInput, setWizardBrandNameInput] = useState('')
-  const [wizardBusinessDesc, setWizardBusinessDesc] = useState('')
+  const [wizardBusinessDesc, setWizardBusinessDesc] = useState('OVBNE')
   const [wizardSlogan, setWizardSlogan] = useState('')
-  const [wizardBrandCode, setWizardBrandCode] = useState('')
+  const [wizardBrandCode, setWizardBrandCode] = useState('OVBNE')
   const [wizardError, setWizardError] = useState('')
   const [wizardPreviewBrief, setWizardPreviewBrief] = useState<BrandBrief | null>(null)
 
