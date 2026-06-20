@@ -3568,28 +3568,50 @@ export default function Home() {
         )}
 
         {showEvaluation && (
-          <div style={{ display: 'grid', gridTemplateColumns: '380px minmax(620px, 1fr) 620px', gap: 14, height: 'calc(100vh - 96px)', overflow: 'hidden' }}>
-            <aside style={{ border: '1px solid rgba(17,17,17,.12)', borderRadius: 12, padding: 14, background: '#ffffff', overflow: 'auto' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '460px minmax(540px, 1fr) 620px', gap: 14, height: 'calc(100vh - 96px)', overflow: 'hidden' }}>
+            <aside key={currentConditionIndex} style={{ border: '1px solid rgba(17,17,17,.12)', borderRadius: 12, padding: 14, background: '#ffffff', overflow: 'auto' }}>
               <div style={{ fontSize: 12, color: currentConditionColor, fontWeight: 800, marginBottom: 8 }}>
                 조건 {activeAssignment.order}/3 · {activeAssignment.conditionLabel}
               </div>
-              <div style={{ fontSize: 13, color: '#4d4d4d', lineHeight: 1.72, display: 'grid', gap: 9 }}>
-                <div><strong>브랜드명:</strong> {displayedBrief?.name}</div>
-                <div><strong>업종:</strong> {displayedBrief?.category}</div>
-                <div><strong>포지셔닝:</strong> {displayedBrief?.positioning}</div>
-                <div><strong>가치 키워드:</strong> {displayedBrief?.keywords.join(', ')}</div>
-                <div><strong>타깃 고객:</strong> {displayedBrief?.target}</div>
-                <div><strong>경쟁사 시각 특징:</strong> {displayedBrief?.competitors}</div>
-                <div><strong>적용 환경:</strong> {displayedBrief?.environments.join(', ')}</div>
+              <div style={{ fontSize: 13.5, color: '#111111', lineHeight: 1.72, display: 'grid', gap: 9 }}>
+                <div className="brief-item-animate" style={{ animationDelay: '0ms', display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+                  <strong style={{ color: '#000000', fontWeight: 900, minWidth: 120, flexShrink: 0 }}>브랜드명</strong>
+                  <span style={{ color: '#111111', fontWeight: 600, flex: 1, wordBreak: 'keep-all' }}>{displayedBrief?.name}</span>
+                </div>
+                <div className="brief-item-animate" style={{ animationDelay: '150ms', display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+                  <strong style={{ color: '#000000', fontWeight: 900, minWidth: 120, flexShrink: 0 }}>업종</strong>
+                  <span style={{ color: '#111111', fontWeight: 600, flex: 1, wordBreak: 'keep-all' }}>{displayedBrief?.category}</span>
+                </div>
+                <div className="brief-item-animate" style={{ animationDelay: '300ms', display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+                  <strong style={{ color: '#000000', fontWeight: 900, minWidth: 120, flexShrink: 0 }}>포지셔닝</strong>
+                  <span style={{ color: '#111111', fontWeight: 600, flex: 1, wordBreak: 'keep-all' }}>{displayedBrief?.positioning}</span>
+                </div>
+                <div className="brief-item-animate" style={{ animationDelay: '450ms', display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+                  <strong style={{ color: '#000000', fontWeight: 900, minWidth: 120, flexShrink: 0 }}>가치 키워드</strong>
+                  <span style={{ color: '#111111', fontWeight: 600, flex: 1, wordBreak: 'keep-all' }}>{displayedBrief?.keywords.join(', ')}</span>
+                </div>
+                <div className="brief-item-animate" style={{ animationDelay: '600ms', display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+                  <strong style={{ color: '#000000', fontWeight: 900, minWidth: 120, flexShrink: 0 }}>타깃 고객</strong>
+                  <span style={{ color: '#111111', fontWeight: 600, flex: 1, wordBreak: 'keep-all' }}>{displayedBrief?.target}</span>
+                </div>
+                <div className="brief-item-animate" style={{ animationDelay: '750ms', display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+                  <strong style={{ color: '#000000', fontWeight: 900, minWidth: 120, flexShrink: 0 }}>경쟁사 시각 특징</strong>
+                  <span style={{ color: '#111111', fontWeight: 600, flex: 1, wordBreak: 'keep-all' }}>{displayedBrief?.competitors}</span>
+                </div>
+                <div className="brief-item-animate" style={{ animationDelay: '900ms', display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+                  <strong style={{ color: '#000000', fontWeight: 900, minWidth: 120, flexShrink: 0 }}>적용 환경</strong>
+                  <span style={{ color: '#111111', fontWeight: 600, flex: 1, wordBreak: 'keep-all' }}>{displayedBrief?.environments.join(', ')}</span>
+                </div>
               </div>
-              <div style={{ borderTop: '1px solid rgba(17,17,17,.16)', margin: '14px 0 10px' }} />
-              <div style={{ fontSize: 14, fontWeight: 800, color: '#111111', marginBottom: 8 }}>
+              <div className="brief-item-animate" style={{ animationDelay: '1050ms', borderTop: '1px solid rgba(17,17,17,.16)', margin: '14px 0 10px' }} />
+              <div className="brief-item-animate" style={{ animationDelay: '1150ms', fontSize: 14, fontWeight: 900, color: '#000000', marginBottom: 8 }}>
                 판단 기준 안내
               </div>
-              <div style={{ fontSize: 13, color: '#4d4d4d', lineHeight: 1.72, display: 'grid', gap: 8 }}>
+              <div style={{ fontSize: 13.5, color: '#111111', lineHeight: 1.72, display: 'grid', gap: 8 }}>
                 {AXIS_LABELS.map((axis, idx) => (
-                  <div key={`brief-axis-${axis.id}`}>
-                    <strong>{idx + 1}. {axis.name}</strong> - {axis.desc}
+                  <div key={`brief-axis-${axis.id}`} className="brief-item-animate" style={{ animationDelay: `${1250 + idx * 120}ms`, display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+                    <strong style={{ color: '#000000', fontWeight: 900, minWidth: 120, flexShrink: 0 }}>{idx + 1}. {axis.name}</strong>
+                    <span style={{ color: '#111111', fontWeight: 500, flex: 1, wordBreak: 'keep-all' }}>{axis.desc}</span>
                   </div>
                 ))}
               </div>

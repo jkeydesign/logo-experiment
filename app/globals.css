@@ -362,3 +362,20 @@ button[aria-disabled="true"] {
 .page-fade-transition.fade-out {
   opacity: 0;
 }
+
+/* --- 브랜드 브리프 및 판단기준 계단식 등장 애니메이션 --- */
+@keyframes briefItemSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.brief-item-animate {
+  opacity: 0;
+  animation: briefItemSlideIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
