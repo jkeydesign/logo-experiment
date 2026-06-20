@@ -860,10 +860,10 @@ export default function Home() {
   const [uiVersion, setUiVersion] = useState<'v1' | 'v2'>('v2')
 
   // Brand Code Screen Wizard States
-  const [wizardBrandNameInput, setWizardBrandNameInput] = useState('OVBNE')
-  const [wizardBusinessDesc, setWizardBusinessDesc] = useState('OVBNE')
+  const [wizardBrandNameInput, setWizardBrandNameInput] = useState('')
+  const [wizardBusinessDesc, setWizardBusinessDesc] = useState('')
   const [wizardSlogan, setWizardSlogan] = useState('')
-  const [wizardBrandCode, setWizardBrandCode] = useState('OVBNE')
+  const [wizardBrandCode, setWizardBrandCode] = useState('')
   const [wizardError, setWizardError] = useState('')
   const [wizardPreviewBrief, setWizardPreviewBrief] = useState<BrandBrief | null>(null)
 
@@ -2823,12 +2823,13 @@ export default function Home() {
                   <button
                     onClick={() => {
                       if (!wizardBrandNameInput.trim()) {
-                        setWizardError('회사명을 기입해 주세요.')
+                        setWizardError('이름을 기입해 주세요.')
                         return
                       }
                       logEvent('landing_name_submitted', {
                         payload: {
                           brand_name: wizardBrandNameInput,
+                          participant_name: wizardBrandNameInput,
                         }
                       })
                       setStep('brief')
