@@ -3629,7 +3629,7 @@ export default function Home() {
             </section>
 
             <aside style={{ border: '1px solid rgba(17,17,17,.12)', borderRadius: 12, background: '#ffffff', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', borderBottom: '1px solid rgba(17,17,17,.1)' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', background: '#f3f4f6', borderRadius: '11px 11px 0 0', borderBottom: '1px solid rgba(17,17,17,.1)' }}>
                 {[
                   { id: 'hold' as RightTab, label: `최종 후보 (${initialHoldCards.length})` },
                   { id: 'exclude' as RightTab, label: `제외 (${initialExcludeCards.length})` },
@@ -3639,13 +3639,15 @@ export default function Home() {
                     onClick={() => setRightTab(tab.id)}
                     style={{
                       border: 'none',
-                      borderBottom: `2px solid ${rightTab === tab.id ? currentConditionColor : 'transparent'}`,
-                      background: rightTab === tab.id ? 'rgba(17,17,17,.04)' : '#ffffff',
+                      borderBottom: rightTab === tab.id ? `2.5px solid ${currentConditionColor}` : '1px solid rgba(17,17,17,.1)',
+                      background: rightTab === tab.id ? '#ffffff' : '#f3f4f6',
                       color: rightTab === tab.id ? '#111111' : '#666666',
-                      padding: '10px 6px',
-                      fontSize: 11,
-                      fontWeight: 700,
+                      padding: '11px 6px',
+                      fontSize: 12,
+                      fontWeight: rightTab === tab.id ? 800 : 600,
                       cursor: 'pointer',
+                      borderRadius: rightTab === tab.id ? '11px 11px 0 0' : '0',
+                      transition: 'all 0.15s ease',
                     }}
                   >
                     {tab.label}
