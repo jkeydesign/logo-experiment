@@ -26,7 +26,7 @@ import type {
   StimulusLogRow,
 } from '@/types'
 
-type ScreenStep = 'consent' | 'participation_consent' | 'screening' | 'brief_landing' | 'brief' | 'instruction' | 'evaluation' | 'result' | 'post_survey' | 'comparison_survey' | 'debriefing_check' | 'debriefing' | 'eligibility_collection' | 'completed'
+type ScreenStep = 'consent' | 'participation_consent' | 'screening' | 'brand_brief' | 'brief_landing' | 'brief' | 'instruction' | 'evaluation' | 'result' | 'post_survey' | 'comparison_survey' | 'debriefing_check' | 'debriefing' | 'eligibility_collection' | 'completed'
 type RightTab = 'hold' | 'exclude'
 type EligibilityCheck = {
   q1: 'yes' | 'no' | null
@@ -808,6 +808,8 @@ export default function Home() {
   } = useExperiment()
 
   const [step, setStep] = useState<ScreenStep>('consent')
+  const [brandBriefChecked, setBrandBriefChecked] = useState(false)
+  const [wizardCompleted, setWizardCompleted] = useState(false)
   const [participantInput, setParticipantInput] = useState(participantId)
   const [participantError, setParticipantError] = useState('')
   const [hasCheckedExperimentConsent, setHasCheckedExperimentConsent] = useState(false)
@@ -1205,7 +1207,9 @@ export default function Home() {
     startExperiment(Date.now())
     setParticipantError('')
     setCurrentConditionIndex(0)
-    setStep('brief_landing')
+    setBrandBriefChecked(false)
+    setWizardCompleted(false)
+    setStep('brand_brief')
 
     logEvent('experiment_start', {
       detail: '실험 시작',
@@ -1229,6 +1233,8 @@ export default function Home() {
     setConsentTimestamp(null)
     setParticipantInput('')
     setParticipantError('')
+    setBrandBriefChecked(false)
+    setWizardCompleted(false)
     setStep('consent')
   }, [])
 
@@ -1324,7 +1330,11 @@ export default function Home() {
     setBriefCodeInput(activeAssignment.setBriefCode)
     setBriefOverride(getSetBrief(activeAssignment.setId))
     setBriefCodeError('')
-    setStep('evaluation')
+    if (!wizardCompleted) {
+      setStep('brief_landing')
+    } else {
+      setStep('evaluation')
+    }
 
     logEvent('condition_start', {
       condition: activeAssignment.condition,
@@ -2308,6 +2318,7 @@ export default function Home() {
   const showConsentScreen = step === 'consent'
   const showParticipationConsent = step === 'participation_consent'
   const showScreeningScreen = step === 'screening'
+  const showBrandBrief = step === 'brand_brief' && activeAssignment && activeBrief
   const showBriefLanding = step === 'brief_landing' && activeAssignment && activeBrief
   const showBrief = step === 'brief' && activeAssignment && activeBrief
   const showInstruction = step === 'instruction' && activeAssignment && activeBrief
@@ -2350,7 +2361,7 @@ export default function Home() {
   const showDebriefCheck = step === 'debriefing_check'
   const showDebriefing = step === 'debriefing'
   const showEligibilityCollection = step === 'eligibility_collection'
-  const showAppHeader = !showConsentScreen && !showParticipationConsent && !showScreeningScreen
+  const showAppHeader = !showConsentScreen && !showParticipationConsent && !showScreeningScreen && step !== 'brand_brief'
 
   const headerStatusMessage = useMemo(() => {
     if (isGenerating) {
@@ -2456,7 +2467,7 @@ export default function Home() {
               
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#9ca3af' }}>
                 <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 18, height: 18, borderRadius: '50%', background: '#f3f4f6', color: '#9ca3af', fontSize: 10 }}>3</span>
-                <span>Creation</span>
+                <span>Create</span>
               </div>
               <span style={{ color: '#d1d5db', fontSize: 11 }}>➔</span>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#9ca3af' }}>
@@ -2474,27 +2485,49 @@ export default function Home() {
             <header style={{ padding: '10px 16px', borderBottom: '1px solid rgba(17,17,17,.12)', minHeight: 64, overflow: 'hidden' }}>
               <div style={step === 'instruction' ? { maxWidth: 980, margin: '0 auto', display: 'grid', gridTemplateColumns: '280px 1fr 180px', alignItems: 'center', gap: 14, width: '100%' } : { display: 'grid', gridTemplateColumns: '380px minmax(620px, 1fr) 620px', alignItems: 'center', gap: 14, width: '100%' }}>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, minWidth: 0, width: '100%' }}>
-                  <div style={{ fontSize: 26, fontWeight: 900, letterSpacing: '-.04em', color: '#111111', lineHeight: 1, whiteSpace: 'nowrap' }}>AI LOGO PRO</div>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: '#6b7280', letterSpacing: '.02em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Logo Judgment Assistant</div>
+                  {step === 'instruction' && activeAssignment ? (
+                    <div style={{ fontSize: 22, fontWeight: 900, color: '#111111', letterSpacing: '-.03em', whiteSpace: 'nowrap' }}>
+                      조건 {activeAssignment.order}/3 · {activeAssignment.conditionLabel}
+                    </div>
+                  ) : (
+                    <>
+                      <div style={{ fontSize: 26, fontWeight: 900, letterSpacing: '-.04em', color: '#111111', lineHeight: 1, whiteSpace: 'nowrap' }}>AI LOGO PRO</div>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: '#6b7280', letterSpacing: '.02em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Logo Judgment Assistant</div>
+                    </>
+                  )}
                 </div>
                 <div style={{ justifySelf: 'stretch', width: '100%', minWidth: 0, overflow: 'hidden', height: 34, display: 'flex', alignItems: 'center' }} aria-live="polite" aria-label="AI LOGO PRO 상태 안내">
                   <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 13, fontWeight: 800, color: '#374151' }}>
                     {headerStatusMessage}
                   </span>
                 </div>
-                <div style={{ textAlign: 'right', fontSize: 12, color: '#4d4d4d', justifySelf: 'stretch' }}>
-                  <div>참가자 코드: {participantId || '-'}</div>
-                  <div>세션 ID: {assignments[0]?.latinSquareGroup ?? '-'}</div>
-                  <div style={{ color: '#9ca3af' }}>연구자 로그: 내부 저장 중</div>
-                </div>
+                {step === 'instruction' && activeAssignment ? (
+                  <div style={{ textAlign: 'right', fontSize: 22, fontWeight: 900, color: '#111111', letterSpacing: '-.03em', justifySelf: 'stretch', whiteSpace: 'nowrap' }}>
+                    Set {activeAssignment.setId} 실험 안내
+                  </div>
+                ) : (
+                  <div style={{ textAlign: 'right', fontSize: 12, color: '#4d4d4d', justifySelf: 'stretch' }}>
+                    <div>참가자 코드: {participantId || '-'}</div>
+                    <div>세션 ID: {assignments[0]?.latinSquareGroup ?? '-'}</div>
+                    <div style={{ color: '#9ca3af' }}>연구자 로그: 내부 저장 중</div>
+                  </div>
+                )}
               </div>
             </header>
           ) : (
             <header style={{ padding: '10px 16px', background: '#0b0f19', borderBottom: '1px solid #1f2937', minHeight: 64, overflow: 'hidden' }}>
               <div style={step === 'instruction' ? { maxWidth: 980, margin: '0 auto', display: 'grid', gridTemplateColumns: '280px 1fr 180px', alignItems: 'center', gap: 14, width: '100%' } : { display: 'grid', gridTemplateColumns: '380px minmax(620px, 1fr) 620px', alignItems: 'center', gap: 14, width: '100%' }}>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, minWidth: 0, width: '100%' }}>
-                  <div style={{ fontSize: 26, fontWeight: 900, letterSpacing: '-.04em', color: '#ffffff', lineHeight: 1, whiteSpace: 'nowrap' }}>AI LOGO PRO</div>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: '#9ca3af', letterSpacing: '.02em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Logo Judgment Assistant</div>
+                  {step === 'instruction' && activeAssignment ? (
+                    <div style={{ fontSize: 22, fontWeight: 900, color: '#ffffff', letterSpacing: '-.03em', whiteSpace: 'nowrap' }}>
+                      조건 {activeAssignment.order}/3 · {activeAssignment.conditionLabel}
+                    </div>
+                  ) : (
+                    <>
+                      <div style={{ fontSize: 26, fontWeight: 900, letterSpacing: '-.04em', color: '#ffffff', lineHeight: 1, whiteSpace: 'nowrap' }}>AI LOGO PRO</div>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: '#9ca3af', letterSpacing: '.02em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Logo Judgment Assistant</div>
+                    </>
+                  )}
                 </div>
                 <div className="marquee-container" style={{ justifySelf: 'stretch', width: '100%', minWidth: 0, height: 34, display: 'flex', alignItems: 'center' }} aria-live="polite" aria-label="AI LOGO PRO 상태 안내">
                   <div className="marquee-inner">
@@ -2506,11 +2539,17 @@ export default function Home() {
                     </span>
                   </div>
                 </div>
-                <div style={{ textAlign: 'right', fontSize: 12, color: '#9ca3af', justifySelf: 'stretch', lineHeight: 1.35 }}>
-                  <div>참가자 코드: {participantId || '-'}</div>
-                  <div>세션 ID: {assignments[0]?.latinSquareGroup ?? '-'}</div>
-                  <div style={{ color: '#6b7280' }}>연구자 로그: 내부 저장 중</div>
-                </div>
+                {step === 'instruction' && activeAssignment ? (
+                  <div style={{ textAlign: 'right', fontSize: 22, fontWeight: 900, color: '#ffffff', letterSpacing: '-.03em', justifySelf: 'stretch', whiteSpace: 'nowrap' }}>
+                    Set {activeAssignment.setId} 실험 안내
+                  </div>
+                ) : (
+                  <div style={{ textAlign: 'right', fontSize: 12, color: '#9ca3af', justifySelf: 'stretch', lineHeight: 1.35 }}>
+                    <div>참가자 코드: {participantId || '-'}</div>
+                    <div>세션 ID: {assignments[0]?.latinSquareGroup ?? '-'}</div>
+                    <div style={{ color: '#6b7280' }}>연구자 로그: 내부 저장 중</div>
+                  </div>
+                )}
               </div>
             </header>
           )
@@ -2776,6 +2815,184 @@ export default function Home() {
               >
                 이전으로
               </button>
+            </section>
+          </div>
+        )}
+
+        {showBrandBrief && (
+          <div style={{ minHeight: '100%', display: 'grid', placeItems: 'start center', padding: '42px 0 36px', background: '#ffffff' }}>
+            <section style={{ width: 'min(980px, 94vw)', background: '#ffffff', color: '#111111', fontFamily: 'sans-serif' }}>
+              
+              {/* Centered Header */}
+              <div style={{ textAlign: 'center', marginBottom: 32 }}>
+                <h1 style={{ fontSize: 28, fontWeight: 900, letterSpacing: '-.03em', color: '#000000', marginBottom: 12 }}>
+                  {activeBrief.name.includes('오브네') || activeBrief.name.includes('OVBNE') ? 'OVBNE 브랜드 브리프' : `${activeBrief.name} 브랜드 브리프`}
+                </h1>
+              </div>
+
+              {/* Intro paragraphs - 1pt larger font size */}
+              <div style={{ fontSize: 16, color: '#333333', lineHeight: 1.75, marginBottom: 28, wordBreak: 'keep-all', textAlign: 'justify' }}>
+                {activeBrief.code === 'OVBNE' ? (
+                  <>
+                    <p style={{ marginBottom: 16 }}>
+                      아래 정보는 48개 후보 시안이 OVBNE 브랜드 맥락에서 본실험 자극으로 사용 가능한지 판단하기 위한 참고 기준입니다. 평가자는 완성 로고의 우열을 판단하기보다, 각 시안이 브랜드 맥락과 최소한의 관련성을 갖는지 확인해 주세요.
+                    </p>
+                    <p>
+                      OVBNE는 대형 라이프스타일 브랜드, 독립 오브제 브랜드, 온라인 감성 셀렉트숍과 경쟁하는 신규 브랜드로 설정됩니다. 본 예비평가에서는 특정 경쟁 브랜드와의 직접 비교가 아니라, 각 시안이 OVBNE 브랜드 맥락에서 과도하게 다른 업종으로 오독되지 않는지를 확인합니다.
+                    </p>
+                  </>
+                ) : (
+                  <p>
+                    로고 시안을 보기 전, 브랜드의 맥락과 판단 기준이 되는 핵심 정보를 먼저 확인해 주세요.
+                  </p>
+                )}
+              </div>
+
+              {/* Divider */}
+              <div style={{ borderBottom: '1px solid rgba(17,17,17,.12)', marginBottom: 28 }} />
+
+              {/* Two columns layout */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '32px 48px', marginBottom: 36 }}>
+                
+                {/* Left Column */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
+                  <div>
+                    <h3 style={{ fontSize: 18, fontWeight: 800, color: '#000000', marginBottom: 10, letterSpacing: '-0.02em' }}>[브랜드명]</h3>
+                    <div style={{ fontSize: 16.5, fontWeight: 700, color: '#111111', marginBottom: 6 }}>{activeBrief.name}</div>
+                    {activeBrief.namingMeaning && (
+                      <div style={{ fontSize: 15, color: '#4b5563', lineHeight: 1.65, wordBreak: 'keep-all' }}>
+                        {activeBrief.namingMeaning}
+                      </div>
+                    )}
+                  </div>
+
+                  <div>
+                    <h3 style={{ fontSize: 18, fontWeight: 800, color: '#000000', marginBottom: 10, letterSpacing: '-0.02em' }}>[타깃]</h3>
+                    <div style={{ fontSize: 16.5, fontWeight: 700, color: '#111111', marginBottom: 6 }}>
+                      {activeBrief.target.split('.')[0] || activeBrief.target}
+                    </div>
+                    {activeBrief.target.includes('.') && (
+                      <div style={{ fontSize: 15, color: '#4b5563', lineHeight: 1.65, wordBreak: 'keep-all' }}>
+                        {activeBrief.target.substring(activeBrief.target.indexOf('.') + 1).trim()}
+                      </div>
+                    )}
+                  </div>
+
+                  <div>
+                    <h3 style={{ fontSize: 18, fontWeight: 800, color: '#000000', marginBottom: 10, letterSpacing: '-0.02em' }}>[핵심 가치]</h3>
+                    <div style={{ fontSize: 15, color: '#4b5563', lineHeight: 1.6, marginBottom: 8 }}>
+                      후보 시안 검토 시 참고할 브랜드 가치 키워드입니다.
+                    </div>
+                    <ul style={{ listStyleType: 'none', paddingLeft: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      {activeBrief.keywords.map((keyword) => (
+                        <li key={keyword} style={{ fontSize: 15, color: '#111111', display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <span style={{ color: '#000000' }}>•</span> {keyword}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+
+                {/* Right Column */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
+                  <div>
+                    <h3 style={{ fontSize: 18, fontWeight: 800, color: '#000000', marginBottom: 10, letterSpacing: '-0.02em' }}>[업종]</h3>
+                    <div style={{ fontSize: 16.5, fontWeight: 700, color: '#111111', marginBottom: 6 }}>{activeBrief.category}</div>
+                    {activeBrief.overview && (
+                      <div style={{ fontSize: 15, color: '#4b5563', lineHeight: 1.65, wordBreak: 'keep-all' }}>
+                        {activeBrief.overview}
+                      </div>
+                    )}
+                  </div>
+
+                  <div>
+                    <h3 style={{ fontSize: 18, fontWeight: 800, color: '#000000', marginBottom: 10, letterSpacing: '-0.02em' }}>[포지셔닝]</h3>
+                    <div style={{ fontSize: 15, color: '#4b5563', lineHeight: 1.65, wordBreak: 'keep-all' }}>
+                      {activeBrief.positioning}
+                    </div>
+                  </div>
+
+                  <div>
+                    <h3 style={{ fontSize: 18, fontWeight: 800, color: '#000000', marginBottom: 10, letterSpacing: '-0.02em' }}>[적용 매체]</h3>
+                    <div style={{ fontSize: 15, color: '#4b5563', lineHeight: 1.6, marginBottom: 8 }}>
+                      후보 시안이 기본적으로 활용될 수 있는 매체 범위입니다.
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px 12px' }}>
+                      <ul style={{ listStyleType: 'none', paddingLeft: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                        {(activeBrief.applicationMedia ?? activeBrief.environments).slice(0, 5).map((media) => (
+                          <li key={media} style={{ fontSize: 15, color: '#111111', display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <span style={{ color: '#000000' }}>•</span> {media}
+                          </li>
+                        ))}
+                      </ul>
+                      <ul style={{ listStyleType: 'none', paddingLeft: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                        {(activeBrief.applicationMedia ?? activeBrief.environments).slice(5).map((media) => (
+                          <li key={media} style={{ fontSize: 15, color: '#111111', display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <span style={{ color: '#000000' }}>•</span> {media}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+
+              {/* Checkbox and proceed button at the bottom */}
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20, borderTop: '1px solid rgba(17,17,17,.12)', paddingTop: 28, marginTop: 28 }}>
+                <label
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 10,
+                    cursor: 'pointer',
+                    userSelect: 'none',
+                    fontSize: 16,
+                    fontWeight: 700,
+                    color: '#000000',
+                    padding: '8px 16px',
+                    borderRadius: 8,
+                    background: brandBriefChecked ? '#f3f4f6' : 'transparent',
+                    border: brandBriefChecked ? '1px solid #111111' : '1px solid rgba(17,17,17,.15)',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={brandBriefChecked}
+                    onChange={(e) => setBrandBriefChecked(e.target.checked)}
+                    style={{ width: 18, height: 18, accentColor: '#000000', cursor: 'pointer' }}
+                  />
+                  내용을 읽고 확인하였습니다.
+                </label>
+
+                <button
+                  disabled={!brandBriefChecked}
+                  onClick={() => {
+                    setStep('instruction')
+                    logEvent('general_brief_confirmed', {
+                      detail: 'OVBNE 브랜드 브리프 확인 완료',
+                      payload: { confirmed: true }
+                    })
+                  }}
+                  style={{
+                    border: 'none',
+                    background: brandBriefChecked ? '#000000' : '#d4d4d4',
+                    color: '#ffffff',
+                    borderRadius: 8,
+                    padding: '15px 36px',
+                    fontSize: 16,
+                    fontWeight: 800,
+                    cursor: brandBriefChecked ? 'pointer' : 'not-allowed',
+                    opacity: brandBriefChecked ? 1 : 0.7,
+                    transition: 'all 0.2s',
+                    boxShadow: brandBriefChecked ? '0 4px 12px rgba(0,0,0,0.12)' : 'none'
+                  }}
+                >
+                  다음 단계로 이동
+                </button>
+              </div>
+
             </section>
           </div>
         )}
@@ -3117,7 +3334,8 @@ export default function Home() {
 
                   <button
                     onClick={() => {
-                      setStep('instruction')
+                      setWizardCompleted(true)
+                      setStep('evaluation')
                       logEvent('brief_review_complete', {
                         condition: activeAssignment.condition,
                         conditionLabel: activeAssignment.conditionLabel,
@@ -3148,25 +3366,19 @@ export default function Home() {
 
         {showInstruction && (
           <div style={{ maxWidth: 980, margin: '0 auto', display: 'grid', gap: 14 }}>
-            <div style={{ border: '1px solid rgba(17,17,17,.14)', borderRadius: 14, padding: 16, background: currentConditionSurface }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: currentConditionColor, marginBottom: 8 }}>
-                조건 {activeAssignment.order}/3 · {activeAssignment.conditionLabel}
-              </div>
-              <div style={{ fontSize: 21, fontWeight: 800, color: '#111111', marginBottom: 8 }}>
-                Set {activeAssignment.setId} 실험 안내
-              </div>
-              <div style={{ fontSize: 13, color: '#333333', lineHeight: 1.75, marginBottom: 12 }}>
+            <div style={{ border: '1px solid rgba(17,17,17,.14)', borderRadius: 14, padding: '24px 20px', background: currentConditionSurface }}>
+              <div style={{ fontSize: 15, color: '#333333', lineHeight: 1.75, marginBottom: 16, wordBreak: 'keep-all' }}>
                 본 실험에서는 동일한 브랜드 브리프를 기준으로, AI 판단 정보 제시 범위가 다른 3가지 조건을 순차적으로 수행합니다.<br />
                 각 조건에서는 9개의 로고 시안을 검토하며, 조건에 따라 AI 추천 정보 또는 AI 평가 점수·순위 정보가 함께 제시될 수 있습니다.<br />
                 본 실험에 등장하는 AI 시스템의 추천 및 평가 알고리즘은 본 연구의 목적을 위해 설계된 특정 조건에 따라 작동합니다.<br />
                 본 실험에는 정답이 없으며, 실제 실무에서 로고 시안 후보를 검토하듯이 판단해 주세요.
               </div>
-              <div style={{ fontSize: 13, color: '#333333', lineHeight: 1.75, marginBottom: 12 }}>
-                <span style={{ fontWeight: 700, color: '#111111' }}>실험 순서</span><br />
-                <span style={{ fontWeight: 600 }}>1단계</span> : 브랜드 브리프와 판단 기준을 참고하여, 더 검토할 가능성이 있는 시안은 <span style={{ fontWeight: 600 }}>&apos;후보 유지&apos;</span>로, 더 이상 검토하지 않을 시안은 <span style={{ fontWeight: 600 }}>&apos;제외&apos;</span>로 분류해 주세요.<br />
-                <span style={{ fontWeight: 600 }}>2단계</span> : &apos;후보 유지&apos;한 시안만 상세 평가를 진행해 주시고 비교하시면서 1개의 적합한 로고 시안을 최종 선택합니다.
+              <div style={{ fontSize: 15, color: '#333333', lineHeight: 1.75, marginBottom: 20, wordBreak: 'keep-all' }}>
+                <span style={{ fontWeight: 800, color: '#111111', display: 'block', marginBottom: 6 }}>실험 순서</span>
+                <span style={{ fontWeight: 700 }}>1단계</span> : 브랜드 브리프와 판단 기준을 참고하여, 더 검토할 가능성이 있는 시안은 <span style={{ fontWeight: 700 }}>&apos;후보 유지&apos;</span>로, 더 이상 검토하지 않을 시안은 <span style={{ fontWeight: 700 }}>&apos;제외&apos;</span>로 분류해 주세요.<br />
+                <span style={{ fontWeight: 700 }}>2단계</span> : &apos;후보 유지&apos;한 시안만 상세 평가를 진행해 주시고 비교하시면서 1개의 적합한 로고 시안을 최종 선택합니다.
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 10 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 12 }}>
                 {assignments.map((assignment, idx) => {
                   const isActive = idx === currentConditionIndex
                   const conditionStyle = INSTRUCTION_CONDITION_STYLE[assignment.conditionLabel]
@@ -3177,8 +3389,8 @@ export default function Home() {
                         border: '1px solid rgba(17,17,17,.14)',
                         background: conditionStyle.surface,
                         borderRadius: 10,
-                        padding: 8,
-                        minHeight: 142,
+                        padding: 12,
+                        minHeight: 156,
                       }}
                     >
                       <div
@@ -3188,8 +3400,8 @@ export default function Home() {
                           background: conditionStyle.button,
                           color: '#ffffff',
                           borderRadius: 8,
-                          padding: '8px 8px',
-                          fontSize: 11,
+                          padding: '8px 10px',
+                          fontSize: 13,
                           fontWeight: 800,
                           cursor: 'default',
                           textAlign: 'left',
@@ -3197,7 +3409,7 @@ export default function Home() {
                       >
                         {idx + 1}. {assignment.conditionLabel}
                       </div>
-                      <ul style={{ margin: '9px 0 0', paddingLeft: 18, color: conditionStyle.text, lineHeight: 1.65, fontSize: 12 }}>
+                      <ul style={{ margin: '10px 0 0', paddingLeft: 18, color: conditionStyle.text, lineHeight: 1.7, fontSize: 13.5 }}>
                         {CONDITION_GUIDES[assignment.condition].map((line) => (
                           <li key={`${assignment.condition}-${line}`}>{line}</li>
                         ))}
@@ -3210,9 +3422,9 @@ export default function Home() {
 
             <button
               onClick={startCondition}
-              style={{ justifySelf: 'end', border: 'none', background: currentConditionColor, color: '#ffffff', borderRadius: 10, padding: '10px 14px', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}
+              style={{ justifySelf: 'end', border: 'none', background: currentConditionColor, color: '#ffffff', borderRadius: 10, padding: '12px 20px', fontSize: 15, fontWeight: 800, cursor: 'pointer', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
             >
-              조건 시작
+              AI LOGO PRO 시작하기
             </button>
           </div>
         )}
