@@ -3729,7 +3729,7 @@ export default function Home() {
                               시안 ID {card.stimulus.id}
                             </div>
                             {showBadge && (
-                              <div style={{ background: currentConditionColor, color: '#ffffff', borderRadius: 999, padding: '3px 9px', fontSize: 11, fontWeight: 800, letterSpacing: '.02em' }}>
+                              <div style={{ background: currentConditionColor, color: '#ffffff', borderRadius: 999, padding: '5px 11px', fontSize: 13, fontWeight: 900, letterSpacing: '.02em', boxShadow: '0 2px 5px rgba(0, 0, 0, 0.14)', lineHeight: 1 }}>
                                 AI 추천
                               </div>
                             )}
