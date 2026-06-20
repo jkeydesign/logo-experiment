@@ -963,6 +963,9 @@ export default function Home() {
   const [logCenterTab, setLogCenterTab] = useState<'view' | 'export'>('view')
   const [showFinalModal, setShowFinalModal] = useState(false)
   const [showPostSurveyModal, setShowPostSurveyModal] = useState(false)
+  const [modalOffset, setModalOffset] = useState({ x: 0, y: 0 })
+  const [isDragging, setIsDragging] = useState(false)
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
   const [isBriefLoading, setIsBriefLoading] = useState(false)
   const [finalGuardNotice, setFinalGuardNotice] = useState<{ attemptedStimulusId: string; incompleteIds: string[] } | null>(null)
   const [postSurveyAnswers, setPostSurveyAnswers] = useState<PostSurveyAnswers>(INITIAL_POST_SURVEY)
@@ -1001,6 +1004,34 @@ export default function Home() {
       }
     }
   }, [])
+
+  useEffect(() => {
+    if (!showPostSurveyModal) {
+      setModalOffset({ x: 0, y: 0 })
+    }
+  }, [showPostSurveyModal])
+
+  useEffect(() => {
+    if (!isDragging) return
+
+    const handleMouseMove = (e: MouseEvent) => {
+      setModalOffset({
+        x: e.clientX - dragStart.x,
+        y: e.clientY - dragStart.y,
+      })
+    }
+
+    const handleMouseUp = () => {
+      setIsDragging(false)
+    }
+
+    window.addEventListener('mousemove', handleMouseMove)
+    window.addEventListener('mouseup', handleMouseUp)
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove)
+      window.removeEventListener('mouseup', handleMouseUp)
+    }
+  }, [isDragging, dragStart])
 
 
   const historySnapshot = useMemo<AppHistoryState>(() => ({
@@ -2312,25 +2343,32 @@ export default function Home() {
         condition_difficulty_comment: postSurveyAnswers.freeText || null,
       },
     })
+
     const nextIndex = currentConditionIndex + 1
     if (nextIndex < assignments.length) {
+      const nextAssignment = assignments[nextIndex]
       setCurrentConditionIndex(nextIndex)
-      setCards([])
-      setEditingCardId(null)
-      setRightTab('hold')
-      setActiveStimulusId(null)
-      setPendingDecision(null)
-      setDecisionNotice('')
-      setDetailNotice(null)
-      setHasGenerated(false)
-      setIsGenerating(false)
-      setVisibleGeneratedCount(0)
-      setFinalSelectedStimulusId(null)
-      setFinalSelectionTs(null)
+      initializeConditionCards(nextAssignment)
+      setBriefCodeInput(nextAssignment.setBriefCode)
+      setBriefOverride(getSetBrief(nextAssignment.setId))
+      setBriefCodeError('')
+
+      conditionStartedAtRef.current = Date.now()
+      logEvent('condition_start', {
+        condition: nextAssignment.condition,
+        conditionLabel: nextAssignment.conditionLabel,
+        setId: nextAssignment.setId,
+        detail: `${nextAssignment.conditionLabel} 시작 (설문 제출 후 자동 전환)`,
+        payload: {
+          condition_order: `${nextIndex + 1}/3`,
+          set_id: nextAssignment.setId,
+          brief_code: nextAssignment.setBriefCode,
+        },
+      })
+
       setShowFinalModal(false)
       setShowPostSurveyModal(false)
-      setPostSurveyAnswers(INITIAL_POST_SURVEY)
-      setStep('instruction')
+      setStep('evaluation')
     } else {
       setCompSurveyAnswers(INITIAL_COMP_SURVEY)
       setCompSurveyError('')
@@ -2339,8 +2377,11 @@ export default function Home() {
       setStep('comparison_survey')
     }
   }, [
-    activeAssignment, postSurveyAnswers, currentConditionIndex, assignments.length,
-    finalSelectedStimulusId, participantId, logEvent,
+    activeAssignment, postSurveyAnswers, currentConditionIndex, assignments,
+    finalSelectedStimulusId, participantId, logEvent, initializeConditionCards,
+    setBriefCodeInput, setBriefOverride, setBriefCodeError, setShowFinalModal,
+    setShowPostSurveyModal, setStep, setCompSurveyAnswers, setCompSurveyError,
+    setPostSurveyAnswers
   ])
 
   const submitCompSurvey = useCallback(() => {
@@ -2625,7 +2666,7 @@ export default function Home() {
         ) : (
           uiVersion === 'v1' ? (
             <header style={{ padding: '10px 16px', borderBottom: '1px solid rgba(17,17,17,.12)', minHeight: 64, overflow: 'hidden' }}>
-              <div style={step === 'instruction' ? { maxWidth: 980, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' } : { display: 'grid', gridTemplateColumns: '380px minmax(620px, 1fr) 620px', alignItems: 'center', gap: 14, width: '100%' }}>
+              <div style={step === 'instruction' ? { maxWidth: 980, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' } : { display: 'grid', gridTemplateColumns: '460px minmax(540px, 1fr) 620px', alignItems: 'center', gap: 14, width: '100%' }}>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, minWidth: 0, width: '100%' }}>
                   {step === 'instruction' && activeAssignment ? (
                     <div style={{ fontSize: 22, fontWeight: 900, color: '#111111', letterSpacing: '-.03em', whiteSpace: 'nowrap' }}>
@@ -2671,7 +2712,7 @@ export default function Home() {
               minHeight: 64, 
               overflow: 'hidden' 
             }}>
-              <div style={step === 'instruction' ? { maxWidth: 980, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' } : { display: 'grid', gridTemplateColumns: '380px minmax(620px, 1fr) 620px', alignItems: 'center', gap: 14, width: '100%' }}>
+              <div style={step === 'instruction' ? { maxWidth: 980, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' } : { display: 'grid', gridTemplateColumns: '460px minmax(540px, 1fr) 620px', alignItems: 'center', gap: 14, width: '100%' }}>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, minWidth: 0, width: '100%' }}>
                   {step === 'instruction' && activeAssignment ? (
                     <div style={{ fontSize: 22, fontWeight: 900, color: step === 'instruction' ? '#111111' : '#ffffff', letterSpacing: '-.03em', whiteSpace: 'nowrap' }}>
@@ -3547,11 +3588,11 @@ export default function Home() {
             <div style={{ border: '1px solid rgba(17,17,17,.28)', borderRadius: 14, padding: '24px 20px', background: currentConditionSurface }}>
               <div style={{ fontSize: 15, color: '#333333', lineHeight: 1.75, marginBottom: 16, wordBreak: 'keep-all' }}>
                 <span style={{ fontWeight: 800, color: '#111111', display: 'block', marginBottom: 6 }}>실험 설명</span>
-                전문디자이너(실험자)가 평가·판단 하게 될 AI 로고 시안은 3가지 유형으로 각각 9개의 시안을 만들어 드립니다.<br />
+                전문디자이너(실험자)께서 평가·판단 하는 AI 로고 시안은 3가지 유형으로 각각 9개의 시안을 만들어 드립니다.<br />
                 본 실험에서는 동일한 브랜드 브리프를 기준으로, AI 판단 정보 제시 범위가 다른 3가지 조건을 순차적으로 수행합니다.<br />
-                각 조건에서 9개의 로고 시안을 검토하며, 조건에 따라 AI 추천 · AI 평가 점수·순위 정보가 함께 제시될 수 있습니다.<br />
+                각 조건에서 9개의 로고 시안을 검토하며, 조건에 따라 AI 추천 · AI 평가 점수·순위 정보가 함께 제시됩니다.<br />
                 본 실험에 등장하는 AI Logo Pro 추천·평가 알고리즘은 실험 목적을 위해 설계되었으며, 특정 조건에 따라 자동으로 작동합니다.<br />
-                본 실험에는 정답이 없으며, 실제 실무에서 로고 시안 후보를 검토하듯이 판단해 주세요.
+                AI 로고 평가·판단 실험은 정답이 없으며, 실제 실무에서 브랜드 로고 시안 후보를 검토하듯이 판단해 주세요.
               </div>
               <div style={{ fontSize: 15, color: '#333333', lineHeight: 1.75, marginBottom: 20, wordBreak: 'keep-all' }}>
                 <span style={{ fontWeight: 800, color: '#111111', display: 'block', marginBottom: 6 }}>실험 순서</span>
@@ -5023,7 +5064,7 @@ export default function Home() {
         ]
         return (
           <div
-            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.5)', display: 'grid', placeItems: 'center', zIndex: 9999 }}
+            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.2)', display: 'grid', placeItems: 'center', zIndex: 9999 }}
             onClick={() => {
               savePostSurveyDraft()
               setShowPostSurveyModal(false)
@@ -5041,7 +5082,9 @@ export default function Home() {
                 display: 'grid',
                 gap: 14,
                 boxShadow: '0 24px 80px rgba(0,0,0,.28)',
-                position: 'relative'
+                position: 'relative',
+                transform: `translate(${modalOffset.x}px, ${modalOffset.y}px)`,
+                transition: isDragging ? 'none' : 'transform 0.05s ease-out',
               }}
               onClick={(e) => e.stopPropagation()}
             >
@@ -5069,9 +5112,24 @@ export default function Home() {
                 ✕
               </button>
 
-              <div style={{ border: '1px solid rgba(17,17,17,.28)', borderRadius: 14, padding: 20, background: currentConditionSurface }}>
-                <div style={{ fontSize: 12, fontWeight: 700, color: currentConditionColor, marginBottom: 6 }}>
-                  조건 {activeAssignment.order}/3 · {activeAssignment.conditionLabel}
+              <div 
+                style={{ 
+                  border: '1px solid rgba(17,17,17,.28)', 
+                  borderRadius: 14, 
+                  padding: 20, 
+                  background: currentConditionSurface,
+                  cursor: isDragging ? 'grabbing' : 'grab',
+                  userSelect: 'none'
+                }}
+                onMouseDown={(e) => {
+                  if (e.button !== 0) return
+                  setIsDragging(true)
+                  setDragStart({ x: e.clientX - modalOffset.x, y: e.clientY - modalOffset.y })
+                }}
+              >
+                <div style={{ fontSize: 12, fontWeight: 700, color: currentConditionColor, marginBottom: 6, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span>조건 {activeAssignment.order}/3 · {activeAssignment.conditionLabel}</span>
+                  <span style={{ fontSize: 11, fontWeight: 500, color: '#6b7280' }}>✥ 드래그하여 이동 가능</span>
                 </div>
                 <div style={{ fontSize: 20, fontWeight: 800, color: '#111111' }}>조건별 사후 설문</div>
               </div>
@@ -5139,7 +5197,7 @@ export default function Home() {
 
                 <div style={{ border: '1px solid rgba(17,17,17,.12)', borderRadius: 12, padding: 14, background: '#ffffff' }}>
                   <div style={{ fontSize: 13, fontWeight: 700, color: '#111111', marginBottom: 4, lineHeight: 1.5, wordBreak: 'keep-all' }}>
-                    AI 시안을 비교 검토하는 과정에서 판단이나 평가가 어렵거나 고민되었던 부분이 있었나요?
+                    AI 시안을 비교 검토 선택하는 과정에서 전문디자이너로서 드는 생각을 판단·평가 관점에서 이야기 해주세요.
                   </div>
                   <div style={{ fontSize: 11, color: '#dc2626', fontWeight: 700, marginBottom: 8 }}>필수 입력</div>
                   <textarea
