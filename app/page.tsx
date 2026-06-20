@@ -1790,7 +1790,7 @@ export default function Home() {
       conditionLabel: activeAssignment?.conditionLabel,
       setId: activeAssignment?.setId,
       stimulusId,
-      detail: group === 'brand' ? '브랜드 종합 적합도 선택' : '시각 종합 완성도 선택',
+      detail: group === 'brand' ? '브랜드 맥락 적합도 선택' : '시각체계 완성도 선택',
       payload: { group, value },
     })
     if (activeAssignment && targetCard && typeof previousScore === 'number' && previousScore !== value) {
@@ -1799,7 +1799,7 @@ export default function Home() {
         conditionLabel: activeAssignment.conditionLabel,
         setId: activeAssignment.setId,
         stimulusId,
-        detail: group === 'brand' ? '브랜드 종합 적합도 수정' : '시각 종합 완성도 수정',
+        detail: group === 'brand' ? '브랜드 맥락 적합도 수정' : '시각체계 완성도 수정',
         payload: {
           eventType: 'SCORE_CHANGE',
           participantCode: participantId,
@@ -1928,7 +1928,7 @@ export default function Home() {
       setEditingCardId(stimulusId)
       setDetailNotice({
         stimulusId,
-        message: '브랜드 종합 적합도, 시각 종합 완성도, 주된 판단 기준 2개를 먼저 입력해 주세요.',
+        message: '브랜드 맥락 적합도, 시각체계 완성도, 주된 판단 기준 2개를 먼저 입력해 주세요.',
       })
       logEvent('final_selection_blocked_detail_incomplete', {
         condition: activeAssignment?.condition,
@@ -3671,7 +3671,7 @@ export default function Home() {
                               <div style={{ display: 'grid', gap: 8, pointerEvents: allInitialCompleted ? 'auto' : 'none' }}>
                               <div>
                                 <div style={{ fontSize: 14, fontWeight: 700, color: '#333333', marginBottom: 4 }}>
-                                  1. 브랜드 종합 적합도
+                                  1. 브랜드 맥락 적합도
                                 </div>
                                 <div style={{ fontSize: 13, color: '#666666', marginBottom: 5 }}>이 로고 시안이 브랜드 브리프에 얼마나 적합한가?</div>
                                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: 3 }}>
@@ -3689,7 +3689,7 @@ export default function Home() {
 
                               <div>
                                 <div style={{ fontSize: 14, fontWeight: 700, color: '#333333', marginBottom: 4 }}>
-                                  2. 시각 종합 완성도
+                                  2. 시각체계 완성도
                                 </div>
                                 <div style={{ fontSize: 13, color: '#666666', marginBottom: 5 }}>이 로고 시안이 시각적으로 얼마나 완성도 있는가?</div>
                                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: 3 }}>
@@ -3888,7 +3888,7 @@ export default function Home() {
                 조건 {activeAssignment.order}/3 · {activeAssignment.conditionLabel}
               </div>
               <div style={{ fontSize: 12, color: '#333333' }}>
-                최종 후보/제외 영역 내부 자동 순위는 브랜드 종합 적합도와 시각 종합 완성도 기준입니다. 상세 평가와 영역 이동 후 순위가 즉시 업데이트됩니다.
+                최종 후보/제외 영역 내부 자동 순위는 브랜드 맥락 적합도와 시각체계 완성도 기준입니다. 상세 평가와 영역 이동 후 순위가 즉시 업데이트됩니다.
               </div>
             </div>
 
@@ -3930,10 +3930,10 @@ export default function Home() {
                           )}
                           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
                             <span style={{ fontSize: 10, border: '1px solid rgba(17,17,17,.12)', borderRadius: 999, padding: '2px 6px', color: '#333333' }}>
-                              브랜드 종합 적합도: {card.brandOverallScore ? `${card.brandOverallScore}점` : '미입력'}
+                              브랜드 맥락 적합도: {card.brandOverallScore ? `${card.brandOverallScore}점` : '미입력'}
                             </span>
                             <span style={{ fontSize: 10, border: '1px solid rgba(17,17,17,.12)', borderRadius: 999, padding: '2px 6px', color: '#333333' }}>
-                              시각 종합 완성도: {card.visualOverallScore ? `${card.visualOverallScore}점` : '미입력'}
+                              시각체계 완성도: {card.visualOverallScore ? `${card.visualOverallScore}점` : '미입력'}
                             </span>
                             <span style={{ fontSize: 10, border: `1px solid ${detailComplete ? 'rgba(17,17,17,.2)' : 'rgba(107,114,128,.28)'}`, borderRadius: 999, padding: '2px 6px', color: detailComplete ? '#111111' : '#6b7280', background: detailComplete ? '#ffffff' : '#f5f5f5' }}>
                               주된 판단 기준: {card.mainJudgmentCriteria.length > 0 ? card.mainJudgmentCriteria.join(', ') : '미선택'}
@@ -3947,7 +3947,7 @@ export default function Home() {
                               </div>
 
                               <div style={{ border: '1px solid rgba(17,17,17,.08)', borderRadius: 8, padding: 8 }}>
-                                <div style={{ fontSize: 12, fontWeight: 800, color: '#111111', marginBottom: 6 }}>브랜드 종합 적합도</div>
+                                <div style={{ fontSize: 12, fontWeight: 800, color: '#111111', marginBottom: 6 }}>브랜드 맥락 적합도</div>
                                 <div style={{ display: 'grid', gap: 4, marginBottom: 8 }}>
                                   {BRAND_SUMMARY_REFERENCES.map((item, refIdx) => (
                                     <div key={`${card.stimulus.id}-brand-ref-${item.label}`} style={{ fontSize: 10, color: '#4d4d4d', lineHeight: 1.45 }}>
@@ -3973,7 +3973,7 @@ export default function Home() {
                               </div>
 
                               <div style={{ border: '1px solid rgba(17,17,17,.08)', borderRadius: 8, padding: 8 }}>
-                                <div style={{ fontSize: 12, fontWeight: 800, color: '#111111', marginBottom: 6 }}>시각 종합 완성도</div>
+                                <div style={{ fontSize: 12, fontWeight: 800, color: '#111111', marginBottom: 6 }}>시각체계 완성도</div>
                                 <div style={{ display: 'grid', gap: 4, marginBottom: 8 }}>
                                   {VISUAL_SUMMARY_REFERENCES.map((item, refIdx) => (
                                     <div key={`${card.stimulus.id}-visual-ref-${item.label}`} style={{ fontSize: 10, color: '#4d4d4d', lineHeight: 1.45 }}>
@@ -4843,7 +4843,7 @@ export default function Home() {
             </div>
             <div style={{ fontSize: 13, color: '#555555', lineHeight: 1.75, marginBottom: 10 }}>
               최종선택 전에 <strong style={{ color: '#111111' }}>최종 후보 탭에 있는 모든 시안</strong>의
-              브랜드 종합 적합도, 시각 종합 완성도, 주된 판단 기준을 모두 입력해야 합니다.
+              브랜드 맥락 적합도, 시각체계 완성도, 주된 판단 기준을 모두 입력해야 합니다.
             </div>
             <div style={{ background: '#f7f7f7', border: '1px solid rgba(17,17,17,.1)', borderRadius: 10, padding: '10px 12px', fontSize: 12, color: '#333333', lineHeight: 1.6, marginBottom: 22 }}>
               미완료 시안: <strong>{finalGuardNotice.incompleteIds.join(', ')}</strong>
