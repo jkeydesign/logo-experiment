@@ -3077,6 +3077,10 @@ export default function Home() {
                   </div>
 
                   <div style={{ display: 'grid', gap: 12, border: '1px solid rgba(17,17,17,.08)', borderRadius: 12, padding: 18, background: '#fafafa', marginBottom: 24, fontSize: 13.5, lineHeight: 1.65 }}>
+                    <div style={{ borderBottom: '1px solid rgba(17,17,17,.06)', paddingBottom: 8 }}>
+                      <span style={{ fontWeight: 800, color: '#4b5563', marginRight: 10 }}>코드 번호:</span>
+                      <span style={{ fontWeight: 900, color: '#111827' }}>{wizardBrandCode}</span>
+                    </div>
                     {wizardBusinessDesc && (
                       <div style={{ borderBottom: '1px solid rgba(17,17,17,.06)', paddingBottom: 8 }}>
                         <span style={{ fontWeight: 800, color: '#4b5563', display: 'block', marginBottom: 3 }}>입력된 비즈니스 설명:</span>
