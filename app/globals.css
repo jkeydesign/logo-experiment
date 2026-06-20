@@ -252,4 +252,13 @@ button[aria-disabled="true"] {
   flex-shrink: 0;
 }
 
+/* --- AI LOGO PRO 로고 청록색 점 10초 주기 깜빡임 애니메이션 --- */
+@keyframes dotBlink {
+  0%, 4%, 8%, 100% { opacity: 1; }
+  2%, 6% { opacity: 0.15; }
+}
+.blink-dot-10s {
+  animation: dotBlink 10s ease-in-out infinite;
+}
+
 
