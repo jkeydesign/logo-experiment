@@ -1498,68 +1498,6 @@ export default function Home() {
     }
   }, [activeAssignment, logEvent, cards])
 
-  const requestInitialDecision = useCallback((stimulusId: string, decision: DecisionType) => {
-    const card = cards.find((item) => item.stimulus.id === stimulusId)
-    if (!card || card.initialDecision) return
-
-    setActiveStimulusId(stimulusId)
-    if (decision === '보류') setRightTab('hold')
-
-    setPendingDecision(null)
-    setDecisionNotice('')
-    const nowIso = new Date().toISOString()
-
-    setCards((prev) => prev.map((item) => {
-      if (item.stimulus.id !== stimulusId || item.initialDecision) return item
-      return {
-        ...item,
-        initialScores: null,
-        finalScores: null,
-        initialDecision: decision,
-        finalDecision: decision,
-        initialDecisionTs: nowIso,
-      }
-    }))
-
-    logEvent('initial_decision', {
-      condition: activeAssignment?.condition,
-      conditionLabel: activeAssignment?.conditionLabel,
-      setId: activeAssignment?.setId,
-      stimulusId,
-      detail: `초기 분류: ${decision}`,
-      payload: { decision, stage: 'first_classification_only' },
-    })
-  }, [cards, activeAssignment, logEvent])
-
-  const commitInitialDecision = useCallback((stimulusId: string, decision: DecisionType) => {
-    const nowIso = new Date().toISOString()
-
-    setCards((prev) => prev.map((card) => {
-      if (card.stimulus.id !== stimulusId) return card
-      if (card.initialDecision) return card
-
-      return {
-        ...card,
-        initialScores: null,
-        finalScores: null,
-        initialDecision: decision,
-        finalDecision: decision,
-        initialDecisionTs: nowIso,
-      }
-    }))
-
-    logEvent('initial_decision', {
-      condition: activeAssignment?.condition,
-      conditionLabel: activeAssignment?.conditionLabel,
-      setId: activeAssignment?.setId,
-      stimulusId,
-      detail: `초기 분류: ${decision}`,
-      payload: { decision, stage: 'first_classification_only' },
-    })
-    setPendingDecision(null)
-    setDecisionNotice('')
-  }, [activeAssignment, logEvent])
-
   const cancelInitialDecision = useCallback((stimulusId: string) => {
     const target = cards.find((card) => card.stimulus.id === stimulusId)
     if (!target?.initialDecision) return
@@ -1597,6 +1535,80 @@ export default function Home() {
       payload: { previous_decision: target.initialDecision },
     })
   }, [activeAssignment, cards, finalSelectedStimulusId, logEvent])
+
+  const requestInitialDecision = useCallback((stimulusId: string, decision: DecisionType) => {
+    const card = cards.find((item) => item.stimulus.id === stimulusId)
+    if (!card) return
+
+    // Click same button to toggle off (deselect)
+    if (card.initialDecision === decision) {
+      cancelInitialDecision(stimulusId)
+      return
+    }
+
+    setActiveStimulusId(stimulusId)
+    if (decision === '보류') setRightTab('hold')
+
+    setPendingDecision(null)
+    setDecisionNotice('')
+    const nowIso = new Date().toISOString()
+
+    // If changing from Hold (보류) to Exclude (제외), clear final selection if it was selected
+    if (decision === '제외' && finalSelectedStimulusId === stimulusId) {
+      setFinalSelectedStimulusId(null)
+      setFinalSelectionTs(null)
+    }
+
+    setCards((prev) => prev.map((item) => {
+      if (item.stimulus.id !== stimulusId) return item
+      return {
+        ...item,
+        initialScores: null,
+        finalScores: null,
+        initialDecision: decision,
+        finalDecision: decision,
+        initialDecisionTs: nowIso,
+      }
+    }))
+
+    logEvent('initial_decision', {
+      condition: activeAssignment?.condition,
+      conditionLabel: activeAssignment?.conditionLabel,
+      setId: activeAssignment?.setId,
+      stimulusId,
+      detail: card.initialDecision ? `초기 분류 변경: ${card.initialDecision} -> ${decision}` : `초기 분류: ${decision}`,
+      payload: { decision, stage: 'first_classification_only' },
+    })
+  }, [cards, activeAssignment, logEvent, cancelInitialDecision, finalSelectedStimulusId])
+
+  const commitInitialDecision = useCallback((stimulusId: string, decision: DecisionType) => {
+    const nowIso = new Date().toISOString()
+
+    setCards((prev) => prev.map((card) => {
+      if (card.stimulus.id !== stimulusId) return card
+      if (card.initialDecision) return card
+
+      return {
+        ...card,
+        initialScores: null,
+        finalScores: null,
+        initialDecision: decision,
+        finalDecision: decision,
+        initialDecisionTs: nowIso,
+      }
+    }))
+
+    logEvent('initial_decision', {
+      condition: activeAssignment?.condition,
+      conditionLabel: activeAssignment?.conditionLabel,
+      setId: activeAssignment?.setId,
+      stimulusId,
+      detail: `초기 분류: ${decision}`,
+      payload: { decision, stage: 'first_classification_only' },
+    })
+    setPendingDecision(null)
+    setDecisionNotice('')
+  }, [activeAssignment, logEvent])
 
   const openResultScreen = useCallback(() => {
     if (!allInitialCompleted) return
@@ -3579,19 +3591,17 @@ export default function Home() {
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
                           <button
                             onClick={(e) => { e.stopPropagation(); requestInitialDecision(card.stimulus.id, '보류') }}
-                            aria-disabled={isDecided}
                             aria-pressed={card.initialDecision === '보류'}
                             className={`btn-interact btn-hold btn-choice ${card.initialDecision === '보류' ? 'btn-selected' : ''}`}
-                            style={{ border: '1px solid rgba(75,85,99,.45)', background: card.initialDecision === '보류' ? '#4b5563' : '#f3f4f6', color: card.initialDecision === '보류' ? '#ffffff' : '#111827', borderRadius: 7, padding: '7px 0', fontSize: 11, fontWeight: 700, cursor: isDecided ? 'not-allowed' : 'pointer', opacity: isDecided && card.initialDecision !== '보류' ? .45 : 1 }}
+                            style={{ border: '1px solid rgba(75,85,99,.45)', background: card.initialDecision === '보류' ? '#4b5563' : '#f3f4f6', color: card.initialDecision === '보류' ? '#ffffff' : '#111827', borderRadius: 7, padding: '7px 0', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
                           >
                             후보 유지
                           </button>
                           <button
                             onClick={(e) => { e.stopPropagation(); requestInitialDecision(card.stimulus.id, '제외') }}
-                            aria-disabled={isDecided}
                             aria-pressed={card.initialDecision === '제외'}
                             className={`btn-interact btn-exclude btn-choice ${card.initialDecision === '제외' ? 'btn-selected' : ''}`}
-                            style={{ border: '1px solid rgba(107,114,128,.45)', background: card.initialDecision === '제외' ? '#6b7280' : '#f3f4f6', color: card.initialDecision === '제외' ? '#ffffff' : '#1f2937', borderRadius: 7, padding: '7px 0', fontSize: 11, fontWeight: 700, cursor: isDecided ? 'not-allowed' : 'pointer', opacity: isDecided && card.initialDecision !== '제외' ? .45 : 1 }}
+                            style={{ border: '1px solid rgba(107,114,128,.45)', background: card.initialDecision === '제외' ? '#6b7280' : '#f3f4f6', color: card.initialDecision === '제외' ? '#ffffff' : '#1f2937', borderRadius: 7, padding: '7px 0', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
                           >
                             제외
                           </button>
