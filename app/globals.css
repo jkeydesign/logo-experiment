@@ -358,7 +358,11 @@ button[aria-disabled="true"] {
     border-radius: 70% 30% 30% 70% / 100% 100% 0% 0%; /* Rounded Triangle */
     transform: translate(18px, -12px) rotate(360deg) scale(0.94);
   }
+}/* --- 글로벌 페이지 페이드 인/아웃 트랜지션 --- */
+.page-fade-transition {
+  transition: opacity 0.5s ease-in-out;
+  opacity: 1;
 }
-
-
-
+.page-fade-transition.fade-out {
+  opacity: 0;
+}

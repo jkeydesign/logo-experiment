@@ -287,9 +287,9 @@ function assignNextParticipant(): { code: string; lsIndex: number; lsGroup: stri
 
 
 const CONDITION_SURFACE: Record<ConditionLabel, string> = {
-  '시안 제시형': '#f8f8f8',
-  '추천 제시형': '#f2f2f2',
-  '평가 근거 제시형': '#ececec',
+  '시안 제시형': '#fafafa',
+  '추천 제시형': '#fafafa',
+  '평가 근거 제시형': '#fafafa',
 }
 
 const CONDITION_COLOR: Record<ConditionLabel, string> = {
@@ -905,7 +905,16 @@ export default function Home() {
     exportEventsCsv,
   } = useExperiment()
 
-  const [step, setStep] = useState<ScreenStep>('consent')
+  const [step, setRawStep] = useState<ScreenStep>('consent')
+  const [pageFade, setPageFade] = useState<'fade-in' | 'fade-out'>('fade-in')
+
+  const setStep = useCallback((newStep: ScreenStep) => {
+    setPageFade('fade-out')
+    setTimeout(() => {
+      setRawStep(newStep)
+      setPageFade('fade-in')
+    }, 400)
+  }, [])
   const [brandBriefChecked, setBrandBriefChecked] = useState(false)
   const [wizardCompleted, setWizardCompleted] = useState(false)
   const [participantInput, setParticipantInput] = useState(participantId)
@@ -2676,7 +2685,7 @@ export default function Home() {
         )
       )}
 
-      <main style={{ flex: 1, overflow: 'auto', padding: 16 }} onClickCapture={handleUiClickCapture}>
+      <main style={{ flex: 1, overflow: 'auto', padding: 16 }} onClickCapture={handleUiClickCapture} className={`page-fade-transition ${pageFade}`}>
         {showConsentScreen && (
           <div style={{ minHeight: '100%', display: 'grid', placeItems: 'start center', padding: '46px 0 36px' }}>
             <section style={{ width: 'min(1120px, 92vw)', background: '#ffffff', color: '#111111' }}>
@@ -3480,7 +3489,7 @@ export default function Home() {
 
         {showInstruction && (
           <div style={{ maxWidth: 980, margin: '40px auto 24px', display: 'grid', gap: 14 }}>
-            <div style={{ border: '1px solid rgba(17,17,17,.14)', borderRadius: 14, padding: '24px 20px', background: currentConditionSurface }}>
+            <div style={{ border: '1px solid rgba(17,17,17,.28)', borderRadius: 14, padding: '24px 20px', background: currentConditionSurface }}>
               <div style={{ fontSize: 15, color: '#333333', lineHeight: 1.75, marginBottom: 16, wordBreak: 'keep-all' }}>
                 본 실험에서는 동일한 브랜드 브리프를 기준으로, AI 판단 정보 제시 범위가 다른 3가지 조건을 순차적으로 수행합니다.<br />
                 각 조건에서는 9개의 로고 시안을 검토하며, 조건에 따라 AI 추천 정보 또는 AI 평가 점수·순위 정보가 함께 제시될 수 있습니다.<br />
@@ -4001,7 +4010,7 @@ export default function Home() {
 
         {showResult && (
           <div style={{ display: 'grid', gap: 12 }}>
-            <div style={{ border: '1px solid rgba(17,17,17,.12)', borderRadius: 12, padding: 12, background: currentConditionSurface }}>
+            <div style={{ border: '1px solid rgba(17,17,17,.24)', borderRadius: 12, padding: 12, background: currentConditionSurface }}>
               <div style={{ fontSize: 13, fontWeight: 800, color: currentConditionColor, marginBottom: 4 }}>
                 조건 {activeAssignment.order}/3 · {activeAssignment.conditionLabel}
               </div>
@@ -4204,7 +4213,7 @@ export default function Home() {
           ]
           return (
             <div style={{ maxWidth: 720, margin: '0 auto', display: 'grid', gap: 0, padding: '24px 0 48px' }}>
-              <div style={{ border: '1px solid rgba(17,17,17,.14)', borderRadius: 14, padding: 20, background: currentConditionSurface, marginBottom: 14 }}>
+              <div style={{ border: '1px solid rgba(17,17,17,.28)', borderRadius: 14, padding: 20, background: currentConditionSurface, marginBottom: 14 }}>
                 <div style={{ fontSize: 12, fontWeight: 700, color: currentConditionColor, marginBottom: 6 }}>
                   조건 {activeAssignment.order}/3 · {activeAssignment.conditionLabel}
                 </div>
