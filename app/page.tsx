@@ -2833,9 +2833,14 @@ export default function Home() {
               {/* Intro paragraphs - 1pt larger font size */}
               <div style={{ fontSize: 16, color: '#333333', lineHeight: 1.75, marginBottom: 28, wordBreak: 'keep-all', textAlign: 'justify' }}>
                 {activeBrief.code === 'OVBNE' ? (
-                  <p>
-                    본 실험을 통해 생성형 AI와 전문 디자이너(실험자)의 판단으로 함께 개발할 새로운 브랜드를 소개합니다.
-                  </p>
+                  <div style={{ textAlign: 'center' }}>
+                    <p style={{ marginBottom: 8 }}>
+                      생성형 AI와 전문 디자이너(실험자)의 판단으로 함께 개발할 새로운 브랜드를 소개합니다.
+                    </p>
+                    <p>
+                      브랜드 맥락 평가를 위해 브랜드 브리프를 자세히 여러번 읽고 기억하시면서 로고를 판단해 주세요.
+                    </p>
+                  </div>
                 ) : (
                   <p>
                     로고 시안을 보기 전, 브랜드의 맥락과 판단 기준이 되는 핵심 정보를 먼저 확인해 주세요.
