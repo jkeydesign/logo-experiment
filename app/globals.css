@@ -406,3 +406,12 @@ button[aria-disabled="true"] {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22);
 }
 
+/* --- AI 분석중 스켈레톤 펄스 애니메이션 --- */
+@keyframes skeletonPulse {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+.skeleton-pulse {
+  animation: skeletonPulse 1.5s infinite ease-in-out;
+}
+

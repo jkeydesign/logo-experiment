@@ -967,6 +967,8 @@ export default function Home() {
   const [isDragging, setIsDragging] = useState(false)
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
   const [isBriefLoading, setIsBriefLoading] = useState(false)
+  const [revealedTimestamps, setRevealedTimestamps] = useState<Record<string, number>>({})
+  const [loadingFinishedCards, setLoadingFinishedCards] = useState<Record<string, boolean>>({})
   const [finalGuardNotice, setFinalGuardNotice] = useState<{ attemptedStimulusId: string; incompleteIds: string[] } | null>(null)
   const [postSurveyAnswers, setPostSurveyAnswers] = useState<PostSurveyAnswers>(INITIAL_POST_SURVEY)
   const [postSurveyError, setPostSurveyError] = useState('')
@@ -1248,6 +1250,8 @@ export default function Home() {
     setFinalSelectionTs(null)
     setPostSurveyAnswers(INITIAL_POST_SURVEY)
     setPostSurveyError('')
+    setRevealedTimestamps({})
+    setLoadingFinishedCards({})
   }, [])
 
   const rebuildRows = useCallback((nextCards: StimulusCardState[], selectedId: string | null, selectedTs: string | null) => {
@@ -1584,6 +1588,9 @@ export default function Home() {
       detail: 'AI 로고 시안 생성 클릭',
     })
 
+    setRevealedTimestamps({})
+    setLoadingFinishedCards({})
+
     const startedAt = Date.now()
     let revealed = 0
     while (revealed < totalCards) {
@@ -1593,6 +1600,21 @@ export default function Home() {
       await new Promise((resolve) => setTimeout(resolve, waitMs))
 
       revealed = Math.min(totalCards, revealed + 1)
+      const newlyRevealedCard = cards[revealed - 1]
+      if (newlyRevealedCard) {
+        const cardId = newlyRevealedCard.stimulus.id
+        setRevealedTimestamps((prev) => ({
+          ...prev,
+          [cardId]: Date.now(),
+        }))
+        setTimeout(() => {
+          setLoadingFinishedCards((prev) => ({
+            ...prev,
+            [cardId]: true,
+          }))
+        }, 3000)
+      }
+
       setVisibleGeneratedCount(revealed)
       if (revealed > 0) {
         setActiveStimulusId((prev) => prev ?? cards[0]?.stimulus.id ?? null)
@@ -3769,9 +3791,12 @@ export default function Home() {
                     const displayRank = aiRank ?? card.displayOrder
                     const aiVisualText = card.stimulus.aiExplanation ?? (AI_VISUAL_EVALUATION_TEXT[displayRank] ?? '')
 
+                    const isCardFinished = !revealedTimestamps[card.stimulus.id] || !!loadingFinishedCards[card.stimulus.id]
+                    const showBadgeHighlight = isCardFinished && showBadge && !isAiCond
+
                     const cardBorder = isActive
                       ? `2px solid ${currentConditionColor}`
-                      : showBadge && !isAiCond
+                      : showBadgeHighlight
                         ? '1.5px solid rgba(17,17,17,.6)'
                         : isAiCond
                           ? '1px solid rgba(17,17,17,.18)'
@@ -3787,26 +3812,46 @@ export default function Home() {
                       >
                         {/* 평가 근거 제시형: 상단에 AI 순위와 짧은 시각 평가 설명 */}
                         {isAiCond && (
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 7, background: currentConditionColor, borderRadius: 8, padding: '7px 10px', minHeight: 36 }}>
-                            <div style={{ flexShrink: 0, fontSize: 19, fontWeight: 900, color: '#ffffff', letterSpacing: '-.03em', lineHeight: 1 }}>
-                              {displayRank}위
+                          !isCardFinished ? (
+                            <div className="skeleton-pulse" style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 7, background: '#f3f4f6', border: '1px dashed #d1d5db', borderRadius: 8, padding: '7px 10px', minHeight: 36 }}>
+                              <span className='ai-thinking-orbit' style={{ width: 14, height: 14, borderWidth: 1.5, borderColor: 'rgba(75,85,99,.15)', borderTopColor: '#4b5563' }}>
+                                <span className='ai-thinking-core' style={{ fontSize: 5 }}>AI</span>
+                              </span>
+                              <span style={{ fontSize: 11, fontWeight: 700, color: '#6b7280' }}>AI 분석 및 평가 중...</span>
                             </div>
-                            <div style={{ minWidth: 0, flex: 1, fontSize: 11.5, fontWeight: 700, color: '#f9fafb', lineHeight: 1.35, wordBreak: 'keep-all' }}>
-                              {aiVisualText}
+                          ) : (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 7, background: currentConditionColor, borderRadius: 8, padding: '7px 10px', minHeight: 36, animation: 'wizardFadeIn .3s ease-out forwards' }}>
+                              <div style={{ flexShrink: 0, fontSize: 19, fontWeight: 900, color: '#ffffff', letterSpacing: '-.03em', lineHeight: 1 }}>
+                                {displayRank}위
+                              </div>
+                              <div style={{ minWidth: 0, flex: 1, fontSize: 11.5, fontWeight: 700, color: '#f9fafb', lineHeight: 1.35, wordBreak: 'keep-all' }}>
+                                {aiVisualText}
+                              </div>
                             </div>
-                          </div>
+                          )
                         )}
 
                         {/* 추천 제시형: 상단 ID + 배지 행 */}
                         {!isAiCond && (
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, minHeight: 24 }}>
                             <div style={{ fontSize: 12, fontWeight: 700, color: '#333333' }}>
                               시안 ID {card.stimulus.id}
                             </div>
-                            {showBadge && (
-                              <div style={{ background: currentConditionColor, color: '#ffffff', borderRadius: 999, padding: '5px 11px', fontSize: 13, fontWeight: 900, letterSpacing: '.02em', boxShadow: '0 2px 5px rgba(0, 0, 0, 0.14)', lineHeight: 1 }}>
-                                AI 추천
-                              </div>
+                            {isCollab && (
+                              !isCardFinished ? (
+                                <div className="skeleton-pulse" style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: '#f3f4f6', border: '1px dashed #d1d5db', borderRadius: 999, padding: '4px 10px', fontSize: 11, fontWeight: 700, color: '#6b7280', lineHeight: 1 }}>
+                                  <span className='ai-thinking-orbit' style={{ width: 10, height: 10, borderWidth: 1.2, borderColor: 'rgba(75,85,99,.15)', borderTopColor: '#4b5563' }}>
+                                    <span className='ai-thinking-core' style={{ fontSize: 4 }}>AI</span>
+                                  </span>
+                                  AI 분석 중
+                                </div>
+                              ) : (
+                                showBadge && (
+                                  <div style={{ background: currentConditionColor, color: '#ffffff', borderRadius: 999, padding: '5px 11px', fontSize: 13, fontWeight: 900, letterSpacing: '.02em', boxShadow: '0 2px 5px rgba(0, 0, 0, 0.14)', lineHeight: 1, animation: 'wizardFadeIn .3s ease-out forwards' }}>
+                                    AI 추천
+                                  </div>
+                                )
+                              )
                             )}
                           </div>
                         )}
