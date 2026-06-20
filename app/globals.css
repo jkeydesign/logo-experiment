@@ -252,13 +252,113 @@ button[aria-disabled="true"] {
   flex-shrink: 0;
 }
 
-/* --- AI LOGO PRO 로고 청록색 점 10초 주기 깜빡임 애니메이션 --- */
-@keyframes dotBlink {
-  0%, 4%, 8%, 100% { opacity: 1; }
-  2%, 6% { opacity: 0.15; }
+/* --- AI LOGO PRO 로고 청록색 점 3초 주기 깜빡임 애니메이션 --- */
+@keyframes dotBlink3s {
+  0%, 10%, 20%, 100% { opacity: 1; }
+  5%, 15% { opacity: 0.15; }
 }
-.blink-dot-10s {
-  animation: dotBlink 10s ease-in-out infinite;
+.blink-dot-3s {
+  animation: dotBlink3s 3s ease-in-out infinite;
 }
+
+/* --- 브랜드 분석 로고 생성 로딩 화면 도형 애니메이션 --- */
+.loading-shapes-container {
+  position: relative;
+  width: 140px;
+  height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 24px;
+}
+
+.loading-shape {
+  position: absolute;
+  width: 56px;
+  height: 56px;
+  opacity: 0.82;
+  mix-blend-mode: multiply;
+}
+
+.shape-mint {
+  background: #34d399;
+  animation: morphMint 5s ease-in-out infinite alternate;
+}
+
+.shape-cyan {
+  background: #00f2fe;
+  animation: morphCyan 4.2s ease-in-out infinite alternate;
+}
+
+.shape-slate {
+  background: #374151;
+  animation: morphSlate 4.7s ease-in-out infinite alternate;
+}
+
+.shape-green {
+  background: #10b981;
+  animation: morphGreen 3.8s ease-in-out infinite alternate;
+}
+
+@keyframes morphMint {
+  0% {
+    border-radius: 12px; /* Rounded Square */
+    transform: translate(-18px, -18px) rotate(0deg) scale(1);
+  }
+  50% {
+    border-radius: 50%; /* Circle */
+    transform: translate(18px, -10px) rotate(180deg) scale(1.18);
+  }
+  100% {
+    border-radius: 70% 30% 30% 70% / 100% 100% 0% 0%; /* Rounded Triangle */
+    transform: translate(-6px, 18px) rotate(360deg) scale(0.9);
+  }
+}
+
+@keyframes morphCyan {
+  0% {
+    border-radius: 50%; /* Circle */
+    transform: translate(18px, 12px) rotate(0deg) scale(1.12);
+  }
+  50% {
+    border-radius: 70% 30% 30% 70% / 100% 100% 0% 0%; /* Rounded Triangle */
+    transform: translate(-12px, -18px) rotate(180deg) scale(0.9);
+  }
+  100% {
+    border-radius: 12px; /* Rounded Square */
+    transform: translate(12px, 18px) rotate(360deg) scale(1.06);
+  }
+}
+
+@keyframes morphSlate {
+  0% {
+    border-radius: 70% 30% 30% 70% / 100% 100% 0% 0%; /* Rounded Triangle */
+    transform: translate(-12px, 18px) rotate(0deg) scale(0.94);
+  }
+  50% {
+    border-radius: 12px; /* Rounded Square */
+    transform: translate(12px, -12px) rotate(180deg) scale(1.12);
+  }
+  100% {
+    border-radius: 50%; /* Circle */
+    transform: translate(-18px, -18px) rotate(360deg) scale(1);
+  }
+}
+
+@keyframes morphGreen {
+  0% {
+    border-radius: 12px; /* Rounded Square */
+    transform: translate(12px, -18px) rotate(0deg) scale(1);
+  }
+  50% {
+    border-radius: 50%; /* Circle */
+    transform: translate(-18px, 18px) rotate(180deg) scale(1.12);
+  }
+  100% {
+    border-radius: 70% 30% 30% 70% / 100% 100% 0% 0%; /* Rounded Triangle */
+    transform: translate(18px, -12px) rotate(360deg) scale(0.94);
+  }
+}
+
 
 

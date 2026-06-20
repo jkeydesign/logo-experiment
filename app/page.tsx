@@ -26,7 +26,7 @@ import type {
   StimulusLogRow,
 } from '@/types'
 
-type ScreenStep = 'consent' | 'participation_consent' | 'screening' | 'brand_brief' | 'brief_landing' | 'brief' | 'instruction' | 'evaluation' | 'result' | 'post_survey' | 'comparison_survey' | 'debriefing_check' | 'debriefing' | 'eligibility_collection' | 'completed'
+type ScreenStep = 'consent' | 'participation_consent' | 'screening' | 'brand_brief' | 'brief_landing' | 'brief' | 'instruction' | 'generation_loading' | 'evaluation' | 'result' | 'post_survey' | 'comparison_survey' | 'debriefing_check' | 'debriefing' | 'eligibility_collection' | 'completed'
 type RightTab = 'hold' | 'exclude'
 type EligibilityCheck = {
   q1: 'yes' | 'no' | null
@@ -663,7 +663,7 @@ function createEmptyStimulusRow(
 }
 
 // Interactive dot grid background component for brief input screen
-function InteractiveDotGrid() {
+function InteractiveDotGrid({ isLoading = false }: { isLoading?: boolean }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   
   useEffect(() => {
@@ -737,18 +737,51 @@ function InteractiveDotGrid() {
           const x = i * dotSpacing
           const y = j * dotSpacing
           
-          const dx = mouse.x - x
-          const dy = mouse.y - y
+          let activeX = mouse.x
+          let activeY = mouse.y
+          
+          if (isLoading) {
+            const time = Date.now() * 0.002
+            const centerX = width / 2
+            const centerY = height / 2
+            // Lissajous curve animation for virtual cursor
+            activeX = centerX + Math.cos(time) * 160
+            activeY = centerY + Math.sin(time * 1.5) * 100
+          }
+          
+          const dx = activeX - x
+          const dy = activeY - y
           const dist = Math.sqrt(dx * dx + dy * dy)
           
           let radius = 1.2
           let opacity = 0.08
           let color = '107, 114, 128'
           
+          // Concentric wave ripple centered on the screen when loading
+          let rippleEffect = 0
+          if (isLoading) {
+            const time = Date.now() * 0.003
+            const centerX = width / 2
+            const centerY = height / 2
+            const cDx = x - centerX
+            const cDy = y - centerY
+            const cDist = Math.sqrt(cDx * cDx + cDy * cDy)
+            
+            // Ripple wave radiating outward
+            const wave = Math.sin(cDist * 0.02 - time * 2.5) * 0.5 + 0.5
+            rippleEffect = wave * 0.8
+          }
+          
           if (dist < 180) {
             const factor = 1 - dist / 180
-            radius = 1.2 + factor * 2.5
+            radius = 1.2 + factor * 2.5 + rippleEffect
             opacity = 0.08 + factor * 0.45
+            color = '0, 242, 254'
+          } else if (isLoading && rippleEffect > 0.4) {
+            // Apply ripple effect color/size to the outer dots too during loading
+            const rf = (rippleEffect - 0.4) / 0.6
+            radius = 1.2 + rf * 1.5
+            opacity = 0.08 + rf * 0.18
             color = '0, 242, 254'
           }
           
@@ -772,7 +805,7 @@ function InteractiveDotGrid() {
       }
       window.removeEventListener('resize', handleResize)
     }
-  }, [])
+  }, [isLoading])
   
   return (
     <canvas
@@ -787,6 +820,71 @@ function InteractiveDotGrid() {
         zIndex: 0
       }}
     />
+  )
+}
+
+// Generation loading screen component
+function GenerationLoadingScreen({ onComplete }: { onComplete: () => void }) {
+  const [progress, setProgress] = useState(0)
+  
+  useEffect(() => {
+    const duration = 6000 // 6 seconds
+    const intervalTime = 30 // Update every 30ms for smooth 60fps-like progress
+    const increment = (100 / duration) * intervalTime
+    
+    const timer = setInterval(() => {
+      setProgress((prev) => {
+        const next = prev + increment
+        if (next >= 100) {
+          clearInterval(timer)
+          return 100
+        }
+        return next
+      })
+    }, intervalTime)
+    
+    const completeTimeout = setTimeout(() => {
+      onComplete()
+    }, duration)
+    
+    return () => {
+      clearInterval(timer)
+      clearTimeout(completeTimeout)
+    }
+  }, [onComplete])
+  
+  return (
+    <div style={{ position: 'relative', width: '100%', height: 'calc(100vh - 96px)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', background: '#ffffff' }}>
+      <InteractiveDotGrid isLoading={true} />
+      
+      <div style={{ zIndex: 10, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+        {/* Overlapping Morphing Shapes */}
+        <div className="loading-shapes-container">
+          <div className="loading-shape shape-mint"></div>
+          <div className="loading-shape shape-cyan"></div>
+          <div className="loading-shape shape-slate"></div>
+          <div className="loading-shape shape-green"></div>
+        </div>
+        
+        {/* Loading Text */}
+        <div style={{ fontSize: 16, fontWeight: 700, color: '#374151', letterSpacing: '-0.02em', marginBottom: 20 }}>
+          Analyzing your brief...
+        </div>
+        
+        {/* Progress Bar Container */}
+        <div style={{ width: 280, height: 6, background: '#e5e7eb', borderRadius: 3, overflow: 'hidden' }}>
+          <div 
+            style={{ 
+              width: `${progress}%`, 
+              height: '100%', 
+              background: '#00f2fe', 
+              borderRadius: 3,
+              transition: 'width 0.03s linear'
+            }} 
+          />
+        </div>
+      </div>
+    </div>
   )
 }
 
@@ -1333,7 +1431,7 @@ export default function Home() {
     if (!wizardCompleted) {
       setStep('brief_landing')
     } else {
-      setStep('evaluation')
+      setStep('generation_loading')
     }
 
     logEvent('condition_start', {
@@ -2373,7 +2471,7 @@ export default function Home() {
   const showDebriefCheck = step === 'debriefing_check'
   const showDebriefing = step === 'debriefing'
   const showEligibilityCollection = step === 'eligibility_collection'
-  const showAppHeader = !showConsentScreen && !showParticipationConsent && !showScreeningScreen && step !== 'brand_brief'
+  const showAppHeader = !showConsentScreen && !showParticipationConsent && !showScreeningScreen && step !== 'brand_brief' && step !== 'generation_loading'
 
   const headerStatusMessage = useMemo(() => {
     if (isGenerating) {
@@ -2447,7 +2545,7 @@ export default function Home() {
           <header style={{ padding: '10px 24px', background: '#ffffff', borderBottom: '1px solid rgba(17,17,17,.08)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', minHeight: 64 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <span style={{ fontSize: 22, fontWeight: 900, letterSpacing: '-.05em', color: '#111827' }}>AI LOGO PRO</span>
-              <span className="blink-dot-10s" style={{ width: 6, height: 6, borderRadius: '50%', background: '#00f2fe', marginTop: 8 }}></span>
+              <span className="blink-dot-3s" style={{ width: 6, height: 6, borderRadius: '50%', background: '#00f2fe', marginTop: 8 }}></span>
             </div>
             
             <div style={{ display: 'flex', alignItems: 'center', gap: 16, fontSize: 13, fontWeight: 700 }}>
@@ -3105,7 +3203,7 @@ export default function Home() {
 
         {showBrief && (
           uiVersion === 'v1' ? (
-            <div style={{ maxWidth: 980, margin: '0 auto', display: 'grid', gap: 14 }}>
+            <div style={{ maxWidth: 980, margin: '40px auto 24px', display: 'grid', gap: 14 }}>
               <section style={{ border: '1px solid rgba(17,17,17,.14)', borderRadius: 16, padding: 22, background: '#ffffff' }}>
                 <div style={{ fontSize: 12, fontWeight: 800, color: currentConditionColor, marginBottom: 8 }}>
                   조건 {activeAssignment.order}/3 · {activeAssignment.conditionLabel}
@@ -3351,7 +3449,7 @@ export default function Home() {
                   <button
                     onClick={() => {
                       setWizardCompleted(true)
-                      setStep('evaluation')
+                      setStep('generation_loading')
                       logEvent('brief_review_complete', {
                         condition: activeAssignment.condition,
                         conditionLabel: activeAssignment.conditionLabel,
@@ -3381,7 +3479,7 @@ export default function Home() {
         )}
 
         {showInstruction && (
-          <div style={{ maxWidth: 980, margin: '0 auto', display: 'grid', gap: 14 }}>
+          <div style={{ maxWidth: 980, margin: '40px auto 24px', display: 'grid', gap: 14 }}>
             <div style={{ border: '1px solid rgba(17,17,17,.14)', borderRadius: 14, padding: '24px 20px', background: currentConditionSurface }}>
               <div style={{ fontSize: 15, color: '#333333', lineHeight: 1.75, marginBottom: 16, wordBreak: 'keep-all' }}>
                 본 실험에서는 동일한 브랜드 브리프를 기준으로, AI 판단 정보 제시 범위가 다른 3가지 조건을 순차적으로 수행합니다.<br />
@@ -3443,6 +3541,10 @@ export default function Home() {
               AI LOGO PRO 시작하기
             </button>
           </div>
+        )}
+
+        {step === 'generation_loading' && (
+          <GenerationLoadingScreen onComplete={() => setStep('evaluation')} />
         )}
 
         {showEvaluation && (
