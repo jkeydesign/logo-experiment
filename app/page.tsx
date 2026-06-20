@@ -3199,7 +3199,7 @@ export default function Home() {
             </div>
           ) : (
             <div style={{ position: 'relative', minHeight: '80vh', display: 'grid', placeItems: 'center', padding: '20px 0', overflow: 'hidden' }}>
-              {wizardPreviewBrief === null && <InteractiveDotGrid />}
+              <InteractiveDotGrid />
               {wizardPreviewBrief === null ? (
                 <div className="brand-card-pulse wizard-fade-in" style={{ width: 'min(600px, 92vw)', background: 'rgba(255, 255, 255, 0.85)', backdropFilter: 'blur(16px)', borderRadius: 16, border: '1px solid rgba(17,17,17,0.08)', padding: '40px 30px', display: 'flex', flexDirection: 'column' }}>
                   <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
@@ -3311,7 +3311,7 @@ export default function Home() {
                   </div>
                 </div>
               ) : (
-                <div className="brand-card-pulse wizard-fade-in" style={{ width: 'min(640px, 92vw)', background: '#ffffff', borderRadius: 16, border: '1px solid rgba(17,17,17,0.06)', padding: '40px 30px', display: 'flex', flexDirection: 'column' }}>
+                <div className="brand-card-pulse wizard-fade-in" style={{ width: 'min(640px, 92vw)', background: 'rgba(255, 255, 255, 0.85)', backdropFilter: 'blur(16px)', borderRadius: 16, border: '1px solid rgba(17,17,17,0.06)', padding: '40px 30px', display: 'flex', flexDirection: 'column', zIndex: 10 }}>
                   <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
                     <span style={{ fontSize: 22, fontWeight: 900, letterSpacing: '-.03em', color: '#111827' }}>브랜드 브리프 정보 확인</span>
                   </div>
