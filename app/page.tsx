@@ -861,9 +861,9 @@ export default function Home() {
 
   // Brand Code Screen Wizard States
   const [wizardBrandNameInput, setWizardBrandNameInput] = useState('')
-  const [wizardBusinessDesc, setWizardBusinessDesc] = useState('OVBNE')
+  const [wizardBusinessDesc, setWizardBusinessDesc] = useState('')
   const [wizardSlogan, setWizardSlogan] = useState('')
-  const [wizardBrandCode, setWizardBrandCode] = useState('OVBNE')
+  const [wizardBrandCode, setWizardBrandCode] = useState('')
   const [wizardError, setWizardError] = useState('')
   const [wizardPreviewBrief, setWizardPreviewBrief] = useState<BrandBrief | null>(null)
 
@@ -2965,7 +2965,7 @@ export default function Home() {
                     </div>
                   </div>
                   <div style={{ fontSize: 13, color: '#6b7280', textAlign: 'center', marginBottom: 30, lineHeight: 1.6, wordBreak: 'keep-all' }}>
-                    Describe your business and let AI do the rest - generating logos from a curated collection of premium assets in seconds.
+                    당신의 비즈니스 브랜드는 무엇인가요? 진행중인 브랜드의 코드를 입력해주세요.
                   </div>
 
                   <div className="wizard-fade-in" style={{ display: 'grid', gap: 16 }}>
@@ -3049,10 +3049,6 @@ export default function Home() {
                         }
                         if (wizardBrandCode.trim().toUpperCase() !== activeAssignment.setBriefCode.trim().toUpperCase()) {
                           setWizardError(`올바르지 않은 브랜드 코드입니다. 저장된 코드를 기입해 주세요. (힌트: ${activeAssignment.setBriefCode})`)
-                          return
-                        }
-                        if (!wizardBusinessDesc.trim()) {
-                          setWizardError('비즈니스 설명을 기입해 주세요.')
                           return
                         }
                         setWizardPreviewBrief(activeBrief)
