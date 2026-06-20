@@ -157,6 +157,7 @@ interface AppHistoryState {
   showLogCenter: boolean
   logCenterTab: 'view' | 'export'
   showFinalModal: boolean
+  showPostSurveyModal: boolean
   finalGuardNotice: { attemptedStimulusId: string; incompleteIds: string[] } | null
   debriefCheckAnswers: DebriefCheckAnswers
   debriefCheckError: string
@@ -961,6 +962,7 @@ export default function Home() {
   const [showLogCenter, setShowLogCenter] = useState(false)
   const [logCenterTab, setLogCenterTab] = useState<'view' | 'export'>('view')
   const [showFinalModal, setShowFinalModal] = useState(false)
+  const [showPostSurveyModal, setShowPostSurveyModal] = useState(false)
   const [finalGuardNotice, setFinalGuardNotice] = useState<{ attemptedStimulusId: string; incompleteIds: string[] } | null>(null)
   const [postSurveyAnswers, setPostSurveyAnswers] = useState<PostSurveyAnswers>(INITIAL_POST_SURVEY)
   const [postSurveyError, setPostSurveyError] = useState('')
@@ -1029,6 +1031,7 @@ export default function Home() {
     showLogCenter,
     logCenterTab,
     showFinalModal,
+    showPostSurveyModal,
     finalGuardNotice,
     debriefCheckAnswers,
     debriefCheckError,
@@ -1063,6 +1066,7 @@ export default function Home() {
     showLogCenter,
     logCenterTab,
     showFinalModal,
+    showPostSurveyModal,
     finalGuardNotice,
     debriefCheckAnswers,
     debriefCheckError,
@@ -1105,6 +1109,7 @@ export default function Home() {
       setShowLogCenter(snapshot.showLogCenter ?? false)
       setLogCenterTab(snapshot.logCenterTab ?? 'view')
       setShowFinalModal(snapshot.showFinalModal ?? false)
+      setShowPostSurveyModal(snapshot.showPostSurveyModal ?? false)
       setFinalGuardNotice(snapshot.finalGuardNotice ?? null)
       setDebriefCheckAnswers(snapshot.debriefCheckAnswers ?? INITIAL_DEBRIEF_CHECK)
       setDebriefCheckError(snapshot.debriefCheckError ?? '')
@@ -2226,20 +2231,21 @@ export default function Home() {
     })
 
     setPostSurveyError('')
-    setStep('post_survey')
+    setShowPostSurveyModal(true)
   }, [activeAssignment, finalSelectedStimulusId, cards, currentConditionIndex, assignments.length, logEvent, participantId])
 
-  const saveIntermediatePostSurvey = useCallback(() => {
+  const savePostSurveyDraft = useCallback((currentAnswers?: PostSurveyAnswers) => {
     if (!activeAssignment) return
     const cond = activeAssignment.condition
     const needsCollab = cond === 'collab'
     const needsAiOnly = cond === 'ai'
+    const answers = currentAnswers ?? postSurveyAnswers
     logEvent('condition_post_survey_draft', {
       condition: activeAssignment.condition,
       conditionLabel: activeAssignment.conditionLabel,
       setId: activeAssignment.setId,
       stimulusId: finalSelectedStimulusId ?? undefined,
-      detail: `조건별 사후 설문 중간 저장: ${activeAssignment.conditionLabel}`,
+      detail: `조건별 사후 설문 자동 저장: ${activeAssignment.conditionLabel}`,
       payload: {
         participant_code: participantId,
         latin_square_group: activeAssignment.latinSquareGroup,
@@ -2247,22 +2253,19 @@ export default function Home() {
         condition_type: cond === 'human' ? 'presentation_only' : cond === 'collab' ? 'recommendation' : 'evaluation',
         stimulus_set_id: activeAssignment.setId,
         selected_final_logo_id: finalSelectedStimulusId,
-        manipulation_check_ai_info_type: postSurveyAnswers.infoType,
-        final_choice_appropriateness: postSurveyAnswers.q3,
-        perceived_control: postSurveyAnswers.q4,
-        perceived_ai_intervention: postSurveyAnswers.q5,
-        ai_recommendation_trust: needsCollab ? (postSurveyAnswers.q6 ?? null) : null,
-        ai_recommendation_usefulness: needsCollab ? (postSurveyAnswers.q7 ?? null) : null,
-        ai_score_rank_trust: needsAiOnly ? (postSurveyAnswers.q6 ?? null) : null,
-        ai_score_rank_usefulness: needsAiOnly ? (postSurveyAnswers.q7 ?? null) : null,
-        ai_score_rank_criterion_shift: needsAiOnly ? (postSurveyAnswers.q8 ?? null) : null,
-        condition_difficulty_comment: postSurveyAnswers.freeText || null,
+        manipulation_check_ai_info_type: answers.infoType,
+        final_choice_appropriateness: answers.q3,
+        perceived_control: answers.q4,
+        perceived_ai_intervention: answers.q5,
+        ai_recommendation_trust: needsCollab ? (answers.q6 ?? null) : null,
+        ai_recommendation_usefulness: needsCollab ? (answers.q7 ?? null) : null,
+        ai_score_rank_trust: needsAiOnly ? (answers.q6 ?? null) : null,
+        ai_score_rank_usefulness: needsAiOnly ? (answers.q7 ?? null) : null,
+        ai_score_rank_criterion_shift: needsAiOnly ? (answers.q8 ?? null) : null,
+        condition_difficulty_comment: answers.freeText || null,
       },
     })
-    alert('중간 저장되었습니다.')
-  }, [
-    activeAssignment, postSurveyAnswers, finalSelectedStimulusId, participantId, logEvent
-  ])
+  }, [activeAssignment, postSurveyAnswers, finalSelectedStimulusId, participantId, logEvent])
 
   const submitPostSurvey = useCallback(() => {
     if (!activeAssignment) return
@@ -2324,10 +2327,14 @@ export default function Home() {
       setFinalSelectedStimulusId(null)
       setFinalSelectionTs(null)
       setShowFinalModal(false)
+      setShowPostSurveyModal(false)
+      setPostSurveyAnswers(INITIAL_POST_SURVEY)
       setStep('instruction')
     } else {
       setCompSurveyAnswers(INITIAL_COMP_SURVEY)
       setCompSurveyError('')
+      setShowPostSurveyModal(false)
+      setPostSurveyAnswers(INITIAL_POST_SURVEY)
       setStep('comparison_survey')
     }
   }, [
@@ -2485,7 +2492,6 @@ export default function Home() {
     }
   }, [tutorialStep, completeTutorial])
   const showResult = step === 'result' && activeAssignment && activeBrief
-  const showPostSurvey = step === 'post_survey' && activeAssignment
   const showCompSurvey = step === 'comparison_survey'
   const showDebriefCheck = step === 'debriefing_check'
   const showDebriefing = step === 'debriefing'
@@ -4257,123 +4263,7 @@ export default function Home() {
           </div>
         )}
 
-        {showPostSurvey && activeAssignment && (() => {
-          const cond = activeAssignment.condition
-          const needsCollab = cond === 'collab'
-          const needsAiOnly = cond === 'ai'
-          const likertQuestions = [
-            ...POST_SURVEY_COMMON,
-            ...(needsCollab ? POST_SURVEY_COLLAB : []),
-            ...(needsAiOnly ? POST_SURVEY_AI_ONLY : []),
-          ]
-          return (
-            <div style={{ maxWidth: 720, margin: '0 auto', display: 'grid', gap: 0, padding: '24px 0 48px' }}>
-              <div style={{ border: '1px solid rgba(17,17,17,.28)', borderRadius: 14, padding: 20, background: currentConditionSurface, marginBottom: 14 }}>
-                <div style={{ fontSize: 12, fontWeight: 700, color: currentConditionColor, marginBottom: 6 }}>
-                  조건 {activeAssignment.order}/3 · {activeAssignment.conditionLabel}
-                </div>
-                <div style={{ fontSize: 20, fontWeight: 800, color: '#111111' }}>조건별 사후 설문</div>
-              </div>
 
-              <div style={{ display: 'grid', gap: 10 }}>
-
-                {/* 조작 점검 — 단일선택 */}
-                <div style={{ border: '1px solid rgba(17,17,17,.12)', borderRadius: 12, padding: 14, background: '#ffffff' }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: '#111111', marginBottom: 12, lineHeight: 1.55 }}>
-                    이번 단계에서 로고 시안과 함께 제공된 AI 관련 정보는 무엇이었다고 기억하십니까?
-                  </div>
-                  <div style={{ display: 'grid', gap: 8 }}>
-                    {POST_SURVEY_INFO_TYPE_OPTIONS.map(({ label, value }) => (
-                      <button
-                        key={value}
-                        onClick={() => setPostSurveyAnswers((prev) => ({ ...prev, infoType: value }))}
-                        style={{
-                          border: `1px solid ${postSurveyAnswers.infoType === value ? '#111111' : 'rgba(17,17,17,.18)'}`,
-                          background: postSurveyAnswers.infoType === value ? '#111111' : '#ffffff',
-                          color: postSurveyAnswers.infoType === value ? '#ffffff' : '#333333',
-                          borderRadius: 8, padding: '9px 14px', fontSize: 13,
-                          fontWeight: postSurveyAnswers.infoType === value ? 700 : 400,
-                          cursor: 'pointer', textAlign: 'left',
-                        }}
-                      >{label}</button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Q3–Q8: 리커트 5점 척도 */}
-                {likertQuestions.map(({ key, text }) => {
-                  const val = postSurveyAnswers[key] as number | null
-                  return (
-                    <div key={key} style={{ border: '1px solid rgba(17,17,17,.12)', borderRadius: 12, padding: 14, background: '#ffffff' }}>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: '#111111', marginBottom: 12, lineHeight: 1.55 }}>{text}</div>
-                      <div style={{ display: 'flex', gap: 6 }}>
-                        {[1, 2, 3, 4, 5].map((v) => (
-                          <button
-                            key={v}
-                            onClick={() => setPostSurveyAnswers((prev) => ({ ...prev, [key]: v }))}
-                            style={{
-                              flex: 1, border: `1px solid ${val === v ? '#111111' : 'rgba(17,17,17,.18)'}`,
-                              background: val === v ? '#111111' : '#ffffff',
-                              color: val === v ? '#ffffff' : '#333333',
-                              borderRadius: 8, padding: '8px 0', fontSize: 13, fontWeight: val === v ? 700 : 400, cursor: 'pointer',
-                            }}
-                          >{v}</button>
-                        ))}
-                      </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 5 }}>
-                        <span style={{ fontSize: 10, color: '#6b7280' }}>1 전혀 그렇지 않다</span>
-                        <span style={{ fontSize: 10, color: '#6b7280' }}>5 매우 그렇다</span>
-                      </div>
-                    </div>
-                  )
-                })}
-
-                <div style={{ border: '1px solid rgba(17,17,17,.12)', borderRadius: 12, padding: 14, background: '#ffffff' }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: '#111111', marginBottom: 4, lineHeight: 1.5, wordBreak: 'keep-all' }}>
-                    AI 시안을 비교 검토하는 과정에서 판단이나 평가가 어렵거나 고민되었던 부분이 있었나요?
-                  </div>
-                  <div style={{ fontSize: 11, color: '#dc2626', fontWeight: 700, marginBottom: 8 }}>필수 입력</div>
-                  <textarea
-                    value={postSurveyAnswers.freeText}
-                    onChange={(e) => setPostSurveyAnswers((prev) => ({ ...prev, freeText: e.target.value }))}
-                    placeholder='자유롭게 입력해 주세요.'
-                    rows={3}
-                    style={{ width: '100%', border: '1px solid rgba(17,17,17,.18)', borderRadius: 8, padding: '8px 10px', fontSize: 13, resize: 'vertical', outline: 'none', fontFamily: 'inherit' }}
-                  />
-                </div>
-
-                {postSurveyError && (
-                  <div style={{ border: '1px solid #dc2626', background: '#fff5f5', borderRadius: 8, padding: '10px 12px', color: '#b91c1c', fontSize: 13, fontWeight: 700 }}>
-                    {postSurveyError}
-                  </div>
-                )}
-
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12 }}>
-                  <button
-                    onClick={() => setStep('evaluation')}
-                    style={{ border: '1px solid rgba(17,17,17,.18)', background: '#ffffff', color: '#333333', borderRadius: 10, padding: '11px 20px', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}
-                  >
-                    뒤로 가서 수정/확인하기
-                  </button>
-                  <div style={{ display: 'flex', gap: 8 }}>
-                    <button
-                      onClick={saveIntermediatePostSurvey}
-                      style={{ border: '1px solid rgba(17,17,17,.18)', background: '#ffffff', color: '#333333', borderRadius: 10, padding: '11px 20px', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}
-                    >
-                      중간 저장
-                    </button>
-                    <button
-                      onClick={submitPostSurvey}
-                      style={{ border: 'none', background: currentConditionColor, color: '#ffffff', borderRadius: 10, padding: '11px 20px', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}
-                    >
-                      다음 단계로
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )
-        })()}
 
         {showCompSurvey && (
           <div style={{ maxWidth: 720, margin: '0 auto', display: 'grid', gap: 0, padding: '24px 0 48px' }}>
@@ -5103,6 +4993,168 @@ export default function Home() {
           </div>
         </div>
       )}
+      {showPostSurveyModal && activeAssignment && (() => {
+        const cond = activeAssignment.condition
+        const needsCollab = cond === 'collab'
+        const needsAiOnly = cond === 'ai'
+        const likertQuestions = [
+          ...POST_SURVEY_COMMON,
+          ...(needsCollab ? POST_SURVEY_COLLAB : []),
+          ...(needsAiOnly ? POST_SURVEY_AI_ONLY : []),
+        ]
+        return (
+          <div
+            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.5)', display: 'grid', placeItems: 'center', zIndex: 9999 }}
+            onClick={() => {
+              savePostSurveyDraft()
+              setShowPostSurveyModal(false)
+            }}
+          >
+            <div
+              style={{
+                background: '#ffffff',
+                borderRadius: 18,
+                padding: '28px 26px',
+                maxWidth: 720,
+                width: '90vw',
+                maxHeight: '90vh',
+                overflowY: 'auto',
+                display: 'grid',
+                gap: 14,
+                boxShadow: '0 24px 80px rgba(0,0,0,.28)',
+                position: 'relative'
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                onClick={() => {
+                  savePostSurveyDraft()
+                  setShowPostSurveyModal(false)
+                }}
+                style={{
+                  position: 'absolute',
+                  top: 20,
+                  right: 20,
+                  border: 'none',
+                  background: 'transparent',
+                  fontSize: 22,
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                  color: '#9ca3af',
+                  outline: 'none',
+                  padding: 4,
+                  lineHeight: 1
+                }}
+                className="btn-interact"
+              >
+                ✕
+              </button>
+
+              <div style={{ border: '1px solid rgba(17,17,17,.28)', borderRadius: 14, padding: 20, background: currentConditionSurface }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: currentConditionColor, marginBottom: 6 }}>
+                  조건 {activeAssignment.order}/3 · {activeAssignment.conditionLabel}
+                </div>
+                <div style={{ fontSize: 20, fontWeight: 800, color: '#111111' }}>조건별 사후 설문</div>
+              </div>
+
+              <div style={{ display: 'grid', gap: 10 }}>
+
+                {/* 조작 점검 — 단일선택 */}
+                <div style={{ border: '1px solid rgba(17,17,17,.12)', borderRadius: 12, padding: 14, background: '#ffffff' }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#111111', marginBottom: 12, lineHeight: 1.55 }}>
+                    이번 단계에서 로고 시안과 함께 제공된 AI 관련 정보는 무엇이었다고 기억하십니까?
+                  </div>
+                  <div style={{ display: 'grid', gap: 8 }}>
+                    {POST_SURVEY_INFO_TYPE_OPTIONS.map(({ label, value }) => (
+                      <button
+                        key={value}
+                        onClick={() => {
+                          const updated = { ...postSurveyAnswers, infoType: value }
+                          setPostSurveyAnswers(updated)
+                          savePostSurveyDraft(updated)
+                        }}
+                        style={{
+                          border: `1px solid ${postSurveyAnswers.infoType === value ? '#111111' : 'rgba(17,17,17,.18)'}`,
+                          background: postSurveyAnswers.infoType === value ? '#111111' : '#ffffff',
+                          color: postSurveyAnswers.infoType === value ? '#ffffff' : '#333333',
+                          borderRadius: 8, padding: '9px 14px', fontSize: 13,
+                          fontWeight: postSurveyAnswers.infoType === value ? 700 : 400,
+                          cursor: 'pointer', textAlign: 'left',
+                        }}
+                      >{label}</button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Q3–Q8: 리커트 5점 척도 */}
+                {likertQuestions.map(({ key, text }) => {
+                  const val = postSurveyAnswers[key] as number | null
+                  return (
+                    <div key={key} style={{ border: '1px solid rgba(17,17,17,.12)', borderRadius: 12, padding: 14, background: '#ffffff' }}>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: '#111111', marginBottom: 12, lineHeight: 1.55 }}>{text}</div>
+                      <div style={{ display: 'flex', gap: 6 }}>
+                        {[1, 2, 3, 4, 5].map((v) => (
+                          <button
+                            key={v}
+                            onClick={() => {
+                              const updated = { ...postSurveyAnswers, [key]: v }
+                              setPostSurveyAnswers(updated)
+                              savePostSurveyDraft(updated)
+                            }}
+                            style={{
+                              flex: 1, border: `1px solid ${val === v ? '#111111' : 'rgba(17,17,17,.18)'}`,
+                              background: val === v ? '#111111' : '#ffffff',
+                              color: val === v ? '#ffffff' : '#333333',
+                              borderRadius: 8, padding: '8px 0', fontSize: 13, fontWeight: val === v ? 700 : 400, cursor: 'pointer',
+                            }}
+                          >{v}</button>
+                        ))}
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 5 }}>
+                        <span style={{ fontSize: 10, color: '#6b7280' }}>1 전혀 그렇지 않다</span>
+                        <span style={{ fontSize: 10, color: '#6b7280' }}>5 매우 그렇다</span>
+                      </div>
+                    </div>
+                  )
+                })}
+
+                <div style={{ border: '1px solid rgba(17,17,17,.12)', borderRadius: 12, padding: 14, background: '#ffffff' }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#111111', marginBottom: 4, lineHeight: 1.5, wordBreak: 'keep-all' }}>
+                    AI 시안을 비교 검토하는 과정에서 판단이나 평가가 어렵거나 고민되었던 부분이 있었나요?
+                  </div>
+                  <div style={{ fontSize: 11, color: '#dc2626', fontWeight: 700, marginBottom: 8 }}>필수 입력</div>
+                  <textarea
+                    value={postSurveyAnswers.freeText}
+                    onChange={(e) => setPostSurveyAnswers((prev) => ({ ...prev, freeText: e.target.value }))}
+                    onBlur={() => savePostSurveyDraft()}
+                    placeholder='자유롭게 입력해 주세요.'
+                    rows={3}
+                    style={{ width: '100%', border: '1px solid rgba(17,17,17,.18)', borderRadius: 8, padding: '8px 10px', fontSize: 13, resize: 'vertical', outline: 'none', fontFamily: 'inherit' }}
+                  />
+                </div>
+
+                {postSurveyError && (
+                  <div style={{ border: '1px solid #dc2626', background: '#fff5f5', borderRadius: 8, padding: '10px 12px', color: '#b91c1c', fontSize: 13, fontWeight: 700 }}>
+                    {postSurveyError}
+                  </div>
+                )}
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, color: '#6b7280', fontWeight: 500 }}>
+                    <span style={{ color: '#10b981', fontSize: 14 }}>●</span> 실시간 자동 저장되고 있습니다.
+                  </div>
+                  <button
+                    onClick={submitPostSurvey}
+                    style={{ border: 'none', background: currentConditionColor, color: '#ffffff', borderRadius: 10, padding: '11px 24px', fontSize: 14, fontWeight: 800, cursor: 'pointer' }}
+                  >
+                    다음 단계로
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )
+      })()}
     </div>
   )
 }
