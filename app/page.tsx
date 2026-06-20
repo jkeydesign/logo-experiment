@@ -3528,7 +3528,7 @@ export default function Home() {
             <div style={{ border: '1px solid rgba(17,17,17,.28)', borderRadius: 14, padding: '24px 20px', background: currentConditionSurface }}>
               <div style={{ fontSize: 15, color: '#333333', lineHeight: 1.75, marginBottom: 16, wordBreak: 'keep-all' }}>
                 <span style={{ fontWeight: 800, color: '#111111', display: 'block', marginBottom: 6 }}>실험 설명</span>
-                전문가님이 평가 ·판단 하실 AI 로고 시안은 3가지 유형으로 각각 9개의 시안을 만들어 드립니다.<br />
+                전문디자이너(실험자)가 평가·판단 하게 될 AI 로고 시안은 3가지 유형으로 각각 9개의 시안을 만들어 드립니다.<br />
                 본 실험에서는 동일한 브랜드 브리프를 기준으로, AI 판단 정보 제시 범위가 다른 3가지 조건을 순차적으로 수행합니다.<br />
                 각 조건에서 9개의 로고 시안을 검토하며, 조건에 따라 AI 추천 · AI 평가 점수·순위 정보가 함께 제시될 수 있습니다.<br />
                 본 실험에 등장하는 AI Logo Pro 추천·평가 알고리즘은 실험 목적을 위해 설계되었으며, 특정 조건에 따라 자동으로 작동합니다.<br />
