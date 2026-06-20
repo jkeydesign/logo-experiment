@@ -2823,7 +2823,7 @@ export default function Home() {
                   <button
                     onClick={() => {
                       if (!wizardBrandNameInput.trim()) {
-                        setWizardError('이름을 기입해 주세요.')
+                        setWizardError('당신의 이름이나 별명을 적어주세요.')
                         return
                       }
                       logEvent('landing_name_submitted', {
