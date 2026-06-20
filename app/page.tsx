@@ -2505,7 +2505,7 @@ export default function Home() {
     if (showBrief) return '브랜드 브리프와 판단 기준을 먼저 확인해 주세요.'
     if (activeAssignment?.conditionLabel === '추천 제시형') return 'AI 추천 정보는 참고 자료이며, 후보 유지와 제외 판단은 디자이너가 수행합니다.'
     if (activeAssignment?.conditionLabel === '평가 근거 제시형') return 'AI 평가 순위와 시각 설명을 참고하되, 최종 판단은 디자이너가 수행합니다.'
-    return 'AI Logics 판단 환경이 안정적으로 작동 중입니다.'
+    return 'AI Logo Pro 판단 환경이 안정적으로 작동 중입니다.'
   }, [
     activeAssignment?.conditionLabel,
     cards.length,
