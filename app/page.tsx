@@ -3824,7 +3824,7 @@ export default function Home() {
                   ) : (
                     <div style={{ display: 'grid', gap: 10 }}>
                       <div style={{ border: '1px solid rgba(17,17,17,.14)', background: '#f9fafb', color: '#111827', borderRadius: 8, padding: '9px 10px', fontSize: 12, fontWeight: 700, lineHeight: 1.55 }}>
-                        최종 시안은 1개만 선택할 수 있습니다. 후보 유지 시안을 비교한 뒤 가장 적합한 1개를 최종선택해 주세요.
+                        후보 유지 시안들을 평가·비교한 뒤 브랜드에 적합한 1개를 최종선택 해 주세요.
                       </div>
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 10, alignItems: 'start' }}>
                         {initialHoldCards.map((card) => {
