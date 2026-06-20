@@ -82,8 +82,8 @@ const INITIAL_DEBRIEF_CHECK: DebriefCheckAnswers = {
 }
 const POST_SURVEY_INFO_TYPE_OPTIONS: Array<{ label: string; value: string }> = [
   { label: '로고 시안만 제시되었다.', value: 'visual_only' },
-  { label: 'AI 추천이 제시되었다.', value: 'recommendation' },
-  { label: 'AI 평가 내용과 순위가 제시되었다.', value: 'score_rank' },
+  { label: 'AI 추천이 표시되었다.', value: 'recommendation' },
+  { label: 'AI 평가 문장과 순위가 표시되었다.', value: 'score_rank' },
 ]
 const POST_SURVEY_COMMON: Array<{ key: PostSurveyLikertKey; text: string }> = [
   { key: 'q3', text: '최종 선택한 시안은 적절하다고 생각한다.' },
@@ -4330,7 +4330,7 @@ export default function Home() {
 
                 <div style={{ border: '1px solid rgba(17,17,17,.12)', borderRadius: 12, padding: 14, background: '#ffffff' }}>
                   <div style={{ fontSize: 13, fontWeight: 700, color: '#111111', marginBottom: 4, lineHeight: 1.5, wordBreak: 'keep-all' }}>
-                    방금 실험한 시안들을 판단 혹은 평가하는 과정에서 어렵거나 고민되었던 점이 있었다면 간단한 소감을 부탁드립니다.
+                    AI 시안을 비교 검토하는 과정에서 판단이나 평가가 어렵거나 고민되었던 부분이 있었나요?
                   </div>
                   <div style={{ fontSize: 11, color: '#dc2626', fontWeight: 700, marginBottom: 8 }}>필수 입력</div>
                   <textarea
