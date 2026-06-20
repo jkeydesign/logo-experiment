@@ -2833,14 +2833,9 @@ export default function Home() {
               {/* Intro paragraphs - 1pt larger font size */}
               <div style={{ fontSize: 16, color: '#333333', lineHeight: 1.75, marginBottom: 28, wordBreak: 'keep-all', textAlign: 'justify' }}>
                 {activeBrief.code === 'OVBNE' ? (
-                  <>
-                    <p style={{ marginBottom: 16 }}>
-                      아래 정보는 48개 후보 시안이 OVBNE 브랜드 맥락에서 본실험 자극으로 사용 가능한지 판단하기 위한 참고 기준입니다. 평가자는 완성 로고의 우열을 판단하기보다, 각 시안이 브랜드 맥락과 최소한의 관련성을 갖는지 확인해 주세요.
-                    </p>
-                    <p>
-                      OVBNE는 대형 라이프스타일 브랜드, 독립 오브제 브랜드, 온라인 감성 셀렉트숍과 경쟁하는 신규 브랜드로 설정됩니다. 본 예비평가에서는 특정 경쟁 브랜드와의 직접 비교가 아니라, 각 시안이 OVBNE 브랜드 맥락에서 과도하게 다른 업종으로 오독되지 않는지를 확인합니다.
-                    </p>
-                  </>
+                  <p>
+                    본 실험을 통해 생성형 AI와 전문 디자이너(실험자)의 판단으로 함께 개발할 새로운 브랜드를 소개합니다.
+                  </p>
                 ) : (
                   <p>
                     로고 시안을 보기 전, 브랜드의 맥락과 판단 기준이 되는 핵심 정보를 먼저 확인해 주세요.
