@@ -231,4 +231,25 @@ button[aria-disabled="true"] {
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.18) !important;
 }
 
+/* --- Screening (실험 참여 자격 확인) 카드 반응형 레이아웃 --- */
+.screening-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.screening-card-text {
+  font-size: 14px;
+  font-weight: 700;
+  color: #111111;
+  line-height: 1.55;
+  flex: 1 1 280px;
+}
+.screening-card-buttons {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
 

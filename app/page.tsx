@@ -2770,11 +2770,11 @@ export default function Home() {
                 {ELIGIBILITY_QUESTIONS.map(({ key, text }, idx) => {
                   const val = eligibilityCheck[key]
                   return (
-                    <div key={key} style={{ border: '1px solid rgba(17,17,17,.14)', borderRadius: 12, padding: 16, background: '#fafafa' }}>
-                      <div style={{ fontSize: 14, fontWeight: 700, color: '#111111', marginBottom: 12, lineHeight: 1.55 }}>
+                    <div key={key} className="screening-card" style={{ border: '1px solid rgba(17,17,17,.14)', borderRadius: 12, padding: '16px 20px', background: '#fafafa' }}>
+                      <div className="screening-card-text">
                         {idx + 1}. {text}
                       </div>
-                      <div style={{ display: 'flex', gap: 8 }}>
+                      <div className="screening-card-buttons">
                         {(['yes', 'no'] as const).map((v) => (
                           <button
                             key={v}
