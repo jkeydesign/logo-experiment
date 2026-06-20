@@ -2483,7 +2483,7 @@ export default function Home() {
         ) : (
           uiVersion === 'v1' ? (
             <header style={{ padding: '10px 16px', borderBottom: '1px solid rgba(17,17,17,.12)', minHeight: 64, overflow: 'hidden' }}>
-              <div style={step === 'instruction' ? { maxWidth: 980, margin: '0 auto', display: 'grid', gridTemplateColumns: '280px 1fr 180px', alignItems: 'center', gap: 14, width: '100%' } : { display: 'grid', gridTemplateColumns: '380px minmax(620px, 1fr) 620px', alignItems: 'center', gap: 14, width: '100%' }}>
+              <div style={step === 'instruction' ? { maxWidth: 980, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' } : { display: 'grid', gridTemplateColumns: '380px minmax(620px, 1fr) 620px', alignItems: 'center', gap: 14, width: '100%' }}>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, minWidth: 0, width: '100%' }}>
                   {step === 'instruction' && activeAssignment ? (
                     <div style={{ fontSize: 22, fontWeight: 900, color: '#111111', letterSpacing: '-.03em', whiteSpace: 'nowrap' }}>
@@ -2496,11 +2496,13 @@ export default function Home() {
                     </>
                   )}
                 </div>
-                <div style={{ justifySelf: 'stretch', width: '100%', minWidth: 0, overflow: 'hidden', height: 34, display: 'flex', alignItems: 'center' }} aria-live="polite" aria-label="AI LOGO PRO 상태 안내">
-                  <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 13, fontWeight: 800, color: '#374151' }}>
-                    {headerStatusMessage}
-                  </span>
-                </div>
+                {step !== 'instruction' && (
+                  <div style={{ justifySelf: 'stretch', width: '100%', minWidth: 0, overflow: 'hidden', height: 34, display: 'flex', alignItems: 'center' }} aria-live="polite" aria-label="AI LOGO PRO 상태 안내">
+                    <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 13, fontWeight: 800, color: '#374151' }}>
+                      {headerStatusMessage}
+                    </span>
+                  </div>
+                )}
                 {step === 'instruction' && activeAssignment ? (
                   <div style={{ textAlign: 'right', fontSize: 22, fontWeight: 900, color: '#111111', letterSpacing: '-.03em', justifySelf: 'stretch', whiteSpace: 'nowrap' }}>
                     Set {activeAssignment.setId} 실험 안내
@@ -2515,11 +2517,17 @@ export default function Home() {
               </div>
             </header>
           ) : (
-            <header style={{ padding: '10px 16px', background: '#0b0f19', borderBottom: '1px solid #1f2937', minHeight: 64, overflow: 'hidden' }}>
-              <div style={step === 'instruction' ? { maxWidth: 980, margin: '0 auto', display: 'grid', gridTemplateColumns: '280px 1fr 180px', alignItems: 'center', gap: 14, width: '100%' } : { display: 'grid', gridTemplateColumns: '380px minmax(620px, 1fr) 620px', alignItems: 'center', gap: 14, width: '100%' }}>
+            <header style={{ 
+              padding: '10px 16px', 
+              background: step === 'instruction' ? 'none' : '#0b0f19', 
+              borderBottom: step === 'instruction' ? '1px solid rgba(17,17,17,.12)' : '1px solid #1f2937', 
+              minHeight: 64, 
+              overflow: 'hidden' 
+            }}>
+              <div style={step === 'instruction' ? { maxWidth: 980, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' } : { display: 'grid', gridTemplateColumns: '380px minmax(620px, 1fr) 620px', alignItems: 'center', gap: 14, width: '100%' }}>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, minWidth: 0, width: '100%' }}>
                   {step === 'instruction' && activeAssignment ? (
-                    <div style={{ fontSize: 22, fontWeight: 900, color: '#ffffff', letterSpacing: '-.03em', whiteSpace: 'nowrap' }}>
+                    <div style={{ fontSize: 22, fontWeight: 900, color: step === 'instruction' ? '#111111' : '#ffffff', letterSpacing: '-.03em', whiteSpace: 'nowrap' }}>
                       조건 {activeAssignment.order}/3 · {activeAssignment.conditionLabel}
                     </div>
                   ) : (
@@ -2529,18 +2537,20 @@ export default function Home() {
                     </>
                   )}
                 </div>
-                <div className="marquee-container" style={{ justifySelf: 'stretch', width: '100%', minWidth: 0, height: 34, display: 'flex', alignItems: 'center' }} aria-live="polite" aria-label="AI LOGO PRO 상태 안내">
-                  <div className="marquee-inner">
-                    <span className="marquee-content" style={{ minWidth: 0, fontSize: 13.5, fontWeight: 800, color: '#f3f4f6' }}>
-                      {Array(6).fill(headerStatusMessage).join('      ·      ') + '      ·      '}
-                    </span>
-                    <span className="marquee-content" style={{ minWidth: 0, fontSize: 13.5, fontWeight: 800, color: '#f3f4f6' }}>
-                      {Array(6).fill(headerStatusMessage).join('      ·      ') + '      ·      '}
-                    </span>
+                {step !== 'instruction' && (
+                  <div className="marquee-container" style={{ justifySelf: 'stretch', width: '100%', minWidth: 0, height: 34, display: 'flex', alignItems: 'center' }} aria-live="polite" aria-label="AI LOGO PRO 상태 안내">
+                    <div className="marquee-inner">
+                      <span className="marquee-content" style={{ minWidth: 0, fontSize: 13.5, fontWeight: 800, color: '#f3f4f6' }}>
+                        {Array(6).fill(headerStatusMessage).join('      ·      ') + '      ·      '}
+                      </span>
+                      <span className="marquee-content" style={{ minWidth: 0, fontSize: 13.5, fontWeight: 800, color: '#f3f4f6' }}>
+                        {Array(6).fill(headerStatusMessage).join('      ·      ') + '      ·      '}
+                      </span>
+                    </div>
                   </div>
-                </div>
+                )}
                 {step === 'instruction' && activeAssignment ? (
-                  <div style={{ textAlign: 'right', fontSize: 22, fontWeight: 900, color: '#ffffff', letterSpacing: '-.03em', justifySelf: 'stretch', whiteSpace: 'nowrap' }}>
+                  <div style={{ textAlign: 'right', fontSize: 22, fontWeight: 900, color: step === 'instruction' ? '#111111' : '#ffffff', letterSpacing: '-.03em', justifySelf: 'stretch', whiteSpace: 'nowrap' }}>
                     Set {activeAssignment.setId} 실험 안내
                   </div>
                 ) : (
