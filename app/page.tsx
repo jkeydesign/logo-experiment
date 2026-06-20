@@ -293,15 +293,15 @@ const CONDITION_SURFACE: Record<ConditionLabel, string> = {
 }
 
 const CONDITION_COLOR: Record<ConditionLabel, string> = {
-  '시안 제시형': '#111111',
+  '평가 근거 제시형': '#111111',
   '추천 제시형': '#4b5563',
-  '평가 근거 제시형': '#6b7280',
+  '시안 제시형': '#888888',
 }
 
 const INSTRUCTION_CONDITION_STYLE: Record<ConditionLabel, { button: string; surface: string; border: string; text: string }> = {
-  '시안 제시형': { button: '#525d6e', surface: '#f5f6f7', border: '#525d6e', text: '#2d3748' },
-  '추천 제시형': { button: '#6b7280', surface: '#f1f2f4', border: '#6b7280', text: '#374151' },
-  '평가 근거 제시형': { button: '#8a8f98', surface: '#e8eaed', border: '#8a8f98', text: '#4b5563' },
+  '평가 근거 제시형': { button: '#111111', surface: '#e8eaed', border: '#111111', text: '#2d3748' },
+  '추천 제시형': { button: '#4b5563', surface: '#f1f2f4', border: '#4b5563', text: '#374151' },
+  '시안 제시형': { button: '#888888', surface: '#f5f6f7', border: '#888888', text: '#4b5563' },
 }
 
 const AI_VISUAL_EVALUATION_TEXT: Record<number, string> = {
@@ -3712,7 +3712,7 @@ export default function Home() {
                       >
                         {/* 평가 근거 제시형: 상단에 AI 순위와 짧은 시각 평가 설명 */}
                         {isAiCond && (
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 7, background: '#6b7280', borderRadius: 8, padding: '7px 8px', minHeight: 34 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 7, background: currentConditionColor, borderRadius: 8, padding: '7px 8px', minHeight: 34 }}>
                             <div style={{ flexShrink: 0, fontSize: 16, fontWeight: 900, color: '#ffffff', letterSpacing: '-.03em' }}>
                               {displayRank}위
                             </div>
@@ -3729,7 +3729,7 @@ export default function Home() {
                               시안 ID {card.stimulus.id}
                             </div>
                             {showBadge && (
-                              <div style={{ background: '#111111', color: '#ffffff', borderRadius: 999, padding: '3px 9px', fontSize: 11, fontWeight: 800, letterSpacing: '.02em' }}>
+                              <div style={{ background: currentConditionColor, color: '#ffffff', borderRadius: 999, padding: '3px 9px', fontSize: 11, fontWeight: 800, letterSpacing: '.02em' }}>
                                 AI 추천
                               </div>
                             )}
