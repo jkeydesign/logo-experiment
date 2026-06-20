@@ -194,9 +194,9 @@ const BRAND_SUMMARY_REFERENCES = [
 ]
 
 const VISUAL_SUMMARY_REFERENCES = [
-  { label: '자연성', source: '자연성', desc: '이 형태는 직관적으로 읽히고 친숙하게 느껴지는가?' },
-  { label: '조화성', source: '조화성', desc: '시각 요소들이 균형 있고 안정적으로 배치되어 있는가?' },
-  { label: '정교성', source: '정교성', desc: '단순하거나 복잡한 정도, 즉 디자인의 풍부함이 이 브랜드에 적절한 수준인가?' },
+  { label: '자연성', source: '자연성', desc: '일상적으로 경험 가능한 대상성이나 유기적 형태 단서를 어느 정도 포함하는가?' },
+  { label: '조화성', source: '조화성', desc: '로고를 구성하는 시각 요소들이 서로 어울리며 하나의 전체 안에서 균형 있게 조직되는가?' },
+  { label: '정교성', source: '정교성', desc: '제한된 시각 형식 안에서 의미를 충분히 담아낸 형태 완성도를 갖추고 있는가?' },
 ]
 
 const MAIN_JUDGMENT_CRITERIA = [
