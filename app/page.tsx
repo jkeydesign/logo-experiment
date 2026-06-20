@@ -3400,7 +3400,15 @@ export default function Home() {
                           setWizardError('브랜드 코드를 입력해 주세요.')
                           return
                         }
-                        if (wizardBrandCode.trim().toUpperCase() !== activeAssignment.setBriefCode.trim().toUpperCase()) {
+                        const enteredCode = wizardBrandCode.trim().toUpperCase()
+                        const targetCode = activeAssignment.setBriefCode.trim().toUpperCase()
+                        const isOvbneValid = (targetCode === 'OVBNE' || targetCode === 'OBVBNE') && (
+                          enteredCode === 'OVBNE' || 
+                          enteredCode === 'OBVBNE' || 
+                          enteredCode === 'VB0001'
+                        )
+                        const isMatch = enteredCode === targetCode
+                        if (!isOvbneValid && !isMatch) {
                           setWizardError(`올바르지 않은 브랜드 코드입니다. 저장된 코드를 기입해 주세요. (힌트: ${activeAssignment.setBriefCode})`)
                           return
                         }
