@@ -3712,11 +3712,11 @@ export default function Home() {
                       >
                         {/* 평가 근거 제시형: 상단에 AI 순위와 짧은 시각 평가 설명 */}
                         {isAiCond && (
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 7, background: currentConditionColor, borderRadius: 8, padding: '7px 8px', minHeight: 34 }}>
-                            <div style={{ flexShrink: 0, fontSize: 16, fontWeight: 900, color: '#ffffff', letterSpacing: '-.03em' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 7, background: currentConditionColor, borderRadius: 8, padding: '7px 10px', minHeight: 36 }}>
+                            <div style={{ flexShrink: 0, fontSize: 19, fontWeight: 900, color: '#ffffff', letterSpacing: '-.03em', lineHeight: 1 }}>
                               {displayRank}위
                             </div>
-                            <div style={{ minWidth: 0, flex: 1, fontSize: 10.5, fontWeight: 700, color: '#f9fafb', lineHeight: 1.35, wordBreak: 'keep-all' }}>
+                            <div style={{ minWidth: 0, flex: 1, fontSize: 11.5, fontWeight: 700, color: '#f9fafb', lineHeight: 1.35, wordBreak: 'keep-all' }}>
                               {aiVisualText}
                             </div>
                           </div>
