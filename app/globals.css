@@ -147,10 +147,6 @@ button[aria-disabled="true"] {
   0% { transform: translateX(0); }
   100% { transform: translateX(-50%); }
 }
-@keyframes marquee-blink {
-  0%, 75%, 79%, 83%, 100% { opacity: 1; }
-  77%, 81% { opacity: 0.15; }
-}
 .marquee-container {
   overflow: hidden;
   white-space: nowrap;
@@ -159,7 +155,7 @@ button[aria-disabled="true"] {
 }
 .marquee-inner {
   display: inline-flex;
-  animation: marquee-scroll 35s linear infinite, marquee-blink 5s ease-in-out infinite;
+  animation: marquee-scroll 35s linear infinite;
 }
 .marquee-content {
   display: inline-block;

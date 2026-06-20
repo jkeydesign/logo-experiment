@@ -827,8 +827,16 @@ function InteractiveDotGrid({ isLoading = false }: { isLoading?: boolean }) {
 function GenerationLoadingScreen({ onComplete }: { onComplete: () => void }) {
   const [progress, setProgress] = useState(0)
   
+  const phrases = useMemo(() => [
+    "Analyzing your brief...",
+    "Refining brand personality....",
+    "Pairing typefaces...",
+    "Refining visual harmony...",
+    "Ready Make Logo..."
+  ], [])
+  
   useEffect(() => {
-    const duration = 6000 // 6 seconds
+    const duration = 10000 // 10 seconds
     const intervalTime = 30 // Update every 30ms for smooth 60fps-like progress
     const increment = (100 / duration) * intervalTime
     
@@ -852,6 +860,9 @@ function GenerationLoadingScreen({ onComplete }: { onComplete: () => void }) {
       clearTimeout(completeTimeout)
     }
   }, [onComplete])
+
+  const currentPhraseIndex = Math.min(Math.floor(progress / 20), phrases.length - 1)
+  const currentPhrase = phrases[currentPhraseIndex]
   
   return (
     <div style={{ position: 'relative', width: '100%', height: 'calc(100vh - 96px)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', background: '#ffffff' }}>
@@ -868,7 +879,7 @@ function GenerationLoadingScreen({ onComplete }: { onComplete: () => void }) {
         
         {/* Loading Text */}
         <div style={{ fontSize: 16, fontWeight: 700, color: '#374151', letterSpacing: '-0.02em', marginBottom: 20 }}>
-          Analyzing your brief...
+          {currentPhrase}
         </div>
         
         {/* Progress Bar Container */}
@@ -2554,7 +2565,7 @@ export default function Home() {
           <header style={{ padding: '10px 24px', background: '#ffffff', borderBottom: '1px solid rgba(17,17,17,.08)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', minHeight: 64 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <span style={{ fontSize: 22, fontWeight: 900, letterSpacing: '-.05em', color: '#111827' }}>AI LOGO PRO</span>
-              <span className="blink-dot-3s" style={{ width: 6, height: 6, borderRadius: '50%', background: '#00f2fe', marginTop: 8 }}></span>
+              <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#00f2fe', marginTop: 8 }}></span>
             </div>
             
             <div style={{ display: 'flex', alignItems: 'center', gap: 16, fontSize: 13, fontWeight: 700 }}>
