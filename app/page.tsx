@@ -2471,42 +2471,46 @@ export default function Home() {
           </header>
         ) : (
           uiVersion === 'v1' ? (
-            <header style={{ padding: '10px 16px', borderBottom: '1px solid rgba(17,17,17,.12)', display: 'grid', gridTemplateColumns: '380px minmax(620px, 1fr) 620px', alignItems: 'center', gap: 14, minHeight: 64, overflow: 'hidden' }}>
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, minWidth: 0, width: '100%' }}>
-                <div style={{ fontSize: 26, fontWeight: 900, letterSpacing: '-.04em', color: '#111111', lineHeight: 1, whiteSpace: 'nowrap' }}>AI LOGO PRO</div>
-                <div style={{ fontSize: 12, fontWeight: 700, color: '#6b7280', letterSpacing: '.02em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Logo Judgment Assistant</div>
-              </div>
-              <div style={{ justifySelf: 'stretch', width: '100%', minWidth: 0, overflow: 'hidden', height: 34, display: 'flex', alignItems: 'center' }} aria-live="polite" aria-label="AI LOGO PRO 상태 안내">
-                <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 13, fontWeight: 800, color: '#374151' }}>
-                  {headerStatusMessage}
-                </span>
-              </div>
-              <div style={{ textAlign: 'right', fontSize: 12, color: '#4d4d4d', justifySelf: 'stretch' }}>
-                <div>참가자 코드: {participantId || '-'}</div>
-                <div>세션 ID: {assignments[0]?.latinSquareGroup ?? '-'}</div>
-                <div style={{ color: '#9ca3af' }}>연구자 로그: 내부 저장 중</div>
+            <header style={{ padding: '10px 16px', borderBottom: '1px solid rgba(17,17,17,.12)', minHeight: 64, overflow: 'hidden' }}>
+              <div style={step === 'instruction' ? { maxWidth: 980, margin: '0 auto', display: 'grid', gridTemplateColumns: '280px 1fr 180px', alignItems: 'center', gap: 14, width: '100%' } : { display: 'grid', gridTemplateColumns: '380px minmax(620px, 1fr) 620px', alignItems: 'center', gap: 14, width: '100%' }}>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, minWidth: 0, width: '100%' }}>
+                  <div style={{ fontSize: 26, fontWeight: 900, letterSpacing: '-.04em', color: '#111111', lineHeight: 1, whiteSpace: 'nowrap' }}>AI LOGO PRO</div>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: '#6b7280', letterSpacing: '.02em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Logo Judgment Assistant</div>
+                </div>
+                <div style={{ justifySelf: 'stretch', width: '100%', minWidth: 0, overflow: 'hidden', height: 34, display: 'flex', alignItems: 'center' }} aria-live="polite" aria-label="AI LOGO PRO 상태 안내">
+                  <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 13, fontWeight: 800, color: '#374151' }}>
+                    {headerStatusMessage}
+                  </span>
+                </div>
+                <div style={{ textAlign: 'right', fontSize: 12, color: '#4d4d4d', justifySelf: 'stretch' }}>
+                  <div>참가자 코드: {participantId || '-'}</div>
+                  <div>세션 ID: {assignments[0]?.latinSquareGroup ?? '-'}</div>
+                  <div style={{ color: '#9ca3af' }}>연구자 로그: 내부 저장 중</div>
+                </div>
               </div>
             </header>
           ) : (
-            <header style={{ padding: '10px 16px', background: '#0b0f19', borderBottom: '1px solid #1f2937', display: 'grid', gridTemplateColumns: '380px minmax(620px, 1fr) 620px', alignItems: 'center', gap: 14, minHeight: 64, overflow: 'hidden' }}>
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, minWidth: 0, width: '100%' }}>
-                <div style={{ fontSize: 26, fontWeight: 900, letterSpacing: '-.04em', color: '#ffffff', lineHeight: 1, whiteSpace: 'nowrap' }}>AI LOGO PRO</div>
-                <div style={{ fontSize: 12, fontWeight: 700, color: '#9ca3af', letterSpacing: '.02em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Logo Judgment Assistant</div>
-              </div>
-              <div className="marquee-container" style={{ justifySelf: 'stretch', width: '100%', minWidth: 0, height: 34, display: 'flex', alignItems: 'center' }} aria-live="polite" aria-label="AI LOGO PRO 상태 안내">
-                <div className="marquee-inner">
-                  <span className="marquee-content" style={{ minWidth: 0, fontSize: 13.5, fontWeight: 800, color: '#f3f4f6' }}>
-                    {Array(6).fill(headerStatusMessage).join('      ·      ') + '      ·      '}
-                  </span>
-                  <span className="marquee-content" style={{ minWidth: 0, fontSize: 13.5, fontWeight: 800, color: '#f3f4f6' }}>
-                    {Array(6).fill(headerStatusMessage).join('      ·      ') + '      ·      '}
-                  </span>
+            <header style={{ padding: '10px 16px', background: '#0b0f19', borderBottom: '1px solid #1f2937', minHeight: 64, overflow: 'hidden' }}>
+              <div style={step === 'instruction' ? { maxWidth: 980, margin: '0 auto', display: 'grid', gridTemplateColumns: '280px 1fr 180px', alignItems: 'center', gap: 14, width: '100%' } : { display: 'grid', gridTemplateColumns: '380px minmax(620px, 1fr) 620px', alignItems: 'center', gap: 14, width: '100%' }}>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, minWidth: 0, width: '100%' }}>
+                  <div style={{ fontSize: 26, fontWeight: 900, letterSpacing: '-.04em', color: '#ffffff', lineHeight: 1, whiteSpace: 'nowrap' }}>AI LOGO PRO</div>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: '#9ca3af', letterSpacing: '.02em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Logo Judgment Assistant</div>
                 </div>
-              </div>
-              <div style={{ textAlign: 'right', fontSize: 12, color: '#9ca3af', justifySelf: 'stretch', lineHeight: 1.35 }}>
-                <div>참가자 코드: {participantId || '-'}</div>
-                <div>세션 ID: {assignments[0]?.latinSquareGroup ?? '-'}</div>
-                <div style={{ color: '#6b7280' }}>연구자 로그: 내부 저장 중</div>
+                <div className="marquee-container" style={{ justifySelf: 'stretch', width: '100%', minWidth: 0, height: 34, display: 'flex', alignItems: 'center' }} aria-live="polite" aria-label="AI LOGO PRO 상태 안내">
+                  <div className="marquee-inner">
+                    <span className="marquee-content" style={{ minWidth: 0, fontSize: 13.5, fontWeight: 800, color: '#f3f4f6' }}>
+                      {Array(6).fill(headerStatusMessage).join('      ·      ') + '      ·      '}
+                    </span>
+                    <span className="marquee-content" style={{ minWidth: 0, fontSize: 13.5, fontWeight: 800, color: '#f3f4f6' }}>
+                      {Array(6).fill(headerStatusMessage).join('      ·      ') + '      ·      '}
+                    </span>
+                  </div>
+                </div>
+                <div style={{ textAlign: 'right', fontSize: 12, color: '#9ca3af', justifySelf: 'stretch', lineHeight: 1.35 }}>
+                  <div>참가자 코드: {participantId || '-'}</div>
+                  <div>세션 ID: {assignments[0]?.latinSquareGroup ?? '-'}</div>
+                  <div style={{ color: '#6b7280' }}>연구자 로그: 내부 저장 중</div>
+                </div>
               </div>
             </header>
           )
