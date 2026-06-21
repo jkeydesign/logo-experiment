@@ -2768,7 +2768,7 @@ export default function Home() {
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, minWidth: 0, width: '100%' }}>
                   {step === 'instruction' && activeAssignment ? (
                     <div style={{ fontSize: 22, fontWeight: 900, color: step === 'instruction' ? '#111111' : '#ffffff', letterSpacing: '-.03em', whiteSpace: 'nowrap' }}>
-                      유형 {activeAssignment.order}/3 · {activeAssignment.conditionLabel}
+                      AI 정보 제시 유형 안내
                     </div>
                   ) : (
                     <>
@@ -2795,11 +2795,7 @@ export default function Home() {
                     </div>
                   </div>
                 )}
-                {step === 'instruction' && activeAssignment ? (
-                  <div style={{ textAlign: 'right', fontSize: 22, fontWeight: 900, color: step === 'instruction' ? '#111111' : '#ffffff', letterSpacing: '-.03em', justifySelf: 'stretch', whiteSpace: 'nowrap' }}>
-                    Set {activeAssignment.setId} 실험 안내
-                  </div>
-                ) : (
+                {step === 'instruction' && activeAssignment ? null : (
                   <div style={{ textAlign: 'right', fontSize: 12, color: '#9ca3af', justifySelf: 'stretch', lineHeight: 1.35 }}>
                     <div style={{ fontSize: 15, fontWeight: 900, color: '#ffffff', marginBottom: 2 }}>SET {activeAssignment?.setId ?? assignments[0]?.setId ?? '-'}</div>
                     <div>세션 ID: {assignments[0]?.latinSquareGroup ?? '-'}</div>
