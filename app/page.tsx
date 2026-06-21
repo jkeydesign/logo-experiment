@@ -4373,7 +4373,7 @@ export default function Home() {
         {showCompSurvey && (
           <div style={{ maxWidth: 720, margin: '0 auto', display: 'grid', gap: 0, padding: '24px 0 48px' }}>
             <div style={{ border: '1px solid rgba(17,17,17,.14)', borderRadius: 14, padding: 20, background: '#f7f7f7', marginBottom: 14 }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: '#4d4d4d', marginBottom: 6 }}>전체 유형 완료</div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: '#4d4d4d', marginBottom: 6 }}>시안제시유형 · 추천제시유형 · 평가순위제시유형</div>
               <div style={{ fontSize: 20, fontWeight: 800, color: '#111111' }}>AI 정보 제시 유형 비교 설문</div>
             </div>
 
