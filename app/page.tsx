@@ -38,6 +38,7 @@ type PostExperimentAnswers = {
   fullName: string
   ageGroup: string
   email: string
+  phoneNumber: string
   career: string
   logoProjects: string
   field: string
@@ -216,7 +217,7 @@ const DEFAULT_GAS_URL = 'https://script.google.com/macros/s/AKfycbzUddGpzIdpEcUv
 
 const INITIAL_ELIGIBILITY_CHECK: EligibilityCheck = { q1: null, q2: null, q3: null, q4: null }
 const INITIAL_POST_EXPERIMENT: PostExperimentAnswers = {
-  fullName: '', ageGroup: '', email: '', career: '', logoProjects: '', field: '', aiUse: '', portfolioUrl: '',
+  fullName: '', ageGroup: '', email: '', phoneNumber: '', career: '', logoProjects: '', field: '', aiUse: '', portfolioUrl: '',
 }
 
 const ELIGIBILITY_QUESTIONS: Array<{ key: keyof EligibilityCheck; text: string }> = [
@@ -1430,12 +1431,17 @@ export default function Home() {
 
   const submitPostExperiment = useCallback(() => {
     const trimmedEmail = postExperimentAnswers.email.trim()
+    const trimmedPhone = postExperimentAnswers.phoneNumber.trim()
     const trimmedPortfolioUrl = postExperimentAnswers.portfolioUrl.trim()
     const hasPortfolioUrl = !!trimmedPortfolioUrl
     const hasPortfolioFile = !!portfolioFile
 
     if (!isValidEmailAddress(trimmedEmail) && trimmedEmail) {
       setPostExperimentError('이메일 주소 형식이 올바르지 않습니다. 예: name@example.com')
+      return
+    }
+    if (!trimmedPhone) {
+      setPostExperimentError('핸드폰 번호를 입력해 주세요.')
       return
     }
     if (!hasPortfolioUrl && !hasPortfolioFile) {
@@ -1463,6 +1469,7 @@ export default function Home() {
           fullName: postExperimentAnswers.fullName,
           ageGroup: postExperimentAnswers.ageGroup,
           email: postExperimentAnswers.email,
+          phoneNumber: postExperimentAnswers.phoneNumber,
           career: postExperimentAnswers.career,
           logoProjects: postExperimentAnswers.logoProjects,
           field: postExperimentAnswers.field,
@@ -1475,7 +1482,7 @@ export default function Home() {
     }
     logEvent('post_experiment_info_submitted', {
       detail: '실험 후 개인정보 제출',
-      payload: { hasName: !!postExperimentAnswers.fullName, hasEmail: !!trimmedEmail, hasPortfolioUrl, hasPortfolioFile },
+      payload: { hasName: !!postExperimentAnswers.fullName, hasEmail: !!trimmedEmail, hasPhone: !!trimmedPhone, hasPortfolioUrl, hasPortfolioFile },
     })
     setIsSubmittingPostExperiment(false)
     setStep('completed')
@@ -2626,6 +2633,18 @@ export default function Home() {
       },
     })
   }, [activeAssignment, logEvent, step, rightTab, activeStimulusId])
+
+  const isSubmitDisabled = isSubmittingPostExperiment ||
+    !postExperimentAnswers.fullName.trim() ||
+    !postExperimentAnswers.ageGroup ||
+    !postExperimentAnswers.email.trim() ||
+    !postExperimentAnswers.phoneNumber.trim() ||
+    !postExperimentAnswers.career ||
+    !postExperimentAnswers.logoProjects ||
+    !postExperimentAnswers.field ||
+    !postExperimentAnswers.aiUse ||
+    (!postExperimentAnswers.portfolioUrl.trim() && !portfolioFile) ||
+    (!!postExperimentAnswers.portfolioUrl.trim() && !!portfolioFile)
 
   return (
     <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', background: '#ffffff' }}>
@@ -4645,7 +4664,17 @@ export default function Home() {
                 </div>
 
                 <div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: '#111111', marginBottom: 8 }}>디자인 실무 경력</div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#111111', marginBottom: 6 }}>핸드폰 번호 <span style={{ color: '#6b7280', fontWeight: 400 }}>(필수)</span></div>
+                  <input
+                    value={postExperimentAnswers.phoneNumber}
+                    onChange={(e) => setPostExperimentAnswers((prev) => ({ ...prev, phoneNumber: e.target.value }))}
+                    placeholder='예: 010-1234-5678'
+                    style={{ width: '100%', border: '1px solid rgba(17,17,17,.18)', borderRadius: 8, padding: '11px 12px', fontSize: 14, outline: 'none', background: '#ffffff', boxSizing: 'border-box' }}
+                  />
+                </div>
+
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#111111', marginBottom: 8 }}>디자인 실무 경력 <span style={{ color: '#6b7280', fontWeight: 400 }}>(필수)</span></div>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                     {['5년 미만', '5년 이상 ~ 10년 미만', '10년 이상 ~ 15년 미만', '15년 이상'].map((opt) => (
                       <button key={opt}
@@ -4657,7 +4686,7 @@ export default function Home() {
                 </div>
 
                 <div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: '#111111', marginBottom: 8 }}>브랜드 로고 / CI 프로젝트 경험</div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#111111', marginBottom: 8 }}>브랜드 로고 / CI 프로젝트 경험 <span style={{ color: '#6b7280', fontWeight: 400 }}>(필수)</span></div>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                     {['1~2건', '3~5건', '6~10건', '11건 이상'].map((opt) => (
                       <button key={opt}
@@ -4669,7 +4698,7 @@ export default function Home() {
                 </div>
 
                 <div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: '#111111', marginBottom: 8 }}>주요 실무 분야</div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#111111', marginBottom: 8 }}>주요 실무 분야 <span style={{ color: '#6b7280', fontWeight: 400 }}>(필수)</span></div>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                     {['브랜드 디자인', '시각디자인', '그래픽 디자인', 'BX 디자인', 'UI/UX 디자인', '편집디자인', '기타'].map((opt) => (
                       <button key={opt}
@@ -4681,7 +4710,7 @@ export default function Home() {
                 </div>
 
                 <div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: '#111111', marginBottom: 8 }}>생성형 AI 이미지 도구 사용 경험</div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#111111', marginBottom: 8 }}>생성형 AI 이미지 도구 사용 경험 <span style={{ color: '#6b7280', fontWeight: 400 }}>(필수)</span></div>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                     {['없음', '1~2회', '가끔 사용', '자주 사용'].map((opt) => (
                       <button key={opt}
@@ -4694,7 +4723,7 @@ export default function Home() {
 
                 <div>
                   <div style={{ fontSize: 13, fontWeight: 800, color: '#111111', marginBottom: 8 }}>
-                    포트폴리오 URL 또는 파일 중 하나만 제출해 주세요. <span style={{ color: '#6b7280', fontWeight: 400 }}>(JPEG 또는 PDF, 10MB 이내)</span>
+                    포트폴리오 URL 또는 파일 중 하나만 제출해 주세요. <span style={{ color: '#6b7280', fontWeight: 400 }}>(JPEG 또는 PDF, 10MB 이내) (필수)</span>
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 12 }}>
                     <div style={{ border: `1px solid ${postExperimentError.includes('포트폴리오') ? '#dc2626' : 'rgba(17,17,17,.16)'}`, borderRadius: 10, padding: 12, background: '#ffffff' }}>
@@ -4771,10 +4800,15 @@ export default function Home() {
                   </div>
                 )}
 
+                <div style={{ textAlign: 'center', fontSize: 13, color: '#333333', marginTop: 16, marginBottom: 12, lineHeight: 1.6, wordBreak: 'keep-all' }}>
+                  전문 디자이너 자격 요건 및 실험 데이터 확인 후 사례비는 일괄 지급됩니다.<br />
+                  이메일 주소와 핸드폰 번호를 다시 한번 정확하게 확인해 주세요.
+                </div>
+
                 <button
                   onClick={submitPostExperiment}
-                  disabled={isSubmittingPostExperiment || !postExperimentAnswers.fullName.trim() || !postExperimentAnswers.ageGroup || !postExperimentAnswers.email.trim() || (!postExperimentAnswers.portfolioUrl.trim() && !portfolioFile) || (!!postExperimentAnswers.portfolioUrl.trim() && !!portfolioFile)}
-                  style={{ marginTop: 4, border: 'none', background: (!postExperimentAnswers.fullName.trim() || !postExperimentAnswers.ageGroup || !postExperimentAnswers.email.trim() || (!postExperimentAnswers.portfolioUrl.trim() && !portfolioFile) || (!!postExperimentAnswers.portfolioUrl.trim() && !!portfolioFile)) ? '#9ca3af' : '#111111', color: '#ffffff', borderRadius: 8, padding: '14px 0', fontSize: 15, fontWeight: 800, cursor: 'pointer', width: '100%' }}
+                  disabled={isSubmitDisabled}
+                  style={{ marginTop: 4, border: 'none', background: isSubmitDisabled ? '#9ca3af' : '#111111', color: '#ffffff', borderRadius: 8, padding: '14px 0', fontSize: 15, fontWeight: 800, cursor: 'pointer', width: '100%' }}
                 >
                   {isSubmittingPostExperiment ? '저장 중...' : '제출 후 실험 종료'}
                 </button>
@@ -4792,9 +4826,6 @@ export default function Home() {
               <div style={{ fontSize: 18, fontWeight: 700, color: '#333333', marginBottom: 8 }}>
                 참여해 주셔서 감사합니다.
               </div>
-              <p style={{ fontSize: 14, color: '#6b7280', lineHeight: 1.7, margin: '12px 0 0' }}>
-                최종 선택 시안은 각 조건 완료 단계에서 확인되었습니다.
-              </p>
             </section>
           </div>
         )}
