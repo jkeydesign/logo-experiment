@@ -2869,7 +2869,7 @@ export default function Home() {
 
                 <section>
                   <h2 style={{ fontSize: 18, fontWeight: 800, color: '#111111', marginBottom: 10 }}>연구자 정보</h2>
-                  <p>소속: 홍익대학교 대학원 디자인공예학과 시각디자인전공</p>
+                  <p>소속: 홍익대학교 대학원 공예·디자인학과 시각디자인전공</p>
                   <p>연구자: 박사과정 강은영</p>
                   <p>지도교수: 허민재</p>
                 </section>
