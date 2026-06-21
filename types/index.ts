@@ -3,7 +3,7 @@ export type Condition = 'human' | 'collab' | 'ai' | 'mixed'
 export type ConditionLabel =
   | '시안 제시형'
   | '추천 제시형'
-  | '평가 근거 제시형'
+  | '평가 순위 제시형'
 
 export type SetId = 'A' | 'B' | 'C'
 
