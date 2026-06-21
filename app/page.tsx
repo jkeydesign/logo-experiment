@@ -2445,7 +2445,7 @@ export default function Home() {
 
   const submitDebriefCheck = useCallback(() => {
     if (debriefCheckAnswers.suspectedNonRealtime === null) {
-      setDebriefCheckError('의심 여부를 선택해 주세요.')
+      setDebriefCheckError('응답을 선택해 주세요.')
       return
     }
     setDebriefCheckError('')
@@ -2456,7 +2456,7 @@ export default function Home() {
       detail: '디브리핑 전 AI 정보 의심 여부 확인',
       payload: {
         participantId,
-        suspectedNonRealtime: debriefCheckAnswers.suspectedNonRealtime === 'yes',
+        suspectedNonRealtime: debriefCheckAnswers.suspectedNonRealtime === 'no',
         suspicionComment: debriefCheckAnswers.suspicionComment || null,
       },
     })
@@ -4443,7 +4443,7 @@ export default function Home() {
             <div style={{ display: 'grid', gap: 10 }}>
               <div style={{ border: '1px solid rgba(17,17,17,.12)', borderRadius: 12, padding: 14, background: '#ffffff' }}>
                 <div style={{ fontSize: 13, fontWeight: 700, color: '#111111', marginBottom: 12, lineHeight: 1.6 }}>
-                  실험 중 제시된 AI 추천 또는 AI 평가 정보가 실제 AI가 실시간으로 산출한 정보가 아닐 수 있다고 의심한 적이 있습니까?
+                  실험에서 진행된 AI LOGO PRO가 생성한 AI 시안에 대한 추천/순위/평가 정보는 AI가 생성한 것이 맞습니까?
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                   {[
@@ -4466,10 +4466,10 @@ export default function Home() {
                 </div>
               </div>
 
-              {debriefCheckAnswers.suspectedNonRealtime === 'yes' && (
+              {debriefCheckAnswers.suspectedNonRealtime === 'no' && (
               <div style={{ border: '1px solid rgba(17,17,17,.12)', borderRadius: 12, padding: 14, background: '#ffffff' }}>
                 <div style={{ fontSize: 13, fontWeight: 700, color: '#111111', marginBottom: 8 }}>
-                  그렇게 의심한 시점이나 이유가 있다면 간단히 작성해 주세요.
+                  그렇게 생각한 시점이나 이유가 있다면 간단히 작성해 주세요.
                 </div>
                 <textarea
                   value={debriefCheckAnswers.suspicionComment}
