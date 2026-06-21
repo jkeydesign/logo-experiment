@@ -2465,7 +2465,7 @@ export default function Home() {
 
   const submitDataUseChoice = useCallback(() => {
     if (!dataUseChoice) {
-      setDataUseError('디브리핑 후 자료 활용 여부를 선택해 주세요.')
+      setDataUseError('실험 데이터 활용 여부를 선택해 주세요.')
       return
     }
     const dataUseConsent = dataUseChoice === 'consent'
@@ -4505,20 +4505,20 @@ export default function Home() {
               <div style={{ fontSize: 12, fontWeight: 700, color: '#4d4d4d', marginBottom: 6 }}>디브리핑</div>
               <div style={{ fontSize: 24, fontWeight: 900, color: '#111111', marginBottom: 14, letterSpacing: '-.03em' }}>실험에 참여해 주셔서 감사합니다.</div>
               <div style={{ display: 'grid', gap: 10, fontSize: 14, lineHeight: 1.75, color: '#1f2937' }}>
-                <p>실험 종료 후 안내드립니다. 본 실험에서 제시된 AI 추천 정보, AI 평가 순위 및 AI 평가 설명은 조건 간 비교를 위해 완전히 동일하게 사전에 통제된 텍스트와 순위였습니다.</p>
-                <p>이는 모든 연구대상자가 동일한 기준의 실험 자극을 경험하도록 하기 위한 절차입니다.</p>
-                <p>이로 인해 불쾌감을 느끼거나 본인의 데이터 활용을 원하지 않을 경우 즉시 데이터 폐기를 요청할 수 있으며, 연구대상자의 동의 철회권을 보장합니다.</p>
+                <p>실험 종료 안내사항입니다. 본 실험에서 제시된 AI 로고 시안, AI 추천, AI 순위, AI 평가 정보는 AI 정보 제시 유형 간 비교를 위해 ChatGPT 5.5 지능높음 모드를 활용 프롬프트를 생성하여 GPT Image와 Gemini Nano Banana 3.1 Pro의 Extended 사고레벨 모드로 실험 과정과 동일한 상황에서 사전에 생성형 AI로 제작하였음을 알립니다.</p>
+                <p>이러한 실험 자극을 사용한 것은 모든 연구대상자가 동일한 기준의 실험 자극을 경험하도록 하기 위한 절차입니다.</p>
+                <p>이로 인해 혹여 불쾌감을 느끼셨거나 본인의 실험 데이터 활용을 원하지 않을 경우에는 즉시 데이터 폐기를 요청할 수 있으며, 연구대상자의 동의 철회권을 보장합니다.</p>
               </div>
             </div>
 
             <div style={{ border: '1px solid rgba(17,17,17,.14)', borderRadius: 14, padding: 18, background: '#ffffff' }}>
               <div style={{ fontSize: 14, fontWeight: 800, color: '#111111', marginBottom: 12 }}>
-                위 디브리핑 내용을 확인한 후, 기존 응답자료의 연구 활용에 동의하십니까?
+                위 내용을 확인한 후 본인의 실험 데이터 활용에 동의하십니까?
               </div>
               <div style={{ display: 'grid', gap: 8 }}>
                 {[
-                  { value: 'consent' as const, label: '디브리핑 내용을 확인하였으며, 기존 응답자료를 연구에 활용하는 데 동의합니다.' },
-                  { value: 'withdraw' as const, label: '디브리핑 내용을 확인하였으며, 기존 응답자료의 연구 활용을 원하지 않습니다. 데이터 폐기를 요청합니다.' },
+                  { value: 'consent' as const, label: '위 내용을 확인하였으며, 본인의 실험 데이터를 연구에 활용하는 데 동의합니다.' },
+                  { value: 'withdraw' as const, label: '위 내용을 확인하였으며, 본인의 실험 데이터 활용을 원하지 않습니다. 데이터 폐기를 요청합니다.' },
                 ].map(({ value, label }) => (
                   <button
                     key={value}
