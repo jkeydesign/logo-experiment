@@ -101,15 +101,15 @@ const POST_SURVEY_AI_ONLY: Array<{ key: PostSurveyLikertKey; text: string }> = [
 ]
 const COND_LABELS_ALL: string[] = ['시안 제시형', '추천 제시형', '평가 근거 제시형']
 const COMP_QUESTIONS: Array<{ key: keyof CompSurveyAnswers; text: string; options: string[] }> = [
-  { key: 'easiest', text: '세 조건 중 로고 시안을 판단하기 가장 쉬웠던 조건은 무엇입니까?', options: COND_LABELS_ALL },
-  { key: 'strongestAgency', text: '세 조건 중 자신의 전문적 판단을 유지하기 가장 쉬웠던 조건은 무엇입니까?', options: COND_LABELS_ALL },
-  { key: 'highestConfidence', text: '세 조건 중 최종 선택에 대한 확신이 가장 높았던 조건은 무엇입니까?', options: COND_LABELS_ALL },
-  { key: 'mostPractical', text: '세 조건 중 실제 디자인 실무의 검토 과정에 가장 가깝다고 느낀 조건은 무엇입니까?', options: COND_LABELS_ALL },
-  { key: 'preferred', text: '향후 유사한 로고 시안 검토 상황에서 다시 사용하고 싶은 조건은 무엇입니까?', options: COND_LABELS_ALL },
-  { key: 'mostUsefulAi', text: '세 조건 중 AI 정보가 가장 유용하다고 느껴진 조건은 무엇입니까?', options: COND_LABELS_ALL },
-  { key: 'preferredExploration', text: '초기 후보 검토 단계에 가장 적절하다고 느낀 조건은 무엇입니까?', options: COND_LABELS_ALL },
-  { key: 'preferredComparison', text: '후보 유지/제외를 비교하며 판단하는 단계에 가장 적절하다고 느낀 조건은 무엇입니까?', options: COND_LABELS_ALL },
-  { key: 'preferredFinalSelection', text: '최종 시안 1개를 선택하는 단계에 가장 적절하다고 느낀 조건은 무엇입니까?', options: COND_LABELS_ALL },
+  { key: 'easiest', text: '세 유형 중 로고 시안을 판단하기 가장 쉬웠던 유형은 무엇이었습니까?', options: COND_LABELS_ALL },
+  { key: 'strongestAgency', text: '세 유형 중 자신의 전문적 판단을 유지하기 가장 쉬웠던 유형은 무엇이었습니까?', options: COND_LABELS_ALL },
+  { key: 'highestConfidence', text: '세 유형 중 최종 선택에 대한 확신이 가장 높았던 유형은 무엇이었습니까?', options: COND_LABELS_ALL },
+  { key: 'mostPractical', text: '세 유형 중 실제 디자인 실무 검토 과정과 가장 가깝다고 느낀 유형은 무엇이었습니까?', options: COND_LABELS_ALL },
+  { key: 'preferred', text: '향후 유사한 로고 시안 검토 상황이 온다면 다시 사용하고 싶은 AI 유형은 무엇이었습니까?', options: COND_LABELS_ALL },
+  { key: 'mostUsefulAi', text: 'AI가 제시한 정보 중 가장 유용했다고 생각하는 유형은 무엇이었습니까?', options: COND_LABELS_ALL },
+  { key: 'preferredExploration', text: '로고 디자인을 할 때 초기 시안들의 후보를 선정하는 실무 단계에서 사용하면 좋겠다고 느낀 유형은 무엇이었습니까?', options: COND_LABELS_ALL },
+  { key: 'preferredComparison', text: '로고 디자인을 할 때 후보 선정된 시안들을 유지/제외하는 실무 단계에서 사용하면 좋겠다고 느낀 유형은 무엇이었습니까?', options: COND_LABELS_ALL },
+  { key: 'preferredFinalSelection', text: '로고 디자인을 할 때 최종 결정 시안을 1개 선택하는 실무 단계에서 사용하면 좋겠다고 느낀 유형은 무엇이었습니까?', options: COND_LABELS_ALL },
 ]
 
 interface StimulusCardState {
@@ -2222,7 +2222,7 @@ export default function Home() {
       })
       setDetailNotice({
         stimulusId: firstIncomplete.stimulus.id,
-        message: '후보 유지 시안의 미션 체크를 완료해야 조건을 완료할 수 있습니다.',
+        message: '후보 유지 시안의 미션 체크를 완료해야 유형을 완료할 수 있습니다.',
       })
       logEvent('condition_complete_blocked_hold_mission_incomplete', {
         condition: activeAssignment.condition,
@@ -2571,7 +2571,7 @@ export default function Home() {
     if (showEvaluation && !hasGenerated) return '브랜드 브리프와 판단 기준을 확인한 뒤 AI 로고 시안 생성을 시작해 주세요.'
     if (showEvaluation && hasGenerated && rightTab === 'hold') return '후보 패널에서 최종 선택을 위한 후보 유지 시안을 선택 혹은 제외해 주세요.'
     if (showEvaluation && hasGenerated && rightTab === 'exclude') return '제외 패널에서 제외한 시안을 확인하고 필요하면 후보 유지로 복원할 수 있습니다.'
-    if (showInstruction) return '조건 안내를 확인한 뒤 실제 실무처럼 로고 시안을 검토해 주세요.'
+    if (showInstruction) return '유형 안내를 확인한 뒤 실제 실무처럼 로고 시안을 검토해 주세요.'
     if (showBrief) return '브랜드 브리프와 판단 기준을 먼저 확인해 주세요.'
     if (activeAssignment?.conditionLabel === '추천 제시형') return 'AI 추천 정보는 참고 자료이며, 후보 유지와 제외 판단은 디자이너가 수행합니다.'
     if (activeAssignment?.conditionLabel === '평가 근거 제시형') return 'AI 평가 순위와 시각 설명을 참고하되, 최종 판단은 디자이너가 수행합니다.'
@@ -2692,7 +2692,7 @@ export default function Home() {
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, minWidth: 0, width: '100%' }}>
                   {step === 'instruction' && activeAssignment ? (
                     <div style={{ fontSize: 22, fontWeight: 900, color: '#111111', letterSpacing: '-.03em', whiteSpace: 'nowrap' }}>
-                      조건 {activeAssignment.order}/3 · {activeAssignment.conditionLabel}
+                      유형 {activeAssignment.order}/3 · {activeAssignment.conditionLabel}
                     </div>
                   ) : (
                     <>
@@ -2738,7 +2738,7 @@ export default function Home() {
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, minWidth: 0, width: '100%' }}>
                   {step === 'instruction' && activeAssignment ? (
                     <div style={{ fontSize: 22, fontWeight: 900, color: step === 'instruction' ? '#111111' : '#ffffff', letterSpacing: '-.03em', whiteSpace: 'nowrap' }}>
-                      조건 {activeAssignment.order}/3 · {activeAssignment.conditionLabel}
+                      유형 {activeAssignment.order}/3 · {activeAssignment.conditionLabel}
                     </div>
                   ) : (
                     <>
@@ -3311,7 +3311,7 @@ export default function Home() {
             <div style={{ maxWidth: 980, margin: '40px auto 24px', display: 'grid', gap: 14 }}>
               <section style={{ border: '1px solid rgba(17,17,17,.14)', borderRadius: 16, padding: 22, background: '#ffffff' }}>
                 <div style={{ fontSize: 12, fontWeight: 800, color: currentConditionColor, marginBottom: 8 }}>
-                  조건 {activeAssignment.order}/3 · {activeAssignment.conditionLabel}
+                  유형 {activeAssignment.order}/3 · {activeAssignment.conditionLabel}
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, alignItems: 'start', marginBottom: 18 }}>
                   <div>
@@ -3680,7 +3680,7 @@ export default function Home() {
           <div style={{ display: 'grid', gridTemplateColumns: '460px minmax(540px, 1fr) 620px', gap: 14, height: 'calc(100vh - 96px)', overflow: 'hidden' }}>
             <aside key={currentConditionIndex} style={{ border: '1px solid rgba(17,17,17,.12)', borderRadius: 12, padding: 14, background: '#ffffff', overflow: 'auto' }}>
               <div style={{ fontSize: 12, color: currentConditionColor, fontWeight: 800, marginBottom: 8 }}>
-                조건 {activeAssignment.order}/3 · {activeAssignment.conditionLabel}
+                유형 {activeAssignment.order}/3 · {activeAssignment.conditionLabel}
               </div>
               <div style={{ fontSize: 13.5, color: '#111111', lineHeight: 1.72, display: 'grid', gap: 9 }}>
                 <div className="brief-item-animate" style={{ animationDelay: '0ms', display: 'flex', alignItems: 'flex-start', gap: 12 }}>
@@ -4178,7 +4178,7 @@ export default function Home() {
           <div style={{ display: 'grid', gap: 12 }}>
             <div style={{ border: '1px solid rgba(17,17,17,.24)', borderRadius: 12, padding: 12, background: currentConditionSurface }}>
               <div style={{ fontSize: 13, fontWeight: 800, color: currentConditionColor, marginBottom: 4 }}>
-                조건 {activeAssignment.order}/3 · {activeAssignment.conditionLabel}
+                유형 {activeAssignment.order}/3 · {activeAssignment.conditionLabel}
               </div>
               <div style={{ fontSize: 12, color: '#333333' }}>
                 최종 후보/제외 영역 내부 자동 순위는 브랜드 맥락 적합도와 시각체계 완성도 기준입니다. 상세 평가와 영역 이동 후 순위가 즉시 업데이트됩니다.
@@ -4355,14 +4355,14 @@ export default function Home() {
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
               <div style={{ fontSize: 12, color: '#4d4d4d' }}>
-                {finalSelectedStimulusId ? `최종선택 완료: ${finalSelectedStimulusId}` : '최종선택을 1개 지정해야 다음 조건으로 이동할 수 있습니다.'}
+                {finalSelectedStimulusId ? `최종선택 완료: ${finalSelectedStimulusId}` : '최종선택을 1개 지정해야 다음 유형으로 이동할 수 있습니다.'}
               </div>
               <button
                 onClick={moveToNextCondition}
                 disabled={!finalSelectedStimulusId}
                 style={{ border: 'none', background: finalSelectedStimulusId ? currentConditionColor : '#d1d5db', color: finalSelectedStimulusId ? '#ffffff' : '#6b7280', borderRadius: 10, padding: '10px 14px', fontSize: 13, fontWeight: 700, cursor: finalSelectedStimulusId ? 'pointer' : 'not-allowed' }}
               >
-                {currentConditionIndex >= assignments.length - 1 ? '최종 선택 1개 확정 및 전체 완료' : '최종 선택 1개 확정 후 다음 조건'}
+                {currentConditionIndex >= assignments.length - 1 ? '최종 선택 1개 확정 및 전체 완료' : '최종 선택 1개 확정 후 다음 유형'}
               </button>
             </div>
           </div>
@@ -4373,8 +4373,8 @@ export default function Home() {
         {showCompSurvey && (
           <div style={{ maxWidth: 720, margin: '0 auto', display: 'grid', gap: 0, padding: '24px 0 48px' }}>
             <div style={{ border: '1px solid rgba(17,17,17,.14)', borderRadius: 14, padding: 20, background: '#f7f7f7', marginBottom: 14 }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: '#4d4d4d', marginBottom: 6 }}>전체 조건 완료</div>
-              <div style={{ fontSize: 20, fontWeight: 800, color: '#111111' }}>전체 조건 비교 설문</div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: '#4d4d4d', marginBottom: 6 }}>전체 유형 완료</div>
+              <div style={{ fontSize: 20, fontWeight: 800, color: '#111111' }}>전체 유형 비교 설문</div>
             </div>
 
             <div style={{ display: 'grid', gap: 10 }}>
@@ -4403,7 +4403,7 @@ export default function Home() {
 
               <div style={{ border: '1px solid rgba(17,17,17,.12)', borderRadius: 12, padding: 14, background: '#ffffff' }}>
                 <div style={{ fontSize: 13, fontWeight: 700, color: '#111111', marginBottom: 4 }}>
-                  위와 같이 응답한 이유나, 조건 간 차이에 대해 느낀 점이 있다면 자유롭게 작성해 주세요.
+                  위와 같이 응답한 이유나, 유형 간 차이에 대해 느낀 점이 있다면 자유롭게 작성해 주세요.
                 </div>
                 <div style={{ fontSize: 11, color: '#dc2626', fontWeight: 700, marginBottom: 8 }}>필수 입력</div>
                 <textarea
@@ -5078,8 +5078,8 @@ export default function Home() {
             </div>
             <div style={{ fontSize: 12, color: '#888888', marginBottom: 28 }}>
               {currentConditionIndex < assignments.length - 1
-                ? '확정 후 다음 조건으로 이동합니다.'
-                : '확정 후 모든 조건이 완료됩니다.'}
+                ? '확정 후 다음 유형으로 이동합니다.'
+                : '확정 후 모든 유형이 완료됩니다.'}
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
               <button
@@ -5173,10 +5173,10 @@ export default function Home() {
                 }}
               >
                 <div style={{ fontSize: 12, fontWeight: 700, color: currentConditionColor, marginBottom: 6, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span>조건 {activeAssignment.order}/3 · {activeAssignment.conditionLabel}</span>
+                  <span>유형 {activeAssignment.order}/3 · {activeAssignment.conditionLabel}</span>
                   <span style={{ fontSize: 11, fontWeight: 500, color: '#6b7280' }}>✥ 드래그하여 이동 가능</span>
                 </div>
-                <div style={{ fontSize: 20, fontWeight: 800, color: '#111111' }}>조건별 사후 설문</div>
+                <div style={{ fontSize: 20, fontWeight: 800, color: '#111111' }}>유형별 사후 설문</div>
               </div>
 
               <div style={{ display: 'grid', gap: 10 }}>
