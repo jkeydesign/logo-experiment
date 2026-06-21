@@ -2570,30 +2570,41 @@ export default function Home() {
   const showAppHeader = !showConsentScreen && !showParticipationConsent && !showScreeningScreen && step !== 'brand_brief' && step !== 'generation_loading'
 
   const headerStatusMessage = useMemo(() => {
+    if (step === 'comparison_survey') return '모든 AI 유형 검토가 완료되었습니다. 세 유형을 비교하는 사후 설문에 응답해 주세요.'
+    if (step === 'debriefing_check') return '실험에 사용된 정보와 AI 로고 시안 제작 방식에 관한 의심 여부 확인 단계입니다.'
+    if (step === 'debriefing') return '디브리핑 안내 사항을 확인한 뒤 개인 데이터 활용 동의 여부를 선택해 주세요.'
+    if (step === 'eligibility_collection') return '실험이 모두 완료되었습니다. 사례비 지급 및 분석을 위한 참가자 정보를 입력해 주세요.'
+    if (step === 'completed') return '실험이 최종 종료되었습니다. 귀한 시간 내어 참여해 주셔서 감사합니다.'
+
     if (isGenerating) {
       const nextCount = Math.min(visibleGeneratedCount + 1, cards.length || 9)
       return `AI 로고 시안 생성중... ${nextCount}번째 시안을 준비하고 있습니다.`
     }
-    if (finalSelectedStimulusId) return `${finalSelectedStimulusId} 시안이 최종 선택 후보로 세션에 반영되었습니다.`
-    if (showEvaluation && !hasGenerated) return '브랜드 브리프와 판단 기준을 확인한 뒤 AI 로고 시안 생성을 시작해 주세요.'
-    if (showEvaluation && hasGenerated && rightTab === 'hold') return '후보 패널에서 최종 선택을 위한 후보 유지 시안을 선택 혹은 제외해 주세요.'
-    if (showEvaluation && hasGenerated && rightTab === 'exclude') return '제외 패널에서 제외한 시안을 확인하고 필요하면 후보 유지로 복원할 수 있습니다.'
+    if (showEvaluation) {
+      if (finalSelectedStimulusId) return `${finalSelectedStimulusId} 시안이 최종 선택 후보로 세션에 반영되었습니다.`
+      if (!hasGenerated) return '브랜드 브리프와 판단 기준을 확인한 뒤 AI 로고 시안 생성을 시작해 주세요.'
+      if (rightTab === 'hold') return '후보 패널에서 최종 선택을 위한 후보 유지 시안을 선택 혹은 제외해 주세요.'
+      if (rightTab === 'exclude') return '제외 패널에서 제외한 시안을 확인하고 필요하면 후보 유지로 복원할 수 있습니다.'
+    }
     if (showInstruction) return '유형 안내를 확인한 뒤 실제 실무처럼 로고 시안을 검토해 주세요.'
     if (showBrief) return '브랜드 브리프와 판단 기준을 먼저 확인해 주세요.'
+    if (showBriefLanding) return '가상 브랜드 로고 시안 선별 미션 브리프를 읽고 확인해 주세요.'
     if (activeAssignment?.conditionLabel === '추천 제시형') return 'AI 추천 정보는 참고 자료이며, 후보 유지와 제외 판단은 디자이너가 수행합니다.'
     if (activeAssignment?.conditionLabel === '평가 근거 제시형') return 'AI 평가 순위와 시각 설명을 참고하되, 최종 판단은 디자이너가 수행합니다.'
     return 'AI Logo Pro 판단 환경이 안정적으로 작동 중입니다.'
   }, [
-    activeAssignment?.conditionLabel,
+    step,
+    isGenerating,
+    visibleGeneratedCount,
     cards.length,
+    showEvaluation,
     finalSelectedStimulusId,
     hasGenerated,
-    isGenerating,
     rightTab,
-    showBrief,
-    showEvaluation,
     showInstruction,
-    visibleGeneratedCount,
+    showBrief,
+    showBriefLanding,
+    activeAssignment?.conditionLabel,
   ])
 
   const finalModalCard = useMemo(
