@@ -4604,7 +4604,8 @@ export default function Home() {
               <div style={{ textAlign: 'center', marginBottom: 32 }}>
                 <h1 style={{ fontSize: 22, fontWeight: 900, letterSpacing: '-.02em', marginBottom: 10 }}>참가자 정보 입력</h1>
                 <p style={{ fontSize: 14, color: '#6b7280', lineHeight: 1.65 }}>
-                  실험이 모두 완료되었습니다. 연구 대상자로 선정되신 분에게는 사례비 지급 및 분석을 위해 아래 정보를 입력해 주세요.<br />
+                  실험이 모두 완료되었습니다.<br />
+                  연구 대상자로 선정되신 분에게는 사례비 지급 및 실험 분석을 위해 아래의 정보를 입력해 주세요.<br />
                   입력하신 정보는 실험 데이터와 분리하여 보관되며, 연구 목적 외에는 사용되지 않습니다.
                 </p>
               </div>
