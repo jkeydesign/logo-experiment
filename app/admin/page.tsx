@@ -46,7 +46,7 @@ const DEMO_DASHBOARD_DATA: DashboardData = {
   total_participants: 6,
   total_rows: 162,
   ls_distribution: { LS01: 27, LS02: 27, LS03: 27, LS04: 27, LS05: 27, LS06: 27 },
-  condition_counts: { '시안 제시형': 54, '추천 제시형': 54, '평가 근거 제시형': 54 },
+  condition_counts: { '시안 제시형': 54, '추천 제시형': 54, '평가 순위 제시형': 54 },
   avg_ai_acceptance_rate: 0.71,
   decision_changed_count: 31,
   decision_total: 162,
@@ -381,7 +381,7 @@ function DashboardTab() {
   )
 
   const isUnusableGasData = !showDemoData && data.total_participants === 0
-  const condOrder = ['시안 제시형', '추천 제시형', '평가 근거 제시형']
+  const condOrder = ['시안 제시형', '추천 제시형', '평가 순위 제시형']
   const condMax = Math.max(...condOrder.map((c) => data.condition_counts[c] ?? 0), 1)
   const lsKeys = ['LS01', 'LS02', 'LS03', 'LS04', 'LS05', 'LS06']
   const lsMax = Math.max(...lsKeys.map((k) => data.ls_distribution[k] ?? 0), 1)

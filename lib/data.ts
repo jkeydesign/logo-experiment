@@ -11,7 +11,7 @@ import type {
 export const CONDITION_LABELS: Record<Condition, ConditionLabel> = {
   human: '시안 제시형',
   collab: '추천 제시형',
-  ai: '평가 근거 제시형',
+  ai: '평가 순위 제시형',
   mixed: '추천 제시형',
 }
 

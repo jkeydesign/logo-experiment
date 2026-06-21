@@ -100,7 +100,7 @@ const POST_SURVEY_AI_ONLY: Array<{ key: PostSurveyLikertKey; text: string }> = [
   { key: 'q7', text: 'AI 평가 점수 또는 순위는 시안 판단에 유용했다고 생각한다.' },
   { key: 'q8', text: 'AI 점수 또는 순위 때문에 나의 판단 기준이 흔들렸다고 생각한다.' },
 ]
-const COND_LABELS_ALL: string[] = ['시안 제시형', '추천 제시형', '평가 근거 제시형']
+const COND_LABELS_ALL: string[] = ['시안 제시형', '추천 제시형', '평가 순위 제시형']
 const COMP_QUESTIONS: Array<{ key: keyof CompSurveyAnswers; text: string; options: string[] }> = [
   { key: 'easiest', text: '세 유형 중 로고 시안을 판단하기 가장 쉬웠던 유형은 무엇이었습니까?', options: COND_LABELS_ALL },
   { key: 'strongestAgency', text: '세 유형 중 자신의 전문적 판단을 유지하기 가장 쉬웠던 유형은 무엇이었습니까?', options: COND_LABELS_ALL },
@@ -291,17 +291,17 @@ function assignNextParticipant(): { code: string; lsIndex: number; lsGroup: stri
 const CONDITION_SURFACE: Record<ConditionLabel, string> = {
   '시안 제시형': '#fafafa',
   '추천 제시형': '#fafafa',
-  '평가 근거 제시형': '#fafafa',
+  '평가 순위 제시형': '#fafafa',
 }
 
 const CONDITION_COLOR: Record<ConditionLabel, string> = {
-  '평가 근거 제시형': '#111111',
+  '평가 순위 제시형': '#111111',
   '추천 제시형': '#4b5563',
   '시안 제시형': '#888888',
 }
 
 const INSTRUCTION_CONDITION_STYLE: Record<ConditionLabel, { button: string; surface: string; border: string; text: string }> = {
-  '평가 근거 제시형': { button: '#111111', surface: '#e8eaed', border: '#111111', text: '#2d3748' },
+  '평가 순위 제시형': { button: '#111111', surface: '#e8eaed', border: '#111111', text: '#2d3748' },
   '추천 제시형': { button: '#4b5563', surface: '#f1f2f4', border: '#4b5563', text: '#374151' },
   '시안 제시형': { button: '#888888', surface: '#f5f6f7', border: '#888888', text: '#4b5563' },
 }
@@ -2590,7 +2590,7 @@ export default function Home() {
     if (showBrief) return '브랜드 브리프와 판단 기준을 먼저 확인해 주세요.'
     if (showBriefLanding) return '가상 브랜드 로고 시안 선별 미션 브리프를 읽고 확인해 주세요.'
     if (activeAssignment?.conditionLabel === '추천 제시형') return 'AI 추천 정보는 참고 자료이며, 후보 유지와 제외 판단은 디자이너가 수행합니다.'
-    if (activeAssignment?.conditionLabel === '평가 근거 제시형') return 'AI 평가 순위와 시각 설명을 참고하되, 최종 판단은 디자이너가 수행합니다.'
+    if (activeAssignment?.conditionLabel === '평가 순위 제시형') return 'AI 평가 순위와 시각 설명을 참고하되, 최종 판단은 디자이너가 수행합니다.'
     return 'AI Logo Pro 판단 환경이 안정적으로 작동 중입니다.'
   }, [
     step,
@@ -3833,7 +3833,7 @@ export default function Home() {
                         data-stimulus-id={card.stimulus.id}
                         style={{ border: cardBorder, borderRadius: 12, background: '#ffffff', padding: 8, cursor: 'pointer' }}
                       >
-                        {/* 평가 근거 제시형: 상단에 AI 순위와 짧은 시각 평가 설명 */}
+                        {/* 평가 순위 제시형: 상단에 AI 순위와 짧은 시각 평가 설명 */}
                         {isAiCond && (
                           !isCardFinished ? (
                             <div className="skeleton-pulse" style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 7, background: '#f3f4f6', border: '1px dashed #d1d5db', borderRadius: 8, padding: '7px 10px', minHeight: 36 }}>
