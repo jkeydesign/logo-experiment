@@ -2787,10 +2787,10 @@ export default function Home() {
                   <div className="marquee-container" style={{ justifySelf: 'stretch', width: '100%', minWidth: 0, height: 34, display: 'flex', alignItems: 'center' }} aria-live="polite" aria-label="AI LOGO PRO 상태 안내">
                     <div className="marquee-inner">
                       <span className="marquee-content" style={{ minWidth: 0, fontSize: 13.5, fontWeight: 800, color: '#f3f4f6', letterSpacing: '0.06em' }}>
-                        {Array(6).fill(headerStatusMessage).join('                  ·                  ') + '                  ·                  '}
+                        {Array(6).fill(headerStatusMessage).join('                                      ') + '                                      '}
                       </span>
                       <span className="marquee-content" style={{ minWidth: 0, fontSize: 13.5, fontWeight: 800, color: '#f3f4f6', letterSpacing: '0.06em' }}>
-                        {Array(6).fill(headerStatusMessage).join('                  ·                  ') + '                  ·                  '}
+                        {Array(6).fill(headerStatusMessage).join('                                      ') + '                                      '}
                       </span>
                     </div>
                   </div>
